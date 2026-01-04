@@ -1,3 +1,6 @@
+import { CampaignResourceRepository } from "@/features/base/CampaignResourceRepository";
+import { CampaignResourceService } from "@/features/base/CampaignResourceService";
+import type { CampaignContext } from "@/features/campaigns";
 import {
   charactersOptionalDefaultsSchema,
   charactersPartialSchema,
@@ -8,9 +11,6 @@ import {
 } from "@/lib/validation";
 import { Prisma } from "@prisma/client";
 import { z } from "zod";
-import { CampaignResourceRepository } from "./base/CampaignResourceRepository";
-import { CampaignResourceService } from "./base/CampaignResourceService";
-import type { CampaignContext } from "./campaigns";
 
 // ============================================================================
 // SCHEMAS

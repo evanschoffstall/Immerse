@@ -1,5 +1,5 @@
-import { authConfig } from "@/lib/db/auth";
-import { uploadImage } from "@/lib/db/upload";
+import { authConfig } from "@/lib/auth";
+import { uploadImage } from "@/lib/upload";
 import { getServerSession } from "next-auth/next";
 import { NextRequest, NextResponse } from "next/server";
 

@@ -1,6 +1,6 @@
-import type { CampaignContext } from "@/lib/features/campaigns";
-import { CharacterSchemas, characterService } from "@/lib/db/features/characters";
-import { campaignRoute } from "@/lib/db/route-helpers";
+import type { CampaignContext } from "@/features/campaigns";
+import { CharacterSchemas, characterService } from "@/features/characters";
+import { campaignRoute } from "@/lib/utils/route-helpers";
 
 /**
  * GET /api/campaigns/[id]/characters/[characterId]

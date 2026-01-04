@@ -1,4 +1,4 @@
-import type { CampaignContext } from "@/lib/features/campaigns";
+import type { CampaignContext } from "@/features/campaigns";
 import type {
   BaseListQuery,
   CampaignResourceRepository,

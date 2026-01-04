@@ -1,5 +1,5 @@
 import { authConfig } from "@/lib/auth";
-import { prisma } from "@/lib/db";
+import { prisma } from "@/lib/db/prisma";
 import {
   campaignsOptionalDefaultsSchema,
   campaignsPartialSchema,
