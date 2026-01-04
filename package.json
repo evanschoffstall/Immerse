@@ -126,9 +126,8 @@
     "postcss": "^8.5.6",
     "sass": "1.97.1",
     "tailwindcss": "^4.1.18",
-    "typescript": "5.9.3",
+    "typescript": "^5.9.3",
     "vite": "7.3.0",
-    "vitest": "4.0.16",
-    "zod-prisma-types": "^3.3.10"
+    "vitest": "4.0.16"
   }
 }
