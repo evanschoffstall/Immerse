@@ -1,0 +1,66 @@
+import { z } from "zod";
+
+type ModelSchemas = {
+  optionalDefaults: z.ZodObject<any>;
+  partial: z.ZodObject<any>;
+};
+
+// shared "server managed" fields for *all* campaign resources
+const SERVER_MANAGED = [
+  "id",
+  "slug",
+  "campaignId",
+  "createdById",
+  "createdAt",
+  "updatedAt",
+] as const;
+
+type ServerManagedKey = (typeof SERVER_MANAGED)[number];
+
+function omitServerManaged<T extends ModelSchemas>(schemas: T) {
+  const omitShape = Object.fromEntries(
+    SERVER_MANAGED.map((k) => [k, true])
+  ) as Record<ServerManagedKey, true>;
+
+  return {
+    createBase: schemas.optionalDefaults.omit(omitShape),
+    updateBase: schemas.partial.omit(omitShape),
+  };
+}
+
+/**
+ * Builds create/update schemas with only the *minimal* API rules:
+ * - forbid server-managed fields
+ * - require non-empty name if present
+ * - strict() to block unknown keys
+ * - optional "must provide at least one key" for PATCH
+ */
+export function makeNamedResourceSchemas(schemas: ModelSchemas) {
+  const { createBase, updateBase } = omitServerManaged(schemas);
+
+  const create = createBase
+    .extend({ name: z.string().trim().min(1, "Name is required") })
+    .strict();
+
+  const update = updateBase
+    .extend({ name: z.string().trim().min(1).optional() })
+    .strict()
+    .refine((obj) => Object.keys(obj).length > 0, {
+      message: "At least one field is required",
+    });
+
+  return { create, update };
+}
+
+/**
+ * Standard query params for listing campaign resources
+ */
+export const listResourceQuerySchema = z.object({
+  page: z.coerce.number().int().positive().default(1),
+  limit: z.coerce.number().int().positive().max(100).default(20),
+  search: z.string().optional(),
+  sortBy: z.string().default("name"),
+  sortOrder: z.enum(["asc", "desc"]).default("asc"),
+});
+
+export type ListResourceQuery = z.infer<typeof listResourceQuerySchema>;
