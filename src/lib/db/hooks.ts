@@ -1,6 +1,5 @@
 "use client";
 
-import { cachedFetch } from "@/lib/api-cache";
 import { useTheme } from "next-themes";
 import * as React from "react";
 import { useEffect, useState } from "react";
@@ -68,9 +67,11 @@ export function useCampaignDashboard(campaignId: string) {
     const fetchData = async () => {
       try {
         setLoading(true);
-        const result = await cachedFetch<DashboardData>(
-          `/api/campaigns/${campaignId}/dashboard`
-        );
+        const response = await fetch(`/api/campaigns/${campaignId}/dashboard`);
+        if (!response.ok) {
+          throw new Error(`Failed to fetch dashboard: ${response.statusText}`);
+        }
+        const result = (await response.json()) as DashboardData;
         setData(result);
         setError(null);
       } catch (err) {
