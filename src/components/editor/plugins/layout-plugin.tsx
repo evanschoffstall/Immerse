@@ -26,8 +26,7 @@ import {
   KEY_ARROW_DOWN_COMMAND,
   KEY_ARROW_LEFT_COMMAND,
   KEY_ARROW_RIGHT_COMMAND,
-  KEY_ARROW_UP_COMMAND,
-  LexicalEditor,
+  KEY_ARROW_UP_COMMAND
 } from "lexical"
 import { JSX, useEffect, useState } from "react"
 
