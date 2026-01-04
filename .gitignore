@@ -57,3 +57,4 @@ storybook-static
 
 # Other
 public/
+.vscode/private-folder-alias.json

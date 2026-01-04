@@ -4,13 +4,13 @@ import type { CampaignContext } from "@/features/campaigns";
 import {
   charactersOptionalDefaultsSchema,
   charactersPartialSchema,
-} from "@/lib/generated/zod/modelSchema/charactersSchema";
+  z,
+} from "@/lib/generated/zod";
 import {
   listResourceQuerySchema,
   makeNamedResourceSchemas,
 } from "@/lib/validation";
 import { Prisma } from "@prisma/client";
-import { z } from "zod";
 
 // ============================================================================
 // SCHEMAS
@@ -109,12 +109,13 @@ class CharacterService extends CampaignResourceService<
     ctx: CampaignContext,
     data: CreateCharacterInput
   ): Promise<void> {
+    const charData = data as any;
     // Validate calendar exists if provided
-    if (data.birthCalendarId) {
+    if (charData.birthCalendarId) {
       // Add calendar validation here if needed
     }
     // Validate image exists if provided
-    if (data.imageId) {
+    if (charData.imageId) {
       // Add image validation here if needed
     }
   }
@@ -124,12 +125,13 @@ class CharacterService extends CampaignResourceService<
     id: string,
     data: UpdateCharacterInput
   ): Promise<void> {
+    const charData = data as any;
     // Validate calendar exists if provided
-    if (data.birthCalendarId) {
+    if (charData.birthCalendarId) {
       // Add calendar validation here if needed
     }
     // Validate image exists if provided
-    if (data.imageId) {
+    if (charData.imageId) {
       // Add image validation here if needed
     }
   }

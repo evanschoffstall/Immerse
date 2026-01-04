@@ -12,14 +12,14 @@ import {
 } from '@/components/ui/form';
 import ImageUpload from '@/components/ui/ImageUpload';
 import { Input } from '@/components/ui/input';
+import { campaignsSchema, z } from '@/lib/generated/zod';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
-import { z } from 'zod';
 
-const campaignSchema = z.object({
-  name: z.string().min(1, 'Campaign name is required').max(255, 'Name must be less than 255 characters'),
-  description: z.string().optional(),
-  image: z.string().optional(),
+const campaignSchema = campaignsSchema.pick({
+  name: true,
+  description: true,
+  image: true
 });
 
 type CampaignFormData = z.infer<typeof campaignSchema>;
@@ -79,7 +79,7 @@ export default function CampaignForm({
                   onChange={field.onChange}
                   placeholder="Describe your campaign..."
                   disabled={isLoading}
-                  className="h-[400px]"
+                  className="h-100"
                 />
               </FormControl>
               <FormMessage />
@@ -95,7 +95,7 @@ export default function CampaignForm({
               <FormLabel>Campaign Image</FormLabel>
               <FormControl>
                 <ImageUpload
-                  currentImage={field.value}
+                  currentImage={field.value ?? undefined}
                   onImageUpload={field.onChange}
                   folder="campaigns"
                 />

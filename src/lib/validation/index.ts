@@ -1,6 +1,5 @@
 import { z } from "zod";
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 type ModelSchemas = {
   optionalDefaults: z.ZodObject<any>;
   partial: z.ZodObject<any>;
@@ -39,8 +38,8 @@ function omitServerManaged<T extends ModelSchemas>(
   >;
 
   return {
-    createBase: schemas.optionalDefaults.omit(omitShape as any),
-    updateBase: schemas.partial.omit(omitShape as any),
+    createBase: schemas.optionalDefaults.omit(omitShape),
+    updateBase: schemas.partial.omit(omitShape),
   };
 }
 
@@ -58,11 +57,11 @@ export function makeNamedResourceSchemas(
   const { createBase, updateBase } = omitServerManaged(schemas, isCampaign);
 
   const create = createBase
-    .extend({ name: z.string().trim().min(1, "Name is required") })
+    .merge(z.object({ name: z.string().trim().min(1, "Name is required") }))
     .strict();
 
   const update = updateBase
-    .extend({ name: z.string().trim().min(1).optional() })
+    .merge(z.object({ name: z.string().trim().min(1).optional() }))
     .strict()
     .refine((obj: any) => Object.keys(obj).length > 0, {
       message: "At least one field is required",

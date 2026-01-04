@@ -182,7 +182,8 @@ class CampaignRepository {
    * Create a new campaign
    */
   async create(ownerId: string, data: CreateCampaignInput) {
-    const slug = this.generateSlug(data.name as unknown as string);
+    const campaignData = data as any;
+    const slug = this.generateSlug(campaignData.name);
 
     // Check if slug already exists
     const existing = await this.findBySlug(slug);
@@ -190,12 +191,12 @@ class CampaignRepository {
 
     return prisma.campaigns.create({
       data: {
-        name: data.name,
-        description: data.description,
-        image: data.image,
-        backgroundImage: data.backgroundImage,
-        visibility: data.visibility,
-        locale: data.locale,
+        name: campaignData.name,
+        description: campaignData.description,
+        image: campaignData.image,
+        backgroundImage: campaignData.backgroundImage,
+        visibility: campaignData.visibility,
+        locale: campaignData.locale,
         slug: finalSlug,
         ownerId,
         id: crypto.randomUUID(),
