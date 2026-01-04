@@ -1,4 +1,7 @@
-// Permission types (can be imported in client components)
+// ============================================================================
+// Permission Types
+// ============================================================================
+
 export enum Permission {
   READ = "read",
   EDIT = "edit",
@@ -31,3 +34,9 @@ export const RoleLevelLabels: Record<string, string> = {
   [RoleLevel.MEMBER]: "Member",
   [RoleLevel.VIEWER]: "Viewer",
 };
+
+// ============================================================================
+// Permissions Functionality (Placeholder for future implementation)
+// ============================================================================
+
+// Permissions functionality will be implemented here

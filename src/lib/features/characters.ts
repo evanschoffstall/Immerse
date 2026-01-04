@@ -5,7 +5,7 @@ import {
 import {
   listResourceQuerySchema,
   makeNamedResourceSchemas,
-} from "@/lib/validation/resourceSchemas";
+} from "@/lib/validation";
 import { Prisma } from "@prisma/client";
 import { z } from "zod";
 import { CampaignResourceRepository } from "./base/CampaignResourceRepository";
@@ -86,7 +86,7 @@ class CharacterRepository extends CampaignResourceRepository<
 
   async findMany(campaignId: string, query: ListCharactersQuery) {
     const { items, total } = await super.findMany(campaignId, query);
-    return { characters: items, total };
+    return { items, total };
   }
 }
 

@@ -18,10 +18,7 @@ export interface BaseListQuery {
  */
 export abstract class CampaignResourceRepository<
   TModel extends { id: string; campaignId: string; slug: string; name: string },
-  TInclude extends
-    | Prisma.CharactersInclude
-    | Prisma.LocationsInclude
-    | Record<string, any>,
+  TInclude extends Record<string, any>,
   TCreateInput,
   TUpdateInput,
   TQuery extends BaseListQuery
@@ -161,7 +158,7 @@ export abstract class CampaignResourceRepository<
   protected buildWhereClause(
     campaignId: string,
     query: TQuery
-  ): Prisma.CharactersWhereInput | Prisma.LocationsWhereInput | any {
+  ): any {
     const { search } = query;
 
     const where: any = {

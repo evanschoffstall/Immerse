@@ -1,13 +1,13 @@
-import { authConfig } from "@/auth";
+import { authConfig } from "@/lib/auth";
 import { prisma } from "@/lib/db";
-import { getServerSession } from "next-auth/next";
-import { Prisma } from "@prisma/client";
-import { z } from "zod";
 import {
   campaignsOptionalDefaultsSchema,
   campaignsPartialSchema,
 } from "@/lib/generated/zod/modelSchema/campaignsSchema";
-import { makeNamedResourceSchemas } from "@/lib/validation/resourceSchemas";
+import { makeNamedResourceSchemas } from "@/lib/validation";
+import { Prisma } from "@prisma/client";
+import { getServerSession } from "next-auth/next";
+import { z } from "zod";
 
 // ============================================================================
 // CONTEXT - Shared infrastructure for loading campaign context
@@ -179,7 +179,7 @@ class CampaignRepository {
    * Create a new campaign
    */
   async create(ownerId: string, data: CreateCampaignInput) {
-    const slug = this.generateSlug(data.name);
+    const slug = this.generateSlug(data.name as unknown as string);
 
     // Check if slug already exists
     const existing = await this.findBySlug(slug);
@@ -187,12 +187,17 @@ class CampaignRepository {
 
     return prisma.campaigns.create({
       data: {
-        ...data,
+        name: data.name,
+        description: data.description,
+        image: data.image,
+        backgroundImage: data.backgroundImage,
+        visibility: data.visibility,
+        locale: data.locale,
         slug: finalSlug,
         ownerId,
         id: crypto.randomUUID(),
         updatedAt: new Date(),
-      },
+      } as unknown as Prisma.campaignsUncheckedCreateInput,
       include: campaignInclude,
     });
   }
@@ -203,7 +208,7 @@ class CampaignRepository {
   async update(id: string, data: UpdateCampaignInput) {
     let slug: string | undefined;
     if (data.name) {
-      slug = this.generateSlug(data.name);
+      slug = this.generateSlug(data.name as unknown as string);
 
       // Check if new slug conflicts with another campaign
       const existing = await prisma.campaigns.findFirst({

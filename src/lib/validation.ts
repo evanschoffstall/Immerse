@@ -1,5 +1,6 @@
 import { z } from "zod";
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 type ModelSchemas = {
   optionalDefaults: z.ZodObject<any>;
   partial: z.ZodObject<any>;
@@ -45,7 +46,23 @@ export function makeNamedResourceSchemas(schemas: ModelSchemas) {
   const update = updateBase
     .extend({ name: z.string().trim().min(1).optional() })
     .strict()
-    .refine((obj) => Object.keys(obj).length > 0, {
+    .refine((obj: any) => Object.keys(obj).length > 0, {
+      message: "At least one field is required",
+    });
+
+  return { create, update };
+}
+
+/**
+ * Builds simpler "item" schemas (not needing name) – e.g., a membership or log
+ */
+export function makeItemResourceSchemas(schemas: ModelSchemas) {
+  const { createBase, updateBase } = omitServerManaged(schemas);
+
+  const create = createBase.strict();
+  const update = updateBase
+    .strict()
+    .refine((obj: any) => Object.keys(obj).length > 0, {
       message: "At least one field is required",
     });
 

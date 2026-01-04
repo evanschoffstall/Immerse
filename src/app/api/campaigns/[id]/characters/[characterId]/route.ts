@@ -1,6 +1,6 @@
-import { campaignRoute } from "@/lib/api/route-helpers";
 import type { CampaignContext } from "@/lib/features/campaigns";
 import { CharacterSchemas, characterService } from "@/lib/features/characters";
+import { campaignRoute } from "@/lib/route-helpers";
 
 /**
  * GET /api/campaigns/[id]/characters/[characterId]
