@@ -1,5 +1,8 @@
 import type { CampaignContext } from "@/features/campaigns";
-import { CharacterSchemas, characterService } from "@/features/characters";
+import {
+  CharacterSchemas,
+  characterService,
+} from "@/features/campaigns/characters";
 import { campaignRoute } from "@/lib/utils/route-helpers";
 
 /**

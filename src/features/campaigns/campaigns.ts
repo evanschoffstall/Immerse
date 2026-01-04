@@ -1,9 +1,5 @@
 import { authConfig } from "@/lib/auth";
 import { prisma } from "@/lib/db/prisma";
-import {
-  campaignsOptionalDefaultsSchema,
-  campaignsPartialSchema,
-} from "@/lib/generated/zod/modelSchema/campaignsSchema";
 import { makeNamedResourceSchemas } from "@/lib/validation";
 import { Prisma } from "@prisma/client";
 import { getServerSession } from "next-auth/next";
@@ -84,6 +80,18 @@ export async function getCampaignContext(
 // ============================================================================
 // SCHEMAS - For campaign CRUD operations
 // ============================================================================
+
+// In-file Zod schema for campaigns based on Prisma model
+const campaignsOptionalDefaultsSchema = z.object({
+  name: z.string().min(1),
+  description: z.string().optional(),
+  image: z.string().optional(),
+  backgroundImage: z.string().optional(),
+  visibility: z.string().optional(),
+  locale: z.string().optional(),
+});
+
+const campaignsPartialSchema = campaignsOptionalDefaultsSchema.partial();
 
 export const CampaignSchemas = makeNamedResourceSchemas(
   {

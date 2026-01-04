@@ -1,8 +1,8 @@
 'use client';
 
+import CampaignForm, { type CampaignFormData } from '@/components/forms/CampaignForm';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
-import CampaignForm, { type CampaignFormData } from '@/features/campaigns/components/CampaignForm';
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';

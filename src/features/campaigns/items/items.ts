@@ -1,10 +1,6 @@
-import { CampaignResourceRepository } from "@/features/base/CampaignResourceRepository";
-import { CampaignResourceService } from "@/features/base/CampaignResourceService";
 import type { CampaignContext } from "@/features/campaigns";
-import {
-  itemsOptionalDefaultsSchema,
-  itemsPartialSchema,
-} from "@/lib/generated/zod/modelSchema/itemsSchema";
+import { CampaignResourceRepository } from "@/features/campaigns/base/CampaignResourceRepository";
+import { CampaignResourceService } from "@/features/campaigns/base/CampaignResourceService";
 import {
   listResourceQuerySchema,
   makeNamedResourceSchemas,
@@ -15,6 +11,21 @@ import { z } from "zod";
 // ============================================================================
 // SCHEMAS
 // ============================================================================
+
+// In-file Zod schema for items based on Prisma model
+const itemsOptionalDefaultsSchema = z.object({
+  name: z.string().min(1),
+  type: z.string().optional(),
+  description: z.string().optional(),
+  image: z.string().optional(),
+  location: z.string().optional(),
+  character: z.string().optional(),
+  price: z.string().optional(),
+  size: z.string().optional(),
+  isPrivate: z.boolean().optional(),
+});
+
+const itemsPartialSchema = itemsOptionalDefaultsSchema.partial();
 
 export const ItemSchemas = makeNamedResourceSchemas({
   optionalDefaults: itemsOptionalDefaultsSchema,

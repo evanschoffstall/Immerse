@@ -1,10 +1,6 @@
-import { CampaignResourceRepository } from "@/features/base/CampaignResourceRepository";
-import { CampaignResourceService } from "@/features/base/CampaignResourceService";
 import type { CampaignContext } from "@/features/campaigns";
-import {
-  journalsOptionalDefaultsSchema,
-  journalsPartialSchema,
-} from "@/lib/generated/zod/modelSchema/journalsSchema";
+import { CampaignResourceRepository } from "@/features/campaigns/base/CampaignResourceRepository";
+import { CampaignResourceService } from "@/features/campaigns/base/CampaignResourceService";
 import {
   listResourceQuerySchema,
   makeNamedResourceSchemas,
@@ -15,6 +11,18 @@ import { z } from "zod";
 // ============================================================================
 // SCHEMAS
 // ============================================================================
+
+// In-file Zod schema for journals based on Prisma model
+const journalsOptionalDefaultsSchema = z.object({
+  name: z.string().min(1),
+  type: z.string().optional(),
+  description: z.string().optional(),
+  date: z.string().optional(),
+  image: z.string().optional(),
+  isPrivate: z.boolean().optional(),
+});
+
+const journalsPartialSchema = journalsOptionalDefaultsSchema.partial();
 
 export const JournalsSchemas = makeNamedResourceSchemas({
   optionalDefaults: journalsOptionalDefaultsSchema,

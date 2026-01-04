@@ -1,5 +1,6 @@
 'use client';
 
+import CampaignForm, { type CampaignFormData } from '@/components/forms/CampaignForm';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -16,7 +17,6 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Label } from '@/components/ui/label';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Slider } from '@/components/ui/slider';
-import CampaignForm, { type CampaignFormData } from '@/components/forms/CampaignForm';
 import { useParams, useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { toast } from 'sonner';

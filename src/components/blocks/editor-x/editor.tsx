@@ -1,4 +1,3 @@
-// @ts-nocheck - Lexical editor uses non-serializable props which is valid for client components
 "use client"
 
 import {
@@ -23,22 +22,22 @@ const editorConfig: InitialConfigType = {
   },
 }
 
+// Type the props properly to avoid Next.js serialization warnings
+type EditorProps = {
+  editorState?: any
+  editorSerializedState?: SerializedEditorState
+  onChange?: any
+  onSerializedChange?: any
+  className?: string
+}
+
 export function Editor({
   editorState,
   editorSerializedState,
   onChange,
   onSerializedChange,
   className,
-}: {
-  // @ts-expect-error - Client component with non-serializable props is valid
-  editorState?: EditorState
-  editorSerializedState?: SerializedEditorState
-  // @ts-expect-error - Client component callbacks are valid
-  onChange?: (editorState: EditorState) => void
-  // @ts-expect-error - Client component callbacks are valid
-  onSerializedChange?: (editorSerializedState: SerializedEditorState) => void
-  className?: string
-}) {
+}: EditorProps) {
   return (
     <div className={`bg-background overflow-hidden rounded-lg border shadow ${className || ''}`}>
       <LexicalComposer

@@ -12,17 +12,19 @@ import {
 } from '@/components/ui/form';
 import ImageUpload from '@/components/ui/ImageUpload';
 import { Input } from '@/components/ui/input';
-import { campaignsSchema, z } from '@/lib/generated/zod';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
+import { z } from 'zod';
 
-const campaignSchema = campaignsSchema.pick({
-  name: true,
-  description: true,
-  image: true
+// In-file campaign form schema
+const campaignSchema = z.object({
+  name: z.string().min(1),
+  description: z.string().optional(),
+  image: z.string().optional(),
+  backgroundImage: z.string().optional(),
 });
 
-type CampaignFormData = z.infer<typeof campaignSchema>;
+export type CampaignFormData = z.infer<typeof campaignSchema>;
 
 export interface CampaignFormProps {
   initialData?: Partial<CampaignFormData>;
@@ -43,6 +45,7 @@ export default function CampaignForm({
       name: initialData?.name || '',
       description: initialData?.description || '',
       image: initialData?.image || '',
+      backgroundImage: initialData?.backgroundImage || '',
     },
   });
 
@@ -104,7 +107,23 @@ export default function CampaignForm({
             </FormItem>
           )}
         />
-
+        <FormField
+          control={form.control}
+          name="backgroundImage"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Background Image</FormLabel>
+              <FormControl>
+                <ImageUpload
+                  currentImage={field.value ?? undefined}
+                  onImageUpload={field.onChange}
+                  folder="campaigns"
+                />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
         <div className="flex justify-end space-x-3">
           <Button
             type="button"

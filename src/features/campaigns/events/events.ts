@@ -1,10 +1,6 @@
-import { CampaignResourceRepository } from "@/features/base/CampaignResourceRepository";
-import { CampaignResourceService } from "@/features/base/CampaignResourceService";
 import type { CampaignContext } from "@/features/campaigns";
-import {
-  eventsOptionalDefaultsSchema,
-  eventsPartialSchema,
-} from "@/lib/generated/zod/modelSchema/eventsSchema";
+import { CampaignResourceRepository } from "@/features/campaigns/base/CampaignResourceRepository";
+import { CampaignResourceService } from "@/features/campaigns/base/CampaignResourceService";
 import {
   listResourceQuerySchema,
   makeNamedResourceSchemas,
@@ -15,6 +11,20 @@ import { z } from "zod";
 // ============================================================================
 // SCHEMAS
 // ============================================================================
+
+// In-file Zod schema for events based on Prisma model
+const eventsOptionalDefaultsSchema = z.object({
+  name: z.string().min(1),
+  type: z.string().optional(),
+  description: z.string().optional(),
+  date: z.string().optional(),
+  image: z.string().optional(),
+  location: z.string().optional(),
+  isPrivate: z.boolean().optional(),
+  calendarId: z.string().optional(),
+});
+
+const eventsPartialSchema = eventsOptionalDefaultsSchema.partial();
 
 export const EventSchemas = makeNamedResourceSchemas({
   optionalDefaults: eventsOptionalDefaultsSchema,

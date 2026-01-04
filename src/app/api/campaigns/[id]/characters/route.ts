@@ -2,7 +2,7 @@ import {
   CharacterSchemas,
   characterService,
   listCharactersQuerySchema,
-} from "@/features/characters";
+} from "@/features/campaigns/characters";
 import { campaignRoute } from "@/lib/utils/route-helpers";
 
 /**

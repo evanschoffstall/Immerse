@@ -1,20 +1,35 @@
-import { CampaignResourceRepository } from "@/features/base/CampaignResourceRepository";
-import { CampaignResourceService } from "@/features/base/CampaignResourceService";
 import type { CampaignContext } from "@/features/campaigns";
-import {
-  charactersOptionalDefaultsSchema,
-  charactersPartialSchema,
-  z,
-} from "@/lib/generated/zod";
+import { CampaignResourceRepository } from "@/features/campaigns/base/CampaignResourceRepository";
+import { CampaignResourceService } from "@/features/campaigns/base/CampaignResourceService";
 import {
   listResourceQuerySchema,
   makeNamedResourceSchemas,
 } from "@/lib/validation";
 import { Prisma } from "@prisma/client";
+import { z } from "zod";
 
 // ============================================================================
 // SCHEMAS
 // ============================================================================
+
+// In-file Zod schema for characters based on Prisma model
+const charactersOptionalDefaultsSchema = z.object({
+  name: z.string().min(1),
+  title: z.string().optional(),
+  type: z.string().optional(),
+  age: z.string().optional(),
+  sex: z.string().optional(),
+  pronouns: z.string().optional(),
+  location: z.string().optional(),
+  family: z.string().optional(),
+  description: z.string().optional(),
+  imageId: z.string().optional(),
+  isPrivate: z.boolean().optional(),
+  birthCalendarId: z.string().optional(),
+  birthDate: z.string().optional(),
+});
+
+const charactersPartialSchema = charactersOptionalDefaultsSchema.partial();
 
 export const CharacterSchemas = makeNamedResourceSchemas({
   optionalDefaults: charactersOptionalDefaultsSchema,
