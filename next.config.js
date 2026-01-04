@@ -19,10 +19,7 @@ const nextConfig = {
     // These are false positives for legitimate React patterns (contexts, callbacks, etc.)
     ignoreBuildErrors: false,
   },
-  experimental: {
-    // Relax type checking for client component props
-    typedRoutes: false,
-  },
+  typedRoutes: false,
 };
 
 module.exports = nextConfig;

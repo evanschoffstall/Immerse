@@ -1,4 +1,3 @@
-// @ts-nocheck - Lexical editor uses non-serializable props which is valid for client components
 "use client"
 
 import { LexicalEditor } from "lexical"
@@ -21,6 +20,15 @@ const Context = createContext<{
   showModal: () => { },
 })
 
+type ToolbarContextProps = {
+  activeEditor: any
+  $updateToolbar: any
+  blockType: string
+  setBlockType: any
+  showModal: any
+  children: React.ReactNode
+}
+
 export function ToolbarContext({
   activeEditor,
   $updateToolbar,
@@ -28,21 +36,7 @@ export function ToolbarContext({
   setBlockType,
   showModal,
   children,
-}: {
-  // @ts-expect-error - Client component with non-serializable props is valid
-  activeEditor: LexicalEditor
-  // @ts-expect-error - Client component callbacks are valid
-  $updateToolbar: () => void
-  blockType: string
-  // @ts-expect-error - Client component callbacks are valid
-  setBlockType: (blockType: string) => void
-  // @ts-expect-error - Client component callbacks are valid
-  showModal: (
-    title: string,
-    showModal: (onClose: () => void) => JSX.Element
-  ) => void
-  children: React.ReactNode
-}) {
+}: ToolbarContextProps) {
   return (
     <Context.Provider
       value={{

@@ -1,6 +1,7 @@
 import { prisma } from "@/lib/db";
 import bcrypt from "bcryptjs";
 import type { AuthOptions, Session } from "next-auth";
+import NextAuth from "next-auth";
 import type { JWT } from "next-auth/jwt";
 import CredentialsProvider from "next-auth/providers/credentials";
 
@@ -116,3 +117,7 @@ export const authConfig: AuthOptions = {
   },
   secret: process.env.NEXTAUTH_SECRET,
 };
+
+const handler = NextAuth(authConfig);
+
+export { handler };

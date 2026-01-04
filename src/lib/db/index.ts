@@ -1,4 +1,2 @@
-// Database utilities
-export * from "./entity-logger";
+// Re-export the Prisma client for convenience
 export { prisma } from "./prisma";
-export * from "./versioning";

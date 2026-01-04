@@ -3,7 +3,7 @@
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
-import { extractTextFromLexical, truncateText } from '@/lib/lexical-utils';
+import { extractTextFromLexical, truncateText } from '@/lib/db/lexical-utils';
 import type { campaigns as Campaign } from '@prisma/client';
 import { useSession } from 'next-auth/react';
 import Image from 'next/image';

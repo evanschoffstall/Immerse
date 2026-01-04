@@ -16,13 +16,15 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 
+// In-file campaign form schema
 const campaignSchema = z.object({
-  name: z.string().min(1, 'Campaign name is required').max(255, 'Name must be less than 255 characters'),
+  name: z.string().min(1),
   description: z.string().optional(),
   image: z.string().optional(),
+  backgroundImage: z.string().optional(),
 });
 
-type CampaignFormData = z.infer<typeof campaignSchema>;
+export type CampaignFormData = z.infer<typeof campaignSchema>;
 
 export interface CampaignFormProps {
   initialData?: Partial<CampaignFormData>;
@@ -43,6 +45,7 @@ export default function CampaignForm({
       name: initialData?.name || '',
       description: initialData?.description || '',
       image: initialData?.image || '',
+      backgroundImage: initialData?.backgroundImage || '',
     },
   });
 
@@ -79,7 +82,7 @@ export default function CampaignForm({
                   onChange={field.onChange}
                   placeholder="Describe your campaign..."
                   disabled={isLoading}
-                  className="h-[400px]"
+                  className="h-100"
                 />
               </FormControl>
               <FormMessage />
@@ -95,7 +98,7 @@ export default function CampaignForm({
               <FormLabel>Campaign Image</FormLabel>
               <FormControl>
                 <ImageUpload
-                  currentImage={field.value}
+                  currentImage={field.value ?? undefined}
                   onImageUpload={field.onChange}
                   folder="campaigns"
                 />
@@ -104,7 +107,23 @@ export default function CampaignForm({
             </FormItem>
           )}
         />
-
+        <FormField
+          control={form.control}
+          name="backgroundImage"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Background Image</FormLabel>
+              <FormControl>
+                <ImageUpload
+                  currentImage={field.value ?? undefined}
+                  onImageUpload={field.onChange}
+                  folder="campaigns"
+                />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
         <div className="flex justify-end space-x-3">
           <Button
             type="button"

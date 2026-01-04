@@ -17,12 +17,13 @@ import { getSelectedNode } from "@/components/editor/utils/get-selected-node"
 import { sanitizeUrl } from "@/components/editor/utils/url"
 import { Toggle } from "@/components/ui/toggle"
 
+type LinkToolbarPluginProps = {
+  setIsLinkEditMode: any
+}
+
 export function LinkToolbarPlugin({
   setIsLinkEditMode,
-}: {
-  // @ts-expect-error - Client component callbacks are valid
-  setIsLinkEditMode: (isEditMode: boolean) => void
-}) {
+}: LinkToolbarPluginProps) {
   const { activeEditor } = useToolbarContext()
   const [isLink, setIsLink] = useState(false)
 

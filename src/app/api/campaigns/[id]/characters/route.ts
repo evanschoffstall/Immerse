@@ -1,48 +1,36 @@
-import { authConfig } from "@/auth";
-import { prisma } from "@/lib/db";
-import { getServerSession } from "next-auth/next";
-import { NextRequest, NextResponse } from "next/server";
+import {
+  CharacterSchemas,
+  characterService,
+  listCharactersQuerySchema,
+} from "@/features/campaigns/characters";
+import { campaignRoute } from "@/lib/utils/route-helpers";
 
-export async function GET(
-  request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
-  const { id } = await params;
-  const session = await getServerSession(authConfig);
-
-  if (!session?.user?.id) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
-
-  // Verify user has access to this campaign
-  const campaign = await prisma.campaigns.findUnique({
-    where: { id },
+/**
+ * GET /api/campaigns/[id]/characters
+ * List characters for a campaign with pagination and filters
+ */
+export const GET = campaignRoute(async ({ ctx, query }) => {
+  // Parse and validate query params
+  const parsedQuery = listCharactersQuerySchema.parse({
+    page: query.get("page") || "1",
+    limit: query.get("limit") || "20",
+    search: query.get("search") || undefined,
+    type: query.get("type") || undefined,
+    isPrivate: query.get("isPrivate") || undefined,
+    sortBy: query.get("sortBy") || "name",
+    sortOrder: query.get("sortOrder") || "asc",
   });
 
-  if (!campaign) {
-    return NextResponse.json({ error: "Campaign not found" }, { status: 404 });
-  }
+  return await characterService.list(ctx, parsedQuery);
+});
 
-  // Check if user owns the campaign
-  if (campaign.ownerId !== session.user.id) {
-    return NextResponse.json({ error: "Forbidden" }, { status: 403 });
-  }
-
-  // Fetch characters for this campaign
-  const characters = await prisma.characters.findMany({
-    where: { campaignId: id },
-    include: {
-      users: {
-        select: {
-          id: true,
-          name: true,
-        },
-      },
-    },
-    orderBy: {
-      name: "asc",
-    },
-  });
-
-  return NextResponse.json({ characters });
-}
+/**
+ * POST /api/campaigns/[id]/characters
+ * Create a new character
+ */
+export const POST = campaignRoute(
+  async ({ ctx, body }) => {
+    return await characterService.create(ctx, body as any);
+  },
+  { bodySchema: CharacterSchemas.create }
+);

@@ -3,7 +3,7 @@
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
-import { extractTextFromLexical, truncateText } from '@/lib/lexical-utils';
+import { extractTextFromLexical, truncateText } from '@/lib/db/lexical-utils';
 import type { characters as Character } from '@prisma/client';
 import { Plus, User } from 'lucide-react';
 import { useSession } from 'next-auth/react';

@@ -1,4 +1,4 @@
-import { authConfig } from "@/auth";
+import { authConfig } from "@/lib/auth";
 import { uploadImage } from "@/lib/upload";
 import { getServerSession } from "next-auth/next";
 import { NextRequest, NextResponse } from "next/server";

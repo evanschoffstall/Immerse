@@ -395,16 +395,17 @@ function useFloatingLinkEditorToolbar(
   )
 }
 
+type FloatingLinkEditorPluginProps = {
+  anchorElem: HTMLDivElement | null
+  isLinkEditMode: boolean
+  setIsLinkEditMode: any
+}
+
 export function FloatingLinkEditorPlugin({
   anchorElem,
   isLinkEditMode,
   setIsLinkEditMode,
-}: {
-  anchorElem: HTMLDivElement | null
-  isLinkEditMode: boolean
-  // @ts-expect-error - Client component callbacks are valid
-  setIsLinkEditMode: Dispatch<boolean>
-}): JSX.Element | null {
+}: FloatingLinkEditorPluginProps): JSX.Element | null {
   const [editor] = useLexicalComposerContext()
 
   return useFloatingLinkEditorToolbar(

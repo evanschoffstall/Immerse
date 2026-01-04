@@ -99,15 +99,15 @@ export function TableContext({ children }: { children: JSX.Element }) {
   )
 }
 
+export type InsertTableDialogProps = {
+  activeEditor: any
+  onClose: any
+}
+
 export function InsertTableDialog({
   activeEditor,
   onClose,
-}: {
-  // @ts-expect-error - Client component with non-serializable props is valid
-  activeEditor: LexicalEditor
-  // @ts-expect-error - Client component callbacks are valid
-  onClose: () => void
-}): JSX.Element {
+}: InsertTableDialogProps): JSX.Element {
   const [rows, setRows] = useState("5")
   const [columns, setColumns] = useState("5")
   const [isDisabled, setIsDisabled] = useState(true)

@@ -100,18 +100,15 @@ function ComponentPickerMenu({
   )
 }
 
+type ComponentPickerMenuPluginProps = {
+  baseOptions?: Array<ComponentPickerOption>
+  dynamicOptionsFn?: any
+}
+
 export function ComponentPickerMenuPlugin({
   baseOptions = [],
   dynamicOptionsFn,
-}: {
-  baseOptions?: Array<ComponentPickerOption>
-  // @ts-expect-error - Client component callbacks are valid
-  dynamicOptionsFn?: ({
-    queryString,
-  }: {
-    queryString: string
-  }) => Array<ComponentPickerOption>
-}): JSX.Element {
+}: ComponentPickerMenuPluginProps): JSX.Element {
   const [editor] = useLexicalComposerContext()
   const [modal, showModal] = useEditorModal()
   const [queryString, setQueryString] = useState<string | null>(null)
