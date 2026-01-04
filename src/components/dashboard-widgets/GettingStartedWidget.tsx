@@ -2,7 +2,7 @@
 
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
-import { cachedFetch } from '@/lib/api-cache';
+import { cachedFetch } from '@/lib/db/api-cache';
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
 

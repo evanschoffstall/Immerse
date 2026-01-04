@@ -2,8 +2,8 @@ import {
   CharacterSchemas,
   characterService,
   listCharactersQuerySchema,
-} from "@/lib/features/characters";
-import { campaignRoute } from "@/lib/route-helpers";
+} from "@/lib/db/features/characters";
+import { campaignRoute } from "@/lib/db/route-helpers";
 
 /**
  * GET /api/campaigns/[id]/characters

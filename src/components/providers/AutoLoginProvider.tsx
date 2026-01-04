@@ -1,6 +1,6 @@
 'use client'
 
-import { getTestUserEmail, isTestMode } from '@/lib/test-mode'
+import { getTestUserEmail, isTestMode } from '@/lib/db/test-mode'
 import { signIn, useSession } from 'next-auth/react'
 import { useEffect, useRef, useState } from 'react'
 
