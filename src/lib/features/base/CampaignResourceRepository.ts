@@ -155,10 +155,7 @@ export abstract class CampaignResourceRepository<
    * Build the WHERE clause for queries
    * Override this method to add resource-specific filters
    */
-  protected buildWhereClause(
-    campaignId: string,
-    query: TQuery
-  ): any {
+  protected buildWhereClause(campaignId: string, query: TQuery): any {
     const { search } = query;
 
     const where: any = {
