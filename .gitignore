@@ -3,6 +3,7 @@ scripts/
 README-dev.md
 next.sh
 pg.sh
+run
 
 # Github
 .github/
@@ -11,6 +12,7 @@ pg.sh
 .vscode/
 .lh/
 .history/
+.vsfavorite
 
 # Env
 .env

@@ -85,10 +85,13 @@ export async function getCampaignContext(
 // SCHEMAS - For campaign CRUD operations
 // ============================================================================
 
-export const CampaignSchemas = makeNamedResourceSchemas({
-  optionalDefaults: campaignsOptionalDefaultsSchema,
-  partial: campaignsPartialSchema,
-});
+export const CampaignSchemas = makeNamedResourceSchemas(
+  {
+    optionalDefaults: campaignsOptionalDefaultsSchema,
+    partial: campaignsPartialSchema,
+  },
+  true
+); // true = isCampaign, uses different server-managed fields
 
 // Campaigns don't need standard list filters (they're user-scoped, not campaign-scoped)
 export const listCampaignsQuerySchema = z.object({

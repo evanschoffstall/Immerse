@@ -16,16 +16,31 @@ const SERVER_MANAGED = [
   "updatedAt",
 ] as const;
 
-type ServerManagedKey = (typeof SERVER_MANAGED)[number];
+// server managed fields for campaigns (no campaignId, uses ownerId)
+const CAMPAIGN_SERVER_MANAGED = [
+  "id",
+  "slug",
+  "ownerId",
+  "createdAt",
+  "updatedAt",
+] as const;
 
-function omitServerManaged<T extends ModelSchemas>(schemas: T) {
-  const omitShape = Object.fromEntries(
-    SERVER_MANAGED.map((k) => [k, true])
-  ) as Record<ServerManagedKey, true>;
+type ServerManagedKey = (typeof SERVER_MANAGED)[number];
+type CampaignServerManagedKey = (typeof CAMPAIGN_SERVER_MANAGED)[number];
+
+function omitServerManaged<T extends ModelSchemas>(
+  schemas: T,
+  isCampaign = false
+) {
+  const keys = isCampaign ? CAMPAIGN_SERVER_MANAGED : SERVER_MANAGED;
+  const omitShape = Object.fromEntries(keys.map((k) => [k, true])) as Record<
+    ServerManagedKey | CampaignServerManagedKey,
+    true
+  >;
 
   return {
-    createBase: schemas.optionalDefaults.omit(omitShape),
-    updateBase: schemas.partial.omit(omitShape),
+    createBase: schemas.optionalDefaults.omit(omitShape as any),
+    updateBase: schemas.partial.omit(omitShape as any),
   };
 }
 
@@ -36,8 +51,11 @@ function omitServerManaged<T extends ModelSchemas>(schemas: T) {
  * - strict() to block unknown keys
  * - optional "must provide at least one key" for PATCH
  */
-export function makeNamedResourceSchemas(schemas: ModelSchemas) {
-  const { createBase, updateBase } = omitServerManaged(schemas);
+export function makeNamedResourceSchemas(
+  schemas: ModelSchemas,
+  isCampaign = false
+) {
+  const { createBase, updateBase } = omitServerManaged(schemas, isCampaign);
 
   const create = createBase
     .extend({ name: z.string().trim().min(1, "Name is required") })
