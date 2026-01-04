@@ -137,14 +137,15 @@ const debounce = (callback: (text: string) => void, delay: number) => {
   }
 }
 
+export type AutoEmbedDialogProps = {
+  embedConfig: CustomEmbedConfig
+  onClose: any
+}
+
 export function AutoEmbedDialog({
   embedConfig,
   onClose,
-}: {
-  embedConfig: CustomEmbedConfig
-  // @ts-expect-error - Client component callbacks are valid
-  onClose: () => void
-}): JSX.Element {
+}: AutoEmbedDialogProps): JSX.Element {
   const [text, setText] = useState("")
   const [editor] = useLexicalComposerContext()
   const [embedResult, setEmbedResult] = useState<EmbedMatchResult | null>(null)

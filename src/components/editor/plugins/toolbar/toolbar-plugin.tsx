@@ -8,12 +8,13 @@ import { useEffect, useState } from "react"
 import { ToolbarContext } from "@/components/editor/context/toolbar-context"
 import { useEditorModal } from "@/components/editor/editor-hooks/use-modal"
 
+type ToolbarPluginProps = {
+  children: any
+}
+
 export function ToolbarPlugin({
   children,
-}: {
-  // @ts-expect-error - Client component render props are valid
-  children: (props: { blockType: string }) => React.ReactNode
-}) {
+}: ToolbarPluginProps) {
   const [editor] = useLexicalComposerContext()
 
   const [activeEditor, setActiveEditor] = useState(editor)

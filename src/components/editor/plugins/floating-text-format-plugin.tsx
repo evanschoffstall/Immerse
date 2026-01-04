@@ -422,14 +422,15 @@ function useFloatingTextFormatToolbar(
   )
 }
 
+type FloatingTextFormatToolbarPluginProps = {
+  anchorElem: HTMLDivElement | null
+  setIsLinkEditMode: any
+}
+
 export function FloatingTextFormatToolbarPlugin({
   anchorElem,
   setIsLinkEditMode,
-}: {
-  anchorElem: HTMLDivElement | null
-  // @ts-expect-error - Client component callbacks are valid
-  setIsLinkEditMode: Dispatch<boolean>
-}): JSX.Element | null {
+}: FloatingTextFormatToolbarPluginProps): JSX.Element | null {
   const [editor] = useLexicalComposerContext()
 
   return useFloatingTextFormatToolbar(editor, anchorElem, setIsLinkEditMode)

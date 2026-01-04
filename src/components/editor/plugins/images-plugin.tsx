@@ -56,12 +56,13 @@ const getDOMSelection = (targetWindow: Window | null): Selection | null =>
 export const INSERT_IMAGE_COMMAND: LexicalCommand<InsertImagePayload> =
   createCommand("INSERT_IMAGE_COMMAND")
 
+type InsertImageUriDialogBodyProps = {
+  onClick: any
+}
+
 export function InsertImageUriDialogBody({
   onClick,
-}: {
-  // @ts-expect-error - Client component callbacks are valid
-  onClick: (payload: InsertImagePayload) => void
-}) {
+}: InsertImageUriDialogBodyProps) {
   const [src, setSrc] = useState("")
   const [altText, setAltText] = useState("")
 
@@ -103,12 +104,13 @@ export function InsertImageUriDialogBody({
   )
 }
 
+type InsertImageUploadedDialogBodyProps = {
+  onClick: any
+}
+
 export function InsertImageUploadedDialogBody({
   onClick,
-}: {
-  // @ts-expect-error - Client component callbacks are valid
-  onClick: (payload: InsertImagePayload) => void
-}) {
+}: InsertImageUploadedDialogBodyProps) {
   const [src, setSrc] = useState("")
   const [altText, setAltText] = useState("")
 
@@ -161,15 +163,15 @@ export function InsertImageUploadedDialogBody({
   )
 }
 
+type InsertImageDialogProps = {
+  activeEditor: any
+  onClose: any
+}
+
 export function InsertImageDialog({
   activeEditor,
   onClose,
-}: {
-  // @ts-expect-error - Client component with non-serializable props is valid
-  activeEditor: LexicalEditor
-  // @ts-expect-error - Client component callbacks are valid
-  onClose: () => void
-}): JSX.Element {
+}: InsertImageDialogProps): JSX.Element {
   const hasModifier = useRef(false)
 
   useEffect(() => {

@@ -58,15 +58,15 @@ const LAYOUTS = [
   { label: "4 columns (equal width)", value: "1fr 1fr 1fr 1fr" },
 ]
 
+export type InsertLayoutDialogProps = {
+  activeEditor: any
+  onClose: any
+}
+
 export function InsertLayoutDialog({
   activeEditor,
   onClose,
-}: {
-  // @ts-expect-error - Client component with non-serializable props is valid
-  activeEditor: LexicalEditor
-  // @ts-expect-error - Client component callbacks are valid
-  onClose: () => void
-}): JSX.Element {
+}: InsertLayoutDialogProps): JSX.Element {
   const [layout, setLayout] = useState(LAYOUTS[0].value)
   const buttonLabel = LAYOUTS.find((item) => item.value === layout)?.label
 
