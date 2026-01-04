@@ -1,7 +1,4 @@
-import {
-  CampaignContext,
-  getCampaignContext,
-} from "@/lib/features/campaigns/context";
+import { CampaignContext, getCampaignContext } from "@/lib/features/campaigns";
 import { NextRequest, NextResponse } from "next/server";
 import { ZodSchema } from "zod";
 

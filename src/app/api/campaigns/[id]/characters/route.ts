@@ -1,24 +1,9 @@
 import { campaignRoute } from "@/lib/api/route-helpers";
-import { characterService } from "@/lib/features/characters/service";
 import {
-  charactersOptionalDefaultsSchema,
-  charactersPartialSchema,
-} from "@/lib/generated/zod/modelSchema/charactersSchema";
-import {
-  listResourceQuerySchema,
-  makeNamedResourceSchemas,
-} from "@/lib/validation/resourceSchemas";
-import { z } from "zod";
-
-const CharacterSchemas = makeNamedResourceSchemas({
-  optionalDefaults: charactersOptionalDefaultsSchema,
-  partial: charactersPartialSchema,
-});
-
-const listCharactersQuerySchema = listResourceQuerySchema.extend({
-  type: z.string().optional(),
-  isPrivate: z.coerce.boolean().optional(),
-});
+  CharacterSchemas,
+  characterService,
+  listCharactersQuerySchema,
+} from "@/lib/features/characters";
 
 /**
  * GET /api/campaigns/[id]/characters

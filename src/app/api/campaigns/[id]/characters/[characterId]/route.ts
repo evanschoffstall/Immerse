@@ -1,16 +1,6 @@
 import { campaignRoute } from "@/lib/api/route-helpers";
-import type { CampaignContext } from "@/lib/features/campaigns/context";
-import { characterService } from "@/lib/features/characters/service";
-import {
-  charactersOptionalDefaultsSchema,
-  charactersPartialSchema,
-} from "@/lib/generated/zod/modelSchema/charactersSchema";
-import { makeNamedResourceSchemas } from "@/lib/validation/resourceSchemas";
-
-const CharacterSchemas = makeNamedResourceSchemas({
-  optionalDefaults: charactersOptionalDefaultsSchema,
-  partial: charactersPartialSchema,
-});
+import type { CampaignContext } from "@/lib/features/campaigns";
+import { CharacterSchemas, characterService } from "@/lib/features/characters";
 
 /**
  * GET /api/campaigns/[id]/characters/[characterId]
