@@ -202,7 +202,7 @@ export default function EditCampaignPage() {
 
   if (isLoadingData) {
     return (
-      <div className="container mx-auto px-4 py-8 max-w-4xl">
+      <div className="container mx-auto px-4 py-8 max-w-7xl">
         <Card>
           <CardHeader>
             <Skeleton className="h-8 w-1/2" />
@@ -222,7 +222,7 @@ export default function EditCampaignPage() {
 
   return (
     <>
-      <div className="container mx-auto px-4 py-8 max-w-4xl space-y-6">
+      <div className="container mx-auto px-4 py-8 max-w-7xl space-y-6">
         <Card>
           <CardHeader>
             <CardTitle className="text-3xl">Edit Campaign</CardTitle>
