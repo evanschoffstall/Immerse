@@ -32,14 +32,16 @@ export default function EditCampaignPage() {
   const [isSavingStyle, setIsSavingStyle] = useState(false);
 
   // Background style settings
-  const [bgOpacity, setBgOpacity] = useState(0.8);
+  const [bgOpacity, setBgOpacity] = useState(0.6);
   const [bgBlur, setBgBlur] = useState(4);
-  const [bgExpandToSidebar, setBgExpandToSidebar] = useState(false);
-  const [bgExpandToHeader, setBgExpandToHeader] = useState(false);
-  const [headerBgOpacity, setHeaderBgOpacity] = useState(0.95);
-  const [headerBlur, setHeaderBlur] = useState(0);
-  const [sidebarBgOpacity, setSidebarBgOpacity] = useState(1.0);
+  const [bgExpandToSidebar, setBgExpandToSidebar] = useState(true);
+  const [bgExpandToHeader, setBgExpandToHeader] = useState(true);
+  const [headerBgOpacity, setHeaderBgOpacity] = useState(0.0);
+  const [headerBlur, setHeaderBlur] = useState(4);
+  const [sidebarBgOpacity, setSidebarBgOpacity] = useState(0.0);
   const [sidebarBlur, setSidebarBlur] = useState(0);
+  const [cardBgOpacity, setCardBgOpacity] = useState(0.9);
+  const [cardBlur, setCardBlur] = useState(8);
 
   // Apply styles live for preview
   useEffect(() => {
@@ -51,7 +53,9 @@ export default function EditCampaignPage() {
     document.documentElement.style.setProperty('--campaign-sidebar-blur', `${sidebarBlur}px`);
     document.documentElement.style.setProperty('--campaign-bg-expand-to-sidebar', bgExpandToSidebar ? '1' : '0');
     document.documentElement.style.setProperty('--campaign-bg-expand-to-header', bgExpandToHeader ? '1' : '0');
-  }, [bgOpacity, bgBlur, headerBgOpacity, headerBlur, sidebarBgOpacity, sidebarBlur, bgExpandToSidebar, bgExpandToHeader]);
+    document.documentElement.style.setProperty('--campaign-card-bg-opacity', cardBgOpacity.toString());
+    document.documentElement.style.setProperty('--campaign-card-blur', `${cardBlur}px`);
+  }, [bgOpacity, bgBlur, headerBgOpacity, headerBlur, sidebarBgOpacity, sidebarBlur, bgExpandToSidebar, bgExpandToHeader, cardBgOpacity, cardBlur]);
 
   useEffect(() => {
     const fetchCampaign = async () => {
@@ -75,14 +79,19 @@ export default function EditCampaignPage() {
 
         if (styleRes.ok) {
           const styleData = await styleRes.json();
-          setBgOpacity(styleData.bgOpacity ?? 0.8);
-          setBgBlur(styleData.bgBlur ?? 4);
-          setBgExpandToSidebar(styleData.bgExpandToSidebar ?? false);
-          setBgExpandToHeader(styleData.bgExpandToHeader ?? false);
-          setHeaderBgOpacity(styleData.headerBgOpacity ?? 0.95);
-          setHeaderBlur(styleData.headerBlur ?? 0);
-          setSidebarBgOpacity(styleData.sidebarBgOpacity ?? 1.0);
-          setSidebarBlur(styleData.sidebarBlur ?? 0);
+          const style = styleData.style;
+          if (style) {
+            setBgOpacity(style.bgOpacity ?? 0.6);
+            setBgBlur(style.bgBlur ?? 4);
+            setBgExpandToSidebar(style.bgExpandToSidebar ?? true);
+            setBgExpandToHeader(style.bgExpandToHeader ?? true);
+            setHeaderBgOpacity(style.headerBgOpacity ?? 0.0);
+            setHeaderBlur(style.headerBlur ?? 4);
+            setSidebarBgOpacity(style.sidebarBgOpacity ?? 0.0);
+            setSidebarBlur(style.sidebarBlur ?? 0);
+            setCardBgOpacity(style.cardBgOpacity ?? 0.9);
+            setCardBlur(style.cardBlur ?? 8);
+          }
         }
       } catch (error) {
         console.error('Error fetching campaign:', error);
@@ -148,6 +157,8 @@ export default function EditCampaignPage() {
           headerBlur,
           sidebarBgOpacity,
           sidebarBlur,
+          cardBgOpacity,
+          cardBlur,
         }),
       });
 
@@ -367,6 +378,42 @@ export default function EditCampaignPage() {
                 />
               </div>
             </div>
+
+            {/* Card/UI settings */}
+            <div className="mt-6 pt-6 border-t space-y-4">
+              <h3 className="font-semibold text-lg mb-4">Cards &amp; UI Elements</h3>
+
+              <div className="space-y-2">
+                <div className="flex items-center justify-between">
+                  <Label htmlFor="card-opacity">Background Opacity</Label>
+                  <span className="text-sm text-muted-foreground">{Math.round(cardBgOpacity * 100)}%</span>
+                </div>
+                <Slider
+                  id="card-opacity"
+                  min={0}
+                  max={1}
+                  step={0.01}
+                  value={[cardBgOpacity]}
+                  onValueChange={(values) => setCardBgOpacity(values[0])}
+                />
+              </div>
+
+              <div className="space-y-2">
+                <div className="flex items-center justify-between">
+                  <Label htmlFor="card-blur">Blur</Label>
+                  <span className="text-sm text-muted-foreground">{Math.round(cardBlur)}px</span>
+                </div>
+                <Slider
+                  id="card-blur"
+                  min={0}
+                  max={50}
+                  step={1}
+                  value={[cardBlur]}
+                  onValueChange={(values) => setCardBlur(values[0])}
+                />
+              </div>
+            </div>
+
             <Button onClick={handleSaveStyle} disabled={isSavingStyle}>
               {isSavingStyle ? 'Saving...' : 'Save Background Settings'}
             </Button>          </CardContent>

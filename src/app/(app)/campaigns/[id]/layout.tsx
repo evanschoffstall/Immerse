@@ -54,7 +54,7 @@ export default function CampaignLayout({
 
         if (styleRes.ok) {
           const styleData = await styleRes.json();
-          setCampaignStyle(styleData);
+          setCampaignStyle(styleData.style);
         }
       } catch (error) {
         console.error('Error fetching campaign:', error);
@@ -68,6 +68,37 @@ export default function CampaignLayout({
       fetchData();
     }
   }, [params.id]);
+
+  // Apply card backdrop styles dynamically
+  useEffect(() => {
+    if (!campaignStyle) return;
+
+    const styleId = 'campaign-card-styles';
+    let styleEl = document.getElementById(styleId) as HTMLStyleElement;
+
+    if (!styleEl) {
+      styleEl = document.createElement('style');
+      styleEl.id = styleId;
+      document.head.appendChild(styleEl);
+    }
+
+    const cardOpacity = campaignStyle.cardBgOpacity ?? 0.9;
+    const cardBlur = campaignStyle.cardBlur ?? 8;
+
+    styleEl.textContent = `
+      [data-campaign-page] .bg-card,
+      [data-campaign-page] [class*="bg-card"] {
+        background-color: hsl(var(--card) / ${cardOpacity}) !important;
+        backdrop-filter: blur(${cardBlur}px);
+        -webkit-backdrop-filter: blur(${cardBlur}px);
+      }
+    `;
+
+    return () => {
+      const el = document.getElementById(styleId);
+      if (el) el.remove();
+    };
+  }, [campaignStyle]);
 
   const sidebarItems = [
     { icon: Home, label: 'Dashboard', href: `/campaigns/${params.id}` },
@@ -136,7 +167,7 @@ export default function CampaignLayout({
     // reserved space for the header with `calc(100vh - 4rem)` which
     // pushed content below the header, preventing elements from
     // scrolling beneath it.
-    <div className="flex h-screen relative">
+    <div className="flex h-screen relative" data-campaign-page>
       {/* Fixed background image layer - covers entire viewport including header */}
       {campaign.backgroundImage && (
         <div
