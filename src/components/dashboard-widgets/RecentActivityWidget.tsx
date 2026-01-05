@@ -69,7 +69,7 @@ export function RecentActivityWidget({ campaignId }: RecentActivityWidgetProps) 
     return (
       <Card className="lg:col-span-2">
         <CardHeader>
-          <CardTitle>Recently modified entities</CardTitle>
+          <CardTitle>Recent changes</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="space-y-3">
@@ -92,11 +92,14 @@ export function RecentActivityWidget({ campaignId }: RecentActivityWidgetProps) 
   return (
     <Card className="lg:col-span-2">
       <CardHeader>
-        <CardTitle>Recently modified entities</CardTitle>
+        <CardTitle>Recent changes</CardTitle>
       </CardHeader>
       <CardContent>
         {entities.length === 0 ? (
-          <p className="text-muted-foreground text-sm">No recent activity</p>
+          <div className="flex flex-col items-center justify-center py-8 text-center">
+            <p className="text-sm text-muted-foreground">No recent activity</p>
+            <p className="text-xs text-muted-foreground mt-1">Start creating to see your recent work here</p>
+          </div>
         ) : (
           <div className="space-y-3">
             {entities.map((entity) => (

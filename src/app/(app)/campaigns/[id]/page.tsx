@@ -3,6 +3,7 @@
 import { ActiveQuestsWidget } from '@/components/dashboard-widgets/ActiveQuestsWidget';
 import { GettingStartedWidget } from '@/components/dashboard-widgets/GettingStartedWidget';
 import { RecentActivityWidget } from '@/components/dashboard-widgets/RecentActivityWidget';
+import { Separator } from '@/components/ui/separator';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useSession } from 'next-auth/react';
 import { useParams, useRouter } from 'next/navigation';
@@ -42,9 +43,19 @@ export default function CampaignDashboardPage() {
     <>
       {/* Dashboard Content */}
       <div className="p-8">
-        <h1 className="text-4xl font-bold mb-8">Dashboard</h1>
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          {/* Recently Modified Entities */}
+        <div className="space-y-6">
+          <div className="space-y-1">
+            <h1 className="text-4xl font-bold tracking-tight bg-gradient-to-br from-foreground to-foreground/70 bg-clip-text text-transparent">
+              Dashboard
+            </h1>
+            <p className="text-base text-foreground/70">
+              Welcome back! Here's what's happening with your campaign.
+            </p>
+          </div>
+          <Separator />
+        </div>
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mt-8">
+          {/* Recent Activity */}
           <RecentActivityWidget campaignId={campaignId} />
 
           {/* Active Quests */}
