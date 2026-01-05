@@ -269,7 +269,7 @@ model campaign_styles {
   campaignId        String    @unique
   createdAt         DateTime  @default(now())
   updatedAt         DateTime
-  bgOpacity         Float?    @default(0.8)
+  bgOpacity         Float?    @default(0.4)
   bgBlur            Float?    @default(4)
   bgExpandToSidebar Boolean?  @default(false)
   bgExpandToHeader  Boolean?  @default(false)
