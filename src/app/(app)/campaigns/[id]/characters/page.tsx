@@ -2,6 +2,7 @@
 
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Separator } from '@/components/ui/separator';
 import { Skeleton } from '@/components/ui/skeleton';
 import { extractTextFromLexical, truncateText } from '@/lib/db/lexical-utils';
 import type { characters as Character } from '@prisma/client';
@@ -77,97 +78,105 @@ export default function CharactersPage() {
 
   return (
     <div className="p-8">
-      <div className="flex items-center justify-between mb-8">
-        <h1 className="text-4xl font-bold">Characters</h1>
-        {characters.length > 0 && (
-          <Button asChild>
-            <Link href={`/campaigns/${campaignId}/characters/new`}>
-              <Plus className="mr-2 h-4 w-4" />
-              New Character
-            </Link>
-          </Button>
-        )}
-      </div>
-
-      {characters.length === 0 ? (
-        <Card>
-          <CardContent className="flex flex-col items-center justify-center py-16">
-            <User className="h-16 w-16 text-muted-foreground mb-4" />
-            <h3 className="text-xl font-semibold mb-2">No characters yet</h3>
-            <p className="text-muted-foreground mb-6">
-              Create your first character to get started
-            </p>
+      <div className="space-y-6">
+        <div className="flex items-center justify-between">
+          <h1 className="text-4xl font-bold tracking-tight bg-linear-to-br from-foreground to-foreground/70 bg-clip-text text-transparent">
+            Characters
+          </h1>
+          {characters.length > 0 && (
             <Button asChild>
               <Link href={`/campaigns/${campaignId}/characters/new`}>
                 <Plus className="mr-2 h-4 w-4" />
-                Create Character
+                New Character
               </Link>
             </Button>
-          </CardContent>
-        </Card>
-      ) : (
-        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-          {characters.map((character) => (
-            <Link
-              key={character.id}
-              href={`/campaigns/${campaignId}/characters/${character.id}`}
-            >
-              <Card className="h-full hover:shadow-lg transition-shadow cursor-pointer">
-                <CardHeader>
-                  <div className="flex items-start gap-4">
-                    {character.imageId ? (
-                      <div className="relative w-16 h-16 rounded-md overflow-hidden shrink-0">
-                        <Image
-                          src={character.imageId}
-                          alt={character.name}
-                          fill
-                          className="object-cover"
-                        />
+          )}
+        </div>
+        <Separator />
+      </div>
+
+      <div className="mt-8">
+
+        {characters.length === 0 ? (
+          <Card>
+            <CardContent className="flex flex-col items-center justify-center py-16">
+              <User className="h-16 w-16 text-muted-foreground mb-4" />
+              <h3 className="text-xl font-semibold mb-2">No characters yet</h3>
+              <p className="text-muted-foreground mb-6">
+                Create your first character to get started
+              </p>
+              <Button asChild>
+                <Link href={`/campaigns/${campaignId}/characters/new`}>
+                  <Plus className="mr-2 h-4 w-4" />
+                  Create Character
+                </Link>
+              </Button>
+            </CardContent>
+          </Card>
+        ) : (
+          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+            {characters.map((character) => (
+              <Link
+                key={character.id}
+                href={`/campaigns/${campaignId}/characters/${character.id}`}
+              >
+                <Card className="h-full hover:shadow-lg transition-shadow cursor-pointer">
+                  <CardHeader>
+                    <div className="flex items-start gap-4">
+                      {character.imageId ? (
+                        <div className="relative w-16 h-16 rounded-md overflow-hidden shrink-0">
+                          <Image
+                            src={character.imageId}
+                            alt={character.name}
+                            fill
+                            className="object-cover"
+                          />
+                        </div>
+                      ) : (
+                        <div className="w-16 h-16 rounded-md bg-muted flex items-center justify-center shrink-0">
+                          <User className="h-8 w-8 text-muted-foreground" />
+                        </div>
+                      )}
+                      <div className="flex-1 min-w-0">
+                        <CardTitle className="truncate">{character.name}</CardTitle>
+                        {character.title && (
+                          <CardDescription className="truncate">
+                            {character.title}
+                          </CardDescription>
+                        )}
                       </div>
-                    ) : (
-                      <div className="w-16 h-16 rounded-md bg-muted flex items-center justify-center shrink-0">
-                        <User className="h-8 w-8 text-muted-foreground" />
-                      </div>
+                    </div>
+                  </CardHeader>
+                  <CardContent>
+                    {character.description && (
+                      <p className="text-sm text-muted-foreground line-clamp-3">
+                        {typeof character.description === 'string'
+                          ? truncateText(
+                            extractTextFromLexical(character.description),
+                            150
+                          )
+                          : ''}
+                      </p>
                     )}
-                    <div className="flex-1 min-w-0">
-                      <CardTitle className="truncate">{character.name}</CardTitle>
-                      {character.title && (
-                        <CardDescription className="truncate">
-                          {character.title}
-                        </CardDescription>
+                    <div className="mt-4 flex gap-2 flex-wrap text-xs text-muted-foreground">
+                      {character.type && (
+                        <span className="px-2 py-1 bg-muted rounded">
+                          {character.type}
+                        </span>
+                      )}
+                      {character.location && (
+                        <span className="px-2 py-1 bg-muted rounded">
+                          {character.location}
+                        </span>
                       )}
                     </div>
-                  </div>
-                </CardHeader>
-                <CardContent>
-                  {character.description && (
-                    <p className="text-sm text-muted-foreground line-clamp-3">
-                      {typeof character.description === 'string'
-                        ? truncateText(
-                          extractTextFromLexical(character.description),
-                          150
-                        )
-                        : ''}
-                    </p>
-                  )}
-                  <div className="mt-4 flex gap-2 flex-wrap text-xs text-muted-foreground">
-                    {character.type && (
-                      <span className="px-2 py-1 bg-muted rounded">
-                        {character.type}
-                      </span>
-                    )}
-                    {character.location && (
-                      <span className="px-2 py-1 bg-muted rounded">
-                        {character.location}
-                      </span>
-                    )}
-                  </div>
-                </CardContent>
-              </Card>
-            </Link>
-          ))}
-        </div>
-      )}
+                  </CardContent>
+                </Card>
+              </Link>
+            ))}
+          </div>
+        )}
+      </div>
     </div>
   );
 }
