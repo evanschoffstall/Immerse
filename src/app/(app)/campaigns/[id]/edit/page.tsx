@@ -57,6 +57,64 @@ export default function EditCampaignPage() {
     document.documentElement.style.setProperty('--campaign-card-blur', `${cardBlur}px`);
   }, [bgOpacity, bgBlur, headerBgOpacity, headerBlur, sidebarBgOpacity, sidebarBlur, bgExpandToSidebar, bgExpandToHeader, cardBgOpacity, cardBlur]);
 
+  // Auto-save card opacity changes (debounced)
+  useEffect(() => {
+    if (!isLoadingData) {
+      const timer = setTimeout(async () => {
+        try {
+          await fetch(`/api/campaigns/${params.id}/style`, {
+            method: 'PATCH',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              bgOpacity,
+              bgBlur,
+              bgExpandToSidebar,
+              bgExpandToHeader,
+              headerBgOpacity,
+              headerBlur,
+              sidebarBgOpacity,
+              sidebarBlur,
+              cardBgOpacity,
+              cardBlur,
+            }),
+          });
+        } catch (error) {
+          console.error('Failed to auto-save card opacity:', error);
+        }
+      }, 500);
+      return () => clearTimeout(timer);
+    }
+  }, [cardBgOpacity, params.id, isLoadingData, bgOpacity, bgBlur, bgExpandToSidebar, bgExpandToHeader, headerBgOpacity, headerBlur, sidebarBgOpacity, sidebarBlur, cardBlur]);
+
+  // Auto-save card blur changes (debounced)
+  useEffect(() => {
+    if (!isLoadingData) {
+      const timer = setTimeout(async () => {
+        try {
+          await fetch(`/api/campaigns/${params.id}/style`, {
+            method: 'PATCH',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              bgOpacity,
+              bgBlur,
+              bgExpandToSidebar,
+              bgExpandToHeader,
+              headerBgOpacity,
+              headerBlur,
+              sidebarBgOpacity,
+              sidebarBlur,
+              cardBgOpacity,
+              cardBlur,
+            }),
+          });
+        } catch (error) {
+          console.error('Failed to auto-save card blur:', error);
+        }
+      }, 500);
+      return () => clearTimeout(timer);
+    }
+  }, [cardBlur, params.id, isLoadingData, bgOpacity, bgBlur, bgExpandToSidebar, bgExpandToHeader, headerBgOpacity, headerBlur, sidebarBgOpacity, sidebarBlur, cardBgOpacity]);
+
   useEffect(() => {
     const fetchCampaign = async () => {
       try {
