@@ -34,5 +34,10 @@ export async function GET(
     notes: 0,
   };
 
-  return NextResponse.json({ stats });
+  // Return format expected by frontend
+  return NextResponse.json({
+    hasCharacters: stats.characters > 0,
+    hasLocations: stats.locations > 0,
+    stats,
+  });
 }

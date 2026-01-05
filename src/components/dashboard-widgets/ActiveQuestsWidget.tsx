@@ -25,7 +25,7 @@ export function ActiveQuestsWidget({ campaignId }: ActiveQuestsWidgetProps) {
     const fetchQuests = async () => {
       try {
         const data = await cachedFetch<{ quests: Quest[] }>(
-          `/api/quests?campaignId=${campaignId}&status=active`
+          `/api/campaigns/quests?campaignId=${campaignId}&status=active`
         );
         setQuests(data.quests || []);
       } catch (error) {

@@ -1,8 +1,6 @@
 # Dev
 scripts/
 README-dev.md
-next.sh
-pg.sh
 run
 
 # Github
@@ -47,9 +45,6 @@ package-lock.json
 generated/
 generated/prisma
 migration_lock.toml
-
-# Pg
-database/pg
 
 # Storybook
 *storybook.log

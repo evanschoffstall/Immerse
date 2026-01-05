@@ -225,6 +225,8 @@ CREATE TABLE "public"."campaign_styles" (
     "sidebarBgOpacity" DOUBLE PRECISION DEFAULT 1.0,
     "headerBlur" DOUBLE PRECISION DEFAULT 0,
     "sidebarBlur" DOUBLE PRECISION DEFAULT 0,
+    "cardBgOpacity" DOUBLE PRECISION DEFAULT 0.9,
+    "cardBlur" DOUBLE PRECISION DEFAULT 8,
 
     CONSTRAINT "campaign_styles_pkey" PRIMARY KEY ("id")
 );

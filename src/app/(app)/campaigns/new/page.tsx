@@ -64,7 +64,7 @@ export default function NewCampaignPage() {
   };
 
   return (
-    <div className="container mx-auto px-4 py-8 max-w-4xl">
+    <div className="container mx-auto px-4 py-8 max-w-7xl">
       <Card>
         <CardHeader>
           <CardTitle className="text-3xl">Create New Campaign</CardTitle>

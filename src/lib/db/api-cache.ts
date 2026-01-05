@@ -40,7 +40,18 @@ export async function cachedFetch<T>(
   const request = fetch(url, options)
     .then(async (response) => {
       if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
+        const error = new Error(
+          `HTTP ${response.status} ${response.statusText} - Failed to fetch: ${url}`
+        );
+        error.name = "CachedFetchError";
+        // Add debugging properties that preserve in console/devtools
+        Object.assign(error, {
+          url,
+          status: response.status,
+          statusText: response.statusText,
+          cacheKey,
+        });
+        throw error;
       }
       const data = await response.json();
 

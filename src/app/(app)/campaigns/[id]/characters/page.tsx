@@ -79,12 +79,14 @@ export default function CharactersPage() {
     <div className="p-8">
       <div className="flex items-center justify-between mb-8">
         <h1 className="text-4xl font-bold">Characters</h1>
-        <Button asChild>
-          <Link href={`/campaigns/${campaignId}/characters/new`}>
-            <Plus className="mr-2 h-4 w-4" />
-            New Character
-          </Link>
-        </Button>
+        {characters.length > 0 && (
+          <Button asChild>
+            <Link href={`/campaigns/${campaignId}/characters/new`}>
+              <Plus className="mr-2 h-4 w-4" />
+              New Character
+            </Link>
+          </Button>
+        )}
       </div>
 
       {characters.length === 0 ? (

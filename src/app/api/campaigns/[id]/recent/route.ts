@@ -29,5 +29,5 @@ export async function GET(
   // Get recent activity - for now return empty array
   const recentActivity: any[] = [];
 
-  return NextResponse.json({ recentActivity });
+  return NextResponse.json({ entities: recentActivity });
 }

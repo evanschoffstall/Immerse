@@ -31,6 +31,8 @@ export interface CampaignFormProps {
   onSubmit: (data: CampaignFormData) => Promise<void>;
   isLoading?: boolean;
   submitText?: string;
+  onImageChange?: (url: string) => void;
+  onBackgroundImageChange?: (url: string) => void;
 }
 
 export default function CampaignForm({
@@ -38,6 +40,8 @@ export default function CampaignForm({
   onSubmit,
   isLoading = false,
   submitText = 'Save Campaign',
+  onImageChange,
+  onBackgroundImageChange,
 }: CampaignFormProps) {
   const form = useForm<CampaignFormData>({
     resolver: zodResolver(campaignSchema),
@@ -90,49 +94,49 @@ export default function CampaignForm({
           )}
         />
 
-        <FormField
-          control={form.control}
-          name="image"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Campaign Image</FormLabel>
-              <FormControl>
-                <ImageUpload
-                  currentImage={field.value ?? undefined}
-                  onImageUpload={field.onChange}
-                  folder="campaigns"
-                />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-        <FormField
-          control={form.control}
-          name="backgroundImage"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Background Image</FormLabel>
-              <FormControl>
-                <ImageUpload
-                  currentImage={field.value ?? undefined}
-                  onImageUpload={field.onChange}
-                  folder="campaigns"
-                />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-        <div className="flex justify-end space-x-3">
-          <Button
-            type="button"
-            variant="secondary"
-            onClick={() => window.history.back()}
-            disabled={isLoading}
-          >
-            Cancel
-          </Button>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <FormField
+            control={form.control}
+            name="image"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Campaign Image</FormLabel>
+                <FormControl>
+                  <ImageUpload
+                    currentImage={field.value ?? undefined}
+                    onImageUpload={(url) => {
+                      field.onChange(url);
+                      onImageChange?.(url);
+                    }}
+                    folder="campaigns"
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          <FormField
+            control={form.control}
+            name="backgroundImage"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Background Image</FormLabel>
+                <FormControl>
+                  <ImageUpload
+                    currentImage={field.value ?? undefined}
+                    onImageUpload={(url) => {
+                      field.onChange(url);
+                      onBackgroundImageChange?.(url);
+                    }}
+                    folder="campaigns"
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+        </div>
+        <div className="flex justify-end">
           <Button type="submit" disabled={isLoading}>
             {isLoading ? 'Saving...' : submitText}
           </Button>

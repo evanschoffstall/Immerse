@@ -39,7 +39,7 @@ export function Editor({
   className,
 }: EditorProps) {
   return (
-    <div className={`bg-background overflow-hidden rounded-lg border shadow ${className || ''}`}>
+    <div className={`bg-transparent overflow-hidden rounded-lg border shadow ${className || ''}`}>
       <LexicalComposer
         key={className}
         initialConfig={{

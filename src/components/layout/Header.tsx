@@ -37,7 +37,7 @@ export default function Header() {
           if (response.ok) {
             const data = await response.json()
             console.log('Header fetched campaign style:', data)
-            setCampaignStyle(data)
+            setCampaignStyle(data.style)
           }
         } catch (error) {
           console.error('Failed to fetch campaign style:', error)

@@ -32,14 +32,16 @@ export default function EditCampaignPage() {
   const [isSavingStyle, setIsSavingStyle] = useState(false);
 
   // Background style settings
-  const [bgOpacity, setBgOpacity] = useState(0.8);
+  const [bgOpacity, setBgOpacity] = useState(0.6);
   const [bgBlur, setBgBlur] = useState(4);
-  const [bgExpandToSidebar, setBgExpandToSidebar] = useState(false);
-  const [bgExpandToHeader, setBgExpandToHeader] = useState(false);
-  const [headerBgOpacity, setHeaderBgOpacity] = useState(0.95);
-  const [headerBlur, setHeaderBlur] = useState(0);
-  const [sidebarBgOpacity, setSidebarBgOpacity] = useState(1.0);
+  const [bgExpandToSidebar, setBgExpandToSidebar] = useState(true);
+  const [bgExpandToHeader, setBgExpandToHeader] = useState(true);
+  const [headerBgOpacity, setHeaderBgOpacity] = useState(0.0);
+  const [headerBlur, setHeaderBlur] = useState(4);
+  const [sidebarBgOpacity, setSidebarBgOpacity] = useState(0.0);
   const [sidebarBlur, setSidebarBlur] = useState(0);
+  const [cardBgOpacity, setCardBgOpacity] = useState(0.8);
+  const [cardBlur, setCardBlur] = useState(8);
 
   // Apply styles live for preview
   useEffect(() => {
@@ -51,7 +53,9 @@ export default function EditCampaignPage() {
     document.documentElement.style.setProperty('--campaign-sidebar-blur', `${sidebarBlur}px`);
     document.documentElement.style.setProperty('--campaign-bg-expand-to-sidebar', bgExpandToSidebar ? '1' : '0');
     document.documentElement.style.setProperty('--campaign-bg-expand-to-header', bgExpandToHeader ? '1' : '0');
-  }, [bgOpacity, bgBlur, headerBgOpacity, headerBlur, sidebarBgOpacity, sidebarBlur, bgExpandToSidebar, bgExpandToHeader]);
+    document.documentElement.style.setProperty('--campaign-card-bg-opacity', cardBgOpacity.toString());
+    document.documentElement.style.setProperty('--campaign-card-blur', `${cardBlur}px`);
+  }, [bgOpacity, bgBlur, headerBgOpacity, headerBlur, sidebarBgOpacity, sidebarBlur, bgExpandToSidebar, bgExpandToHeader, cardBgOpacity, cardBlur]);
 
   useEffect(() => {
     const fetchCampaign = async () => {
@@ -75,14 +79,19 @@ export default function EditCampaignPage() {
 
         if (styleRes.ok) {
           const styleData = await styleRes.json();
-          setBgOpacity(styleData.bgOpacity ?? 0.8);
-          setBgBlur(styleData.bgBlur ?? 4);
-          setBgExpandToSidebar(styleData.bgExpandToSidebar ?? false);
-          setBgExpandToHeader(styleData.bgExpandToHeader ?? false);
-          setHeaderBgOpacity(styleData.headerBgOpacity ?? 0.95);
-          setHeaderBlur(styleData.headerBlur ?? 0);
-          setSidebarBgOpacity(styleData.sidebarBgOpacity ?? 1.0);
-          setSidebarBlur(styleData.sidebarBlur ?? 0);
+          const style = styleData.style;
+          if (style) {
+            setBgOpacity(style.bgOpacity ?? 0.6);
+            setBgBlur(style.bgBlur ?? 4);
+            setBgExpandToSidebar(style.bgExpandToSidebar ?? true);
+            setBgExpandToHeader(style.bgExpandToHeader ?? true);
+            setHeaderBgOpacity(style.headerBgOpacity ?? 0.0);
+            setHeaderBlur(style.headerBlur ?? 4);
+            setSidebarBgOpacity(style.sidebarBgOpacity ?? 0.0);
+            setSidebarBlur(style.sidebarBlur ?? 0);
+            setCardBgOpacity(style.cardBgOpacity ?? 0.8);
+            setCardBlur(style.cardBlur ?? 8);
+          }
         }
       } catch (error) {
         console.error('Error fetching campaign:', error);
@@ -121,7 +130,6 @@ export default function EditCampaignPage() {
       }
 
       toast.success('Campaign updated successfully!');
-      router.push(`/campaigns/${params.id}`);
     } catch (error) {
       console.error('Error updating campaign:', error);
       toast.error(error instanceof Error ? error.message : 'Failed to update campaign');
@@ -148,6 +156,8 @@ export default function EditCampaignPage() {
           headerBlur,
           sidebarBgOpacity,
           sidebarBlur,
+          cardBgOpacity,
+          cardBlur,
         }),
       });
 
@@ -192,7 +202,7 @@ export default function EditCampaignPage() {
 
   if (isLoadingData) {
     return (
-      <div className="container mx-auto px-4 py-8 max-w-4xl">
+      <div className="container mx-auto px-4 py-8 max-w-7xl">
         <Card>
           <CardHeader>
             <Skeleton className="h-8 w-1/2" />
@@ -212,7 +222,7 @@ export default function EditCampaignPage() {
 
   return (
     <>
-      <div className="container mx-auto px-4 py-8 max-w-4xl space-y-6">
+      <div className="container mx-auto px-4 py-8 max-w-7xl space-y-6">
         <Card>
           <CardHeader>
             <CardTitle className="text-3xl">Edit Campaign</CardTitle>
@@ -226,6 +236,12 @@ export default function EditCampaignPage() {
               onSubmit={handleSubmit}
               isLoading={isLoading}
               submitText="Update Campaign"
+              onImageChange={(url) => {
+                document.documentElement.style.setProperty('--campaign-preview-image', `url(${url})`);
+              }}
+              onBackgroundImageChange={(url) => {
+                document.documentElement.style.setProperty('--campaign-preview-bg-image', `url(${url})`);
+              }}
             />
           </CardContent>
         </Card>
@@ -239,7 +255,7 @@ export default function EditCampaignPage() {
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6">
               {/* Header Settings */}
               <div className="space-y-4">
                 <h3 className="font-semibold text-lg mb-4">Header</h3>
@@ -331,62 +347,112 @@ export default function EditCampaignPage() {
                   </Label>
                 </div>
               </div>
-            </div>
 
-            {/* Main background settings */}
-            <div className="mt-6 pt-6 border-t space-y-4">
-              <h3 className="font-semibold text-lg mb-4">Main Background</h3>
+              {/* Main background settings */}
+              <div className="space-y-4 md:pt-6 md:border-t xl:pt-0 xl:border-t-0">
+                <h3 className="font-semibold text-lg mb-4">Main Background</h3>
 
-              <div className="space-y-2">
-                <div className="flex items-center justify-between">
-                  <Label htmlFor="bg-opacity">Overlay Opacity</Label>
-                  <span className="text-sm text-muted-foreground">{Math.round(bgOpacity * 100)}%</span>
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between">
+                    <Label htmlFor="bg-opacity">Overlay Opacity</Label>
+                    <span className="text-sm text-muted-foreground">{Math.round(bgOpacity * 100)}%</span>
+                  </div>
+                  <Slider
+                    id="bg-opacity"
+                    min={0}
+                    max={1}
+                    step={0.01}
+                    value={[bgOpacity]}
+                    onValueChange={(values) => setBgOpacity(values[0])}
+                  />
                 </div>
-                <Slider
-                  id="bg-opacity"
-                  min={0}
-                  max={1}
-                  step={0.01}
-                  value={[bgOpacity]}
-                  onValueChange={(values) => setBgOpacity(values[0])}
-                />
+
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between">
+                    <Label htmlFor="bg-blur">Blur</Label>
+                    <span className="text-sm text-muted-foreground">{Math.round(bgBlur)}px</span>
+                  </div>
+                  <Slider
+                    id="bg-blur"
+                    min={0}
+                    max={50}
+                    step={1}
+                    value={[bgBlur]}
+                    onValueChange={(values) => setBgBlur(values[0])}
+                  />
+                </div>
               </div>
 
-              <div className="space-y-2">
-                <div className="flex items-center justify-between">
-                  <Label htmlFor="bg-blur">Blur</Label>
-                  <span className="text-sm text-muted-foreground">{Math.round(bgBlur)}px</span>
+              {/* Card/UI settings */}
+              <div className="space-y-4 md:pt-6">
+                <h3 className="font-semibold text-lg mb-4">Cards &amp; UI Elements</h3>
+
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between">
+                    <Label htmlFor="card-opacity">Background Opacity</Label>
+                    <span className="text-sm text-muted-foreground">{Math.round(cardBgOpacity * 100)}%</span>
+                  </div>
+                  <Slider
+                    id="card-opacity"
+                    min={0}
+                    max={1}
+                    step={0.01}
+                    value={[cardBgOpacity]}
+                    onValueChange={(values) => setCardBgOpacity(values[0])}
+                  />
                 </div>
-                <Slider
-                  id="bg-blur"
-                  min={0}
-                  max={50}
-                  step={1}
-                  value={[bgBlur]}
-                  onValueChange={(values) => setBgBlur(values[0])}
-                />
+
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between">
+                    <Label htmlFor="card-blur">Blur</Label>
+                    <span className="text-sm text-muted-foreground">{Math.round(cardBlur)}px</span>
+                  </div>
+                  <Slider
+                    id="card-blur"
+                    min={0}
+                    max={50}
+                    step={1}
+                    value={[cardBlur]}
+                    onValueChange={(values) => setCardBlur(values[0])}
+                  />
+                </div>
               </div>
             </div>
-            <Button onClick={handleSaveStyle} disabled={isSavingStyle}>
-              {isSavingStyle ? 'Saving...' : 'Save Background Settings'}
-            </Button>          </CardContent>
+
+            <div className="flex justify-end">
+              <Button onClick={handleSaveStyle} disabled={isSavingStyle}>
+                {isSavingStyle ? 'Saving...' : 'Save Background Settings'}
+              </Button>
+            </div>
+          </CardContent>
         </Card>
 
         {/* Danger Zone */}
-        <Card className="border-destructive">
+        <Card>
           <CardHeader>
-            <CardTitle className="text-destructive">Danger Zone</CardTitle>
+            <CardTitle>Danger Zone</CardTitle>
             <CardDescription>
-              Permanently delete this campaign and all its data. This action cannot be undone.
+              Irreversible actions that will affect your campaign
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <Button
-              variant="destructive"
-              onClick={() => setShowDeleteDialog(true)}
-            >
-              Delete Campaign
-            </Button>
+            <div className="rounded-lg border border-destructive/50 bg-destructive/10 p-4">
+              <div className="flex items-start justify-between">
+                <div className="space-y-1">
+                  <h4 className="text-sm font-semibold text-destructive">Delete Campaign</h4>
+                  <p className="text-sm text-muted-foreground">
+                    Permanently delete this campaign and all its data. This action cannot be undone.
+                  </p>
+                </div>
+                <Button
+                  variant="destructive"
+                  size="sm"
+                  onClick={() => setShowDeleteDialog(true)}
+                >
+                  Delete
+                </Button>
+              </div>
+            </div>
           </CardContent>
         </Card>
       </div>
