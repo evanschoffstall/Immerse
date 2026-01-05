@@ -69,9 +69,11 @@ export default function CampaignsPage() {
     <div className="container mx-auto px-4 py-8 mt-16">
       <div className="flex items-center justify-between mb-8">
         <h1 className="text-4xl font-bold">Campaigns</h1>
-        <Link href="/campaigns/new">
-          <Button>Create New Campaign</Button>
-        </Link>
+        {!isLoading && campaigns.length > 0 && (
+          <Link href="/campaigns/new">
+            <Button>Create New Campaign</Button>
+          </Link>
+        )}
       </div>
 
       {isLoading ? (
