@@ -130,7 +130,6 @@ export default function EditCampaignPage() {
       }
 
       toast.success('Campaign updated successfully!');
-      router.push(`/campaigns/${params.id}`);
     } catch (error) {
       console.error('Error updating campaign:', error);
       toast.error(error instanceof Error ? error.message : 'Failed to update campaign');
@@ -237,6 +236,12 @@ export default function EditCampaignPage() {
               onSubmit={handleSubmit}
               isLoading={isLoading}
               submitText="Update Campaign"
+              onImageChange={(url) => {
+                document.documentElement.style.setProperty('--campaign-preview-image', `url(${url})`);
+              }}
+              onBackgroundImageChange={(url) => {
+                document.documentElement.style.setProperty('--campaign-preview-bg-image', `url(${url})`);
+              }}
             />
           </CardContent>
         </Card>
@@ -414,9 +419,12 @@ export default function EditCampaignPage() {
               </div>
             </div>
 
-            <Button onClick={handleSaveStyle} disabled={isSavingStyle}>
-              {isSavingStyle ? 'Saving...' : 'Save Background Settings'}
-            </Button>          </CardContent>
+            <div className="flex justify-end">
+              <Button onClick={handleSaveStyle} disabled={isSavingStyle}>
+                {isSavingStyle ? 'Saving...' : 'Save Background Settings'}
+              </Button>
+            </div>
+          </CardContent>
         </Card>
 
         {/* Danger Zone */}

@@ -133,7 +133,7 @@ export default function CampaignLayoutClient({
         <div
           className="fixed pointer-events-none"
           style={{
-            backgroundImage: `url(${campaign.backgroundImage})`,
+            backgroundImage: `var(--campaign-preview-bg-image, url(${campaign.backgroundImage}))`,
             backgroundSize: 'cover',
             backgroundPosition: 'center',
             backgroundAttachment: 'fixed',
@@ -190,10 +190,13 @@ export default function CampaignLayoutClient({
           <div className="flex items-center gap-3">
             {campaign.image && (
               <div className="relative w-12 h-12 rounded-md overflow-hidden shrink-0">
-                <img
-                  src={campaign.image}
-                  alt={campaign.name}
-                  className="w-full h-full object-cover"
+                <div
+                  className="w-full h-full"
+                  style={{
+                    backgroundImage: `var(--campaign-preview-image, url(${campaign.image}))`,
+                    backgroundSize: 'cover',
+                    backgroundPosition: 'center',
+                  }}
                 />
               </div>
             )}

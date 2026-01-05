@@ -31,6 +31,8 @@ export interface CampaignFormProps {
   onSubmit: (data: CampaignFormData) => Promise<void>;
   isLoading?: boolean;
   submitText?: string;
+  onImageChange?: (url: string) => void;
+  onBackgroundImageChange?: (url: string) => void;
 }
 
 export default function CampaignForm({
@@ -38,6 +40,8 @@ export default function CampaignForm({
   onSubmit,
   isLoading = false,
   submitText = 'Save Campaign',
+  onImageChange,
+  onBackgroundImageChange,
 }: CampaignFormProps) {
   const form = useForm<CampaignFormData>({
     resolver: zodResolver(campaignSchema),
@@ -99,7 +103,10 @@ export default function CampaignForm({
               <FormControl>
                 <ImageUpload
                   currentImage={field.value ?? undefined}
-                  onImageUpload={field.onChange}
+                  onImageUpload={(url) => {
+                    field.onChange(url);
+                    onImageChange?.(url);
+                  }}
                   folder="campaigns"
                 />
               </FormControl>
@@ -116,7 +123,10 @@ export default function CampaignForm({
               <FormControl>
                 <ImageUpload
                   currentImage={field.value ?? undefined}
-                  onImageUpload={field.onChange}
+                  onImageUpload={(url) => {
+                    field.onChange(url);
+                    onBackgroundImageChange?.(url);
+                  }}
                   folder="campaigns"
                 />
               </FormControl>
@@ -124,15 +134,7 @@ export default function CampaignForm({
             </FormItem>
           )}
         />
-        <div className="flex justify-end space-x-3">
-          <Button
-            type="button"
-            variant="secondary"
-            onClick={() => window.history.back()}
-            disabled={isLoading}
-          >
-            Cancel
-          </Button>
+        <div className="flex justify-end">
           <Button type="submit" disabled={isLoading}>
             {isLoading ? 'Saving...' : submitText}
           </Button>
