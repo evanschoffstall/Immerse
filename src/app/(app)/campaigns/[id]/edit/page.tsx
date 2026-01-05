@@ -428,20 +428,31 @@ export default function EditCampaignPage() {
         </Card>
 
         {/* Danger Zone */}
-        <Card className="border-destructive">
+        <Card>
           <CardHeader>
-            <CardTitle className="text-destructive">Danger Zone</CardTitle>
+            <CardTitle>Danger Zone</CardTitle>
             <CardDescription>
-              Permanently delete this campaign and all its data. This action cannot be undone.
+              Irreversible actions that will affect your campaign
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <Button
-              variant="destructive"
-              onClick={() => setShowDeleteDialog(true)}
-            >
-              Delete Campaign
-            </Button>
+            <div className="rounded-lg border border-destructive/50 bg-destructive/10 p-4">
+              <div className="flex items-start justify-between">
+                <div className="space-y-1">
+                  <h4 className="text-sm font-semibold text-destructive">Delete Campaign</h4>
+                  <p className="text-sm text-muted-foreground">
+                    Permanently delete this campaign and all its data. This action cannot be undone.
+                  </p>
+                </div>
+                <Button
+                  variant="destructive"
+                  size="sm"
+                  onClick={() => setShowDeleteDialog(true)}
+                >
+                  Delete
+                </Button>
+              </div>
+            </div>
           </CardContent>
         </Card>
       </div>
