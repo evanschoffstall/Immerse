@@ -165,7 +165,7 @@ export default function CampaignLayoutClient({
 
       {/* Sidebar Navigation - Fixed height with independent scroll */}
       <div
-        className="w-52 flex flex-col shrink-0 overflow-hidden relative z-10 mt-16"
+        className="w-52 flex flex-col shrink-0 overflow-hidden relative z-10 pt-16"
         style={{
           backdropFilter: `blur(var(--campaign-sidebar-blur, ${campaignStyle?.sidebarBlur ?? 0}px))`,
           WebkitBackdropFilter: `blur(var(--campaign-sidebar-blur, ${campaignStyle?.sidebarBlur ?? 0}px))`,
@@ -245,7 +245,7 @@ export default function CampaignLayoutClient({
 
       {/* Main Content Area */}
       <div className="flex-1 overflow-y-auto relative z-10">
-        <div className="mt-16">{children}</div>
+        <div className="pt-16">{children}</div>
       </div>
     </div>
   );
