@@ -121,7 +121,7 @@ export function Plugins({ className }: { className?: string }) {
     <div className="relative">
       <ToolbarPlugin>
         {({ blockType }: { blockType: string }) => (
-          <div className="vertical-align-middle sticky top-0 z-10 flex flex-wrap items-center gap-1 border-b bg-background p-1">
+          <div className="vertical-align-middle sticky top-0 z-10 flex flex-wrap items-center gap-1 border-b bg-transparent p-1">
             <HistoryToolbarPlugin />
             <Separator orientation="vertical" className="h-7!" />
             <BlockFormatDropDown>
