@@ -255,7 +255,7 @@ export default function EditCampaignPage() {
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6">
               {/* Header Settings */}
               <div className="space-y-4">
                 <h3 className="font-semibold text-lg mb-4">Header</h3>
@@ -347,75 +347,75 @@ export default function EditCampaignPage() {
                   </Label>
                 </div>
               </div>
-            </div>
 
-            {/* Main background settings */}
-            <div className="mt-6 pt-6 border-t space-y-4">
-              <h3 className="font-semibold text-lg mb-4">Main Background</h3>
+              {/* Main background settings */}
+              <div className="space-y-4 md:pt-6 md:border-t xl:pt-0 xl:border-t-0">
+                <h3 className="font-semibold text-lg mb-4">Main Background</h3>
 
-              <div className="space-y-2">
-                <div className="flex items-center justify-between">
-                  <Label htmlFor="bg-opacity">Overlay Opacity</Label>
-                  <span className="text-sm text-muted-foreground">{Math.round(bgOpacity * 100)}%</span>
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between">
+                    <Label htmlFor="bg-opacity">Overlay Opacity</Label>
+                    <span className="text-sm text-muted-foreground">{Math.round(bgOpacity * 100)}%</span>
+                  </div>
+                  <Slider
+                    id="bg-opacity"
+                    min={0}
+                    max={1}
+                    step={0.01}
+                    value={[bgOpacity]}
+                    onValueChange={(values) => setBgOpacity(values[0])}
+                  />
                 </div>
-                <Slider
-                  id="bg-opacity"
-                  min={0}
-                  max={1}
-                  step={0.01}
-                  value={[bgOpacity]}
-                  onValueChange={(values) => setBgOpacity(values[0])}
-                />
+
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between">
+                    <Label htmlFor="bg-blur">Blur</Label>
+                    <span className="text-sm text-muted-foreground">{Math.round(bgBlur)}px</span>
+                  </div>
+                  <Slider
+                    id="bg-blur"
+                    min={0}
+                    max={50}
+                    step={1}
+                    value={[bgBlur]}
+                    onValueChange={(values) => setBgBlur(values[0])}
+                  />
+                </div>
               </div>
 
-              <div className="space-y-2">
-                <div className="flex items-center justify-between">
-                  <Label htmlFor="bg-blur">Blur</Label>
-                  <span className="text-sm text-muted-foreground">{Math.round(bgBlur)}px</span>
-                </div>
-                <Slider
-                  id="bg-blur"
-                  min={0}
-                  max={50}
-                  step={1}
-                  value={[bgBlur]}
-                  onValueChange={(values) => setBgBlur(values[0])}
-                />
-              </div>
-            </div>
+              {/* Card/UI settings */}
+              <div className="space-y-4 md:pt-6">
+                <h3 className="font-semibold text-lg mb-4">Cards &amp; UI Elements</h3>
 
-            {/* Card/UI settings */}
-            <div className="mt-6 pt-6 border-t space-y-4">
-              <h3 className="font-semibold text-lg mb-4">Cards &amp; UI Elements</h3>
-
-              <div className="space-y-2">
-                <div className="flex items-center justify-between">
-                  <Label htmlFor="card-opacity">Background Opacity</Label>
-                  <span className="text-sm text-muted-foreground">{Math.round(cardBgOpacity * 100)}%</span>
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between">
+                    <Label htmlFor="card-opacity">Background Opacity</Label>
+                    <span className="text-sm text-muted-foreground">{Math.round(cardBgOpacity * 100)}%</span>
+                  </div>
+                  <Slider
+                    id="card-opacity"
+                    min={0}
+                    max={1}
+                    step={0.01}
+                    value={[cardBgOpacity]}
+                    onValueChange={(values) => setCardBgOpacity(values[0])}
+                  />
                 </div>
-                <Slider
-                  id="card-opacity"
-                  min={0}
-                  max={1}
-                  step={0.01}
-                  value={[cardBgOpacity]}
-                  onValueChange={(values) => setCardBgOpacity(values[0])}
-                />
-              </div>
 
-              <div className="space-y-2">
-                <div className="flex items-center justify-between">
-                  <Label htmlFor="card-blur">Blur</Label>
-                  <span className="text-sm text-muted-foreground">{Math.round(cardBlur)}px</span>
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between">
+                    <Label htmlFor="card-blur">Blur</Label>
+                    <span className="text-sm text-muted-foreground">{Math.round(cardBlur)}px</span>
+                  </div>
+                  <Slider
+                    id="card-blur"
+                    min={0}
+                    max={50}
+                    step={1}
+                    value={[cardBlur]}
+                    onValueChange={(values) => setCardBlur(values[0])}
+                  />
                 </div>
-                <Slider
-                  id="card-blur"
-                  min={0}
-                  max={50}
-                  step={1}
-                  value={[cardBlur]}
-                  onValueChange={(values) => setCardBlur(values[0])}
-                />
               </div>
             </div>
 
