@@ -277,7 +277,7 @@ model campaign_styles {
   sidebarBgOpacity  Float?    @default(1.0)
   headerBlur        Float?    @default(0)
   sidebarBlur       Float?    @default(0)
-  cardBgOpacity     Float?    @default(0.9)
+  cardBgOpacity     Float?    @default(0.8)
   cardBlur          Float?    @default(8)
   campaigns         campaigns @relation(fields: [campaignId], references: [id], onDelete: Cascade)
   themes            themes?   @relation(fields: [themeId], references: [id])

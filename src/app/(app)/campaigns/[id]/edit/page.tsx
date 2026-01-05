@@ -40,7 +40,7 @@ export default function EditCampaignPage() {
   const [headerBlur, setHeaderBlur] = useState(4);
   const [sidebarBgOpacity, setSidebarBgOpacity] = useState(0.0);
   const [sidebarBlur, setSidebarBlur] = useState(0);
-  const [cardBgOpacity, setCardBgOpacity] = useState(0.9);
+  const [cardBgOpacity, setCardBgOpacity] = useState(0.8);
   const [cardBlur, setCardBlur] = useState(8);
 
   // Apply styles live for preview
@@ -56,64 +56,6 @@ export default function EditCampaignPage() {
     document.documentElement.style.setProperty('--campaign-card-bg-opacity', cardBgOpacity.toString());
     document.documentElement.style.setProperty('--campaign-card-blur', `${cardBlur}px`);
   }, [bgOpacity, bgBlur, headerBgOpacity, headerBlur, sidebarBgOpacity, sidebarBlur, bgExpandToSidebar, bgExpandToHeader, cardBgOpacity, cardBlur]);
-
-  // Auto-save card opacity changes (debounced)
-  useEffect(() => {
-    if (!isLoadingData) {
-      const timer = setTimeout(async () => {
-        try {
-          await fetch(`/api/campaigns/${params.id}/style`, {
-            method: 'PATCH',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              bgOpacity,
-              bgBlur,
-              bgExpandToSidebar,
-              bgExpandToHeader,
-              headerBgOpacity,
-              headerBlur,
-              sidebarBgOpacity,
-              sidebarBlur,
-              cardBgOpacity,
-              cardBlur,
-            }),
-          });
-        } catch (error) {
-          console.error('Failed to auto-save card opacity:', error);
-        }
-      }, 500);
-      return () => clearTimeout(timer);
-    }
-  }, [cardBgOpacity, params.id, isLoadingData, bgOpacity, bgBlur, bgExpandToSidebar, bgExpandToHeader, headerBgOpacity, headerBlur, sidebarBgOpacity, sidebarBlur, cardBlur]);
-
-  // Auto-save card blur changes (debounced)
-  useEffect(() => {
-    if (!isLoadingData) {
-      const timer = setTimeout(async () => {
-        try {
-          await fetch(`/api/campaigns/${params.id}/style`, {
-            method: 'PATCH',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              bgOpacity,
-              bgBlur,
-              bgExpandToSidebar,
-              bgExpandToHeader,
-              headerBgOpacity,
-              headerBlur,
-              sidebarBgOpacity,
-              sidebarBlur,
-              cardBgOpacity,
-              cardBlur,
-            }),
-          });
-        } catch (error) {
-          console.error('Failed to auto-save card blur:', error);
-        }
-      }, 500);
-      return () => clearTimeout(timer);
-    }
-  }, [cardBlur, params.id, isLoadingData, bgOpacity, bgBlur, bgExpandToSidebar, bgExpandToHeader, headerBgOpacity, headerBlur, sidebarBgOpacity, sidebarBlur, cardBgOpacity]);
 
   useEffect(() => {
     const fetchCampaign = async () => {
@@ -147,7 +89,7 @@ export default function EditCampaignPage() {
             setHeaderBlur(style.headerBlur ?? 4);
             setSidebarBgOpacity(style.sidebarBgOpacity ?? 0.0);
             setSidebarBlur(style.sidebarBlur ?? 0);
-            setCardBgOpacity(style.cardBgOpacity ?? 0.9);
+            setCardBgOpacity(style.cardBgOpacity ?? 0.8);
             setCardBlur(style.cardBlur ?? 8);
           }
         }
