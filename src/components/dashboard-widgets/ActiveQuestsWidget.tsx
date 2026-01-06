@@ -76,7 +76,10 @@ export function ActiveQuestsWidget({ campaignId }: ActiveQuestsWidgetProps) {
       </CardHeader>
       <CardContent>
         {quests.length === 0 ? (
-          <p className="text-muted-foreground text-sm">No active quests</p>
+          <div className="flex flex-col items-center justify-center py-8 text-center">
+            <p className="text-sm text-muted-foreground">No active quests</p>
+            <p className="text-xs text-muted-foreground mt-1">Create your first quest to get started</p>
+          </div>
         ) : (
           <div className="space-y-3">
             {quests.map((quest) => (
