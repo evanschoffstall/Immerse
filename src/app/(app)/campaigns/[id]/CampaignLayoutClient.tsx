@@ -1,5 +1,6 @@
 'use client';
 
+import { ScrollArea } from '@/components/ui/scroll-area';
 import {
   Sidebar,
   SidebarContent,
@@ -205,7 +206,7 @@ export default function CampaignLayoutClient({
 
   return (
     <SidebarProvider defaultOpen={true}>
-      <div className="flex min-h-svh w-full relative" data-campaign-page>
+      <div className="flex h-screen w-full relative overflow-hidden" data-campaign-page>
         {/* Fixed background image layer - covers entire viewport including header */}
         {campaign.backgroundImage && (
           <div
@@ -287,169 +288,171 @@ export default function CampaignLayoutClient({
             </div>
           </SidebarHeader>
 
-          <SidebarContent>
-            {/* Main Navigation */}
-            <SidebarGroup>
-              <SidebarGroupContent>
-                <SidebarMenu>
-                  {navMain.map((item) => (
-                    <SidebarMenuItem key={item.href}>
-                      <SidebarMenuButton asChild isActive={isActive(item.href)}>
-                        <Link href={item.href}>
-                          <item.icon className="w-4 h-4" />
-                          <span>{item.label}</span>
+          <ScrollArea className="flex-1">
+            <SidebarContent>
+              {/* Main Navigation */}
+              <SidebarGroup>
+                <SidebarGroupContent>
+                  <SidebarMenu>
+                    {navMain.map((item) => (
+                      <SidebarMenuItem key={item.href}>
+                        <SidebarMenuButton asChild isActive={isActive(item.href)}>
+                          <Link href={item.href}>
+                            <item.icon className="w-4 h-4" />
+                            <span>{item.label}</span>
+                          </Link>
+                        </SidebarMenuButton>
+                      </SidebarMenuItem>
+                    ))}
+                  </SidebarMenu>
+                </SidebarGroupContent>
+              </SidebarGroup>
+
+              {/* World Section */}
+              <SidebarGroup>
+                <SidebarGroupLabel>
+                  <navWorld.icon className="w-3.5 h-3.5 mr-2 opacity-60" />
+                  {navWorld.label}
+                </SidebarGroupLabel>
+                <SidebarGroupContent>
+                  <SidebarMenu>
+                    {navWorld.items.map((item) => (
+                      <SidebarMenuItem key={item.href}>
+                        <SidebarMenuButton asChild isActive={isActive(item.href)} size="sm">
+                          <Link href={item.href}>
+                            <item.icon className="w-4 h-4" />
+                            <span>{item.label}</span>
+                          </Link>
+                        </SidebarMenuButton>
+                      </SidebarMenuItem>
+                    ))}
+                  </SidebarMenu>
+                </SidebarGroupContent>
+              </SidebarGroup>
+
+              {/* Time Section */}
+              <SidebarGroup>
+                <SidebarGroupLabel>
+                  <navTime.icon className="w-3.5 h-3.5 mr-2 opacity-60" />
+                  {navTime.label}
+                </SidebarGroupLabel>
+                <SidebarGroupContent>
+                  <SidebarMenu>
+                    {navTime.items.map((item) => (
+                      <SidebarMenuItem key={item.href}>
+                        <SidebarMenuButton asChild isActive={isActive(item.href)} size="sm">
+                          <Link href={item.href}>
+                            <item.icon className="w-4 h-4" />
+                            <span>{item.label}</span>
+                          </Link>
+                        </SidebarMenuButton>
+                      </SidebarMenuItem>
+                    ))}
+                  </SidebarMenu>
+                </SidebarGroupContent>
+              </SidebarGroup>
+
+              {/* Journals */}
+              <SidebarGroup>
+                <SidebarGroupContent>
+                  <SidebarMenu>
+                    <SidebarMenuItem>
+                      <SidebarMenuButton asChild isActive={isActive(`/campaigns/${campaign.id}/journals`)}>
+                        <Link href={`/campaigns/${campaign.id}/journals`}>
+                          <Notebook className="w-4 h-4" />
+                          <span>Journals</span>
                         </Link>
                       </SidebarMenuButton>
                     </SidebarMenuItem>
-                  ))}
-                </SidebarMenu>
-              </SidebarGroupContent>
-            </SidebarGroup>
+                  </SidebarMenu>
+                </SidebarGroupContent>
+              </SidebarGroup>
 
-            {/* World Section */}
-            <SidebarGroup>
-              <SidebarGroupLabel>
-                <navWorld.icon className="w-3.5 h-3.5 mr-2 opacity-60" />
-                {navWorld.label}
-              </SidebarGroupLabel>
-              <SidebarGroupContent>
-                <SidebarMenu>
-                  {navWorld.items.map((item) => (
-                    <SidebarMenuItem key={item.href}>
-                      <SidebarMenuButton asChild isActive={isActive(item.href)} size="sm">
-                        <Link href={item.href}>
-                          <item.icon className="w-4 h-4" />
-                          <span>{item.label}</span>
+              {/* Game Section */}
+              <SidebarGroup>
+                <SidebarGroupLabel>
+                  <navGame.icon className="w-3.5 h-3.5 mr-2 opacity-60" />
+                  {navGame.label}
+                </SidebarGroupLabel>
+                <SidebarGroupContent>
+                  <SidebarMenu>
+                    {navGame.items.map((item) => (
+                      <SidebarMenuItem key={item.href}>
+                        <SidebarMenuButton asChild isActive={isActive(item.href)} size="sm">
+                          <Link href={item.href}>
+                            <item.icon className="w-4 h-4" />
+                            <span>{item.label}</span>
+                          </Link>
+                        </SidebarMenuButton>
+                      </SidebarMenuItem>
+                    ))}
+                  </SidebarMenu>
+                </SidebarGroupContent>
+              </SidebarGroup>
+
+              {/* Notes */}
+              <SidebarGroup>
+                <SidebarGroupContent>
+                  <SidebarMenu>
+                    <SidebarMenuItem>
+                      <SidebarMenuButton asChild isActive={isActive(`/campaigns/${campaign.id}/notes`)}>
+                        <Link href={`/campaigns/${campaign.id}/notes`}>
+                          <FileText className="w-4 h-4" />
+                          <span>Notes</span>
                         </Link>
                       </SidebarMenuButton>
                     </SidebarMenuItem>
-                  ))}
-                </SidebarMenu>
-              </SidebarGroupContent>
-            </SidebarGroup>
+                  </SidebarMenu>
+                </SidebarGroupContent>
+              </SidebarGroup>
 
-            {/* Time Section */}
-            <SidebarGroup>
-              <SidebarGroupLabel>
-                <navTime.icon className="w-3.5 h-3.5 mr-2 opacity-60" />
-                {navTime.label}
-              </SidebarGroupLabel>
-              <SidebarGroupContent>
-                <SidebarMenu>
-                  {navTime.items.map((item) => (
-                    <SidebarMenuItem key={item.href}>
-                      <SidebarMenuButton asChild isActive={isActive(item.href)} size="sm">
-                        <Link href={item.href}>
-                          <item.icon className="w-4 h-4" />
-                          <span>{item.label}</span>
+              {/* Other Section */}
+              <SidebarGroup>
+                <SidebarGroupLabel>
+                  <navOther.icon className="w-3.5 h-3.5 mr-2 opacity-60" />
+                  {navOther.label}
+                </SidebarGroupLabel>
+                <SidebarGroupContent>
+                  <SidebarMenu>
+                    {navOther.items.map((item) => (
+                      <SidebarMenuItem key={item.href}>
+                        <SidebarMenuButton asChild isActive={isActive(item.href)} size="sm">
+                          <Link href={item.href}>
+                            <item.icon className="w-4 h-4" />
+                            <span>{item.label}</span>
+                          </Link>
+                        </SidebarMenuButton>
+                      </SidebarMenuItem>
+                    ))}
+                  </SidebarMenu>
+                </SidebarGroupContent>
+              </SidebarGroup>
+
+              {/* Gallery & Recent Changes */}
+              <SidebarGroup>
+                <SidebarGroupContent>
+                  <SidebarMenu>
+                    <SidebarMenuItem>
+                      <SidebarMenuButton asChild isActive={isActive(`/campaigns/${campaign.id}/gallery`)}>
+                        <Link href={`/campaigns/${campaign.id}/gallery`}>
+                          <Image className="w-4 h-4" />
+                          <span>Gallery</span>
                         </Link>
                       </SidebarMenuButton>
                     </SidebarMenuItem>
-                  ))}
-                </SidebarMenu>
-              </SidebarGroupContent>
-            </SidebarGroup>
-
-            {/* Journals */}
-            <SidebarGroup>
-              <SidebarGroupContent>
-                <SidebarMenu>
-                  <SidebarMenuItem>
-                    <SidebarMenuButton asChild isActive={isActive(`/campaigns/${campaign.id}/journals`)}>
-                      <Link href={`/campaigns/${campaign.id}/journals`}>
-                        <Notebook className="w-4 h-4" />
-                        <span>Journals</span>
-                      </Link>
-                    </SidebarMenuButton>
-                  </SidebarMenuItem>
-                </SidebarMenu>
-              </SidebarGroupContent>
-            </SidebarGroup>
-
-            {/* Game Section */}
-            <SidebarGroup>
-              <SidebarGroupLabel>
-                <navGame.icon className="w-3.5 h-3.5 mr-2 opacity-60" />
-                {navGame.label}
-              </SidebarGroupLabel>
-              <SidebarGroupContent>
-                <SidebarMenu>
-                  {navGame.items.map((item) => (
-                    <SidebarMenuItem key={item.href}>
-                      <SidebarMenuButton asChild isActive={isActive(item.href)} size="sm">
-                        <Link href={item.href}>
-                          <item.icon className="w-4 h-4" />
-                          <span>{item.label}</span>
+                    <SidebarMenuItem>
+                      <SidebarMenuButton asChild isActive={isActive(`/campaigns/${campaign.id}/recent-changes`)}>
+                        <Link href={`/campaigns/${campaign.id}/recent-changes`}>
+                          <History className="w-4 h-4" />
+                          <span>Recent changes</span>
                         </Link>
                       </SidebarMenuButton>
                     </SidebarMenuItem>
-                  ))}
-                </SidebarMenu>
-              </SidebarGroupContent>
-            </SidebarGroup>
-
-            {/* Notes */}
-            <SidebarGroup>
-              <SidebarGroupContent>
-                <SidebarMenu>
-                  <SidebarMenuItem>
-                    <SidebarMenuButton asChild isActive={isActive(`/campaigns/${campaign.id}/notes`)}>
-                      <Link href={`/campaigns/${campaign.id}/notes`}>
-                        <FileText className="w-4 h-4" />
-                        <span>Notes</span>
-                      </Link>
-                    </SidebarMenuButton>
-                  </SidebarMenuItem>
-                </SidebarMenu>
-              </SidebarGroupContent>
-            </SidebarGroup>
-
-            {/* Other Section */}
-            <SidebarGroup>
-              <SidebarGroupLabel>
-                <navOther.icon className="w-3.5 h-3.5 mr-2 opacity-60" />
-                {navOther.label}
-              </SidebarGroupLabel>
-              <SidebarGroupContent>
-                <SidebarMenu>
-                  {navOther.items.map((item) => (
-                    <SidebarMenuItem key={item.href}>
-                      <SidebarMenuButton asChild isActive={isActive(item.href)} size="sm">
-                        <Link href={item.href}>
-                          <item.icon className="w-4 h-4" />
-                          <span>{item.label}</span>
-                        </Link>
-                      </SidebarMenuButton>
-                    </SidebarMenuItem>
-                  ))}
-                </SidebarMenu>
-              </SidebarGroupContent>
-            </SidebarGroup>
-
-            {/* Gallery & Recent Changes */}
-            <SidebarGroup>
-              <SidebarGroupContent>
-                <SidebarMenu>
-                  <SidebarMenuItem>
-                    <SidebarMenuButton asChild isActive={isActive(`/campaigns/${campaign.id}/gallery`)}>
-                      <Link href={`/campaigns/${campaign.id}/gallery`}>
-                        <Image className="w-4 h-4" />
-                        <span>Gallery</span>
-                      </Link>
-                    </SidebarMenuButton>
-                  </SidebarMenuItem>
-                  <SidebarMenuItem>
-                    <SidebarMenuButton asChild isActive={isActive(`/campaigns/${campaign.id}/recent-changes`)}>
-                      <Link href={`/campaigns/${campaign.id}/recent-changes`}>
-                        <History className="w-4 h-4" />
-                        <span>Recent changes</span>
-                      </Link>
-                    </SidebarMenuButton>
-                  </SidebarMenuItem>
-                </SidebarMenu>
-              </SidebarGroupContent>
-            </SidebarGroup>
-          </SidebarContent>
+                  </SidebarMenu>
+                </SidebarGroupContent>
+              </SidebarGroup>
+            </SidebarContent>
+          </ScrollArea>
 
           {/* Settings Footer */}
           <SidebarFooter
@@ -471,7 +474,7 @@ export default function CampaignLayoutClient({
         </Sidebar>
 
         {/* Main Content Area */}
-        <SidebarInset className="relative z-10 bg-transparent">
+        <SidebarInset className="relative z-10 bg-transparent overflow-y-auto">
           <div className="pt-16">{children}</div>
         </SidebarInset>
       </div>
