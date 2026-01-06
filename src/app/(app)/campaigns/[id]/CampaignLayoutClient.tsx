@@ -255,8 +255,8 @@ export default function CampaignLayoutClient({
         </div>
 
         {/* Scrollable Navigation Items */}
-        <ScrollArea className="flex-1 px-2">
-          <nav className="py-2">
+        <ScrollArea className="flex-1 px-3">
+          <nav className="py-2 space-y-0.5">
             {sidebarItems.map((item, index) => {
               const Icon = item.icon;
               const active = isActive(item.href);
@@ -267,7 +267,7 @@ export default function CampaignLayoutClient({
                 return (
                   <div
                     key={index}
-                    className="flex items-center gap-2 px-3 pt-4 pb-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground cursor-default select-none"
+                    className="flex items-center gap-2 px-2 pt-4 pb-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground cursor-default select-none"
                   >
                     <Icon className="w-3.5 h-3.5 opacity-60" />
                     <span>{item.label}</span>
@@ -278,7 +278,7 @@ export default function CampaignLayoutClient({
               return (
                 <Link key={index} href={item.href}>
                   <div
-                    className={`flex items-center gap-3 px-3 py-2 rounded-md text-sm transition-colors ${indent ? 'pl-8' : ''
+                    className={`flex items-center gap-3 px-2 py-2 rounded-md text-sm transition-colors ${indent ? 'pl-7' : ''
                       } ${active
                         ? 'bg-primary text-primary-foreground'
                         : 'text-foreground hover:bg-accent hover:text-accent-foreground'
