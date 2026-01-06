@@ -227,8 +227,8 @@ export default function CampaignLayoutClient({
               backgroundPosition: 'center',
               backgroundAttachment: 'fixed',
               zIndex: 0,
-              top: `calc(var(--campaign-bg-expand-to-header, ${campaignStyle?.bgExpandToHeader ? '1' : '0'}) * 0px + (1 - var(--campaign-bg-expand-to-header, ${campaignStyle?.bgExpandToHeader ? '1' : '0'})) * 4rem)`,
-              left: `calc(var(--campaign-bg-expand-to-sidebar, ${campaignStyle?.bgExpandToSidebar ? '1' : '0'}) * 0px + (1 - var(--campaign-bg-expand-to-sidebar, ${campaignStyle?.bgExpandToSidebar ? '1' : '0'})) * 16rem)`,
+              top: `calc(var(--campaign-bg-expand-to-header, ${campaignStyle?.bgExpandToHeader ? '1' : '0'}) * 0px + (1 - var(--campaign-bg-expand-to-header, ${campaignStyle?.bgExpandToHeader ? '1' : '0'})) * 4rem - 10px)`,
+              left: `calc(var(--campaign-bg-expand-to-sidebar, ${campaignStyle?.bgExpandToSidebar ? '1' : '0'}) * 0px + (1 - var(--campaign-bg-expand-to-sidebar, ${campaignStyle?.bgExpandToSidebar ? '1' : '0'})) * 16rem - 95px)`,
               right: '0',
               bottom: '0',
             }}
@@ -244,8 +244,8 @@ export default function CampaignLayoutClient({
               backdropFilter: `blur(var(--campaign-bg-blur, ${campaignStyle?.bgBlur ?? 4}px))`,
               WebkitBackdropFilter: `blur(var(--campaign-bg-blur, ${campaignStyle?.bgBlur ?? 4}px))`,
               zIndex: 1,
-              top: `calc(var(--campaign-bg-expand-to-header, ${campaignStyle?.bgExpandToHeader ? '1' : '0'}) * 0px + (1 - var(--campaign-bg-expand-to-header, ${campaignStyle?.bgExpandToHeader ? '1' : '0'})) * 4rem)`,
-              left: `calc(var(--campaign-bg-expand-to-sidebar, ${campaignStyle?.bgExpandToSidebar ? '1' : '0'}) * 0px + (1 - var(--campaign-bg-expand-to-sidebar, ${campaignStyle?.bgExpandToSidebar ? '1' : '0'})) * 16rem)`,
+              top: `calc(var(--campaign-bg-expand-to-header, ${campaignStyle?.bgExpandToHeader ? '1' : '0'}) * 0px + (1 - var(--campaign-bg-expand-to-header, ${campaignStyle?.bgExpandToHeader ? '1' : '0'})) * 4rem - 10px)`,
+              left: `calc(var(--campaign-bg-expand-to-sidebar, ${campaignStyle?.bgExpandToSidebar ? '1' : '0'}) * 0px + (1 - var(--campaign-bg-expand-to-sidebar, ${campaignStyle?.bgExpandToSidebar ? '1' : '0'})) * 16rem - 95px)`,
               right: '0',
               bottom: '0',
             }}
@@ -254,7 +254,7 @@ export default function CampaignLayoutClient({
 
         {/* Shadcn Sidebar */}
         <Sidebar
-          className="pt-16 z-10"
+          className="pt-14 z-10"
           collapsible="none"
           style={{
             '--sidebar-background': 'transparent',
@@ -469,7 +469,7 @@ export default function CampaignLayoutClient({
 
         {/* Main Content Area */}
         <SidebarInset className="relative z-10 bg-transparent overflow-y-auto">
-          <div className="pt-16">{children}</div>
+          <div className="pt-14">{children}</div>
         </SidebarInset>
       </div>
     </SidebarProvider>

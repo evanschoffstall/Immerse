@@ -79,7 +79,7 @@ export default function Header() {
     >
       {/* Render internal background layer for both campaign and non-campaign pages */}
       <div
-        className="absolute inset-0 -z-10"
+        className="absolute inset-0 -z-10 "
         style={isOnCampaignPage && campaignStyle ? {
           backgroundColor: `hsl(var(--background) / var(--campaign-header-bg-opacity, ${campaignStyle.headerBgOpacity ?? 0.95}))`,
         } : !isOnCampaignPage && campaignStyle && campaignStyle.headerBgOpacity !== undefined ? {
@@ -88,7 +88,7 @@ export default function Header() {
           background: 'linear-gradient(to bottom, hsl(var(--background) / 0.6), hsl(var(--background) / 0.4), transparent)'
         }}
       />
-      <div className="flex h-16 items-center px-4 sm:px-6 lg:px-8">
+      <div className="flex h-13 items-center px-4 sm:px-6 lg:px-8">
         <div className="mr-4 hidden md:flex">
           <Link href="/" className="mr-6 flex items-center space-x-2 transition-opacity hover:opacity-80">
             <Swords className="h-5 w-5 text-primary" />
