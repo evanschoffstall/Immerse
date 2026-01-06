@@ -4,7 +4,6 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import {
   Sidebar,
   SidebarContent,
-  SidebarFooter,
   SidebarGroup,
   SidebarGroupContent,
   SidebarGroupLabel,
@@ -27,11 +26,13 @@ import {
   Home,
   Image,
   Link as LinkIcon,
+  ListOrdered,
   Map as MapIcon,
   MapPin,
   Mountain,
   Notebook,
   Package,
+  PenLine,
   Scroll,
   Settings,
   Shield,
@@ -165,8 +166,18 @@ export default function CampaignLayoutClient({
     label: 'Time',
     icon: Clock,
     items: [
+      { icon: ListOrdered, label: 'Timelines', href: `/campaigns/${campaign.id}/timelines` },
       { icon: Calendar, label: 'Calendars', href: `/campaigns/${campaign.id}/calendars` },
       { icon: Scroll, label: 'Events', href: `/campaigns/${campaign.id}/events` },
+    ],
+  };
+
+  const navWriting = {
+    label: 'Writing',
+    icon: PenLine,
+    items: [
+      { icon: Notebook, label: 'Journals', href: `/campaigns/${campaign.id}/journals` },
+      { icon: FileText, label: 'Notes', href: `/campaigns/${campaign.id}/notes` },
     ],
   };
 
@@ -191,8 +202,6 @@ export default function CampaignLayoutClient({
   };
 
   const navStandalone = [
-    { icon: Notebook, label: 'Journals', href: `/campaigns/${campaign.id}/journals` },
-    { icon: FileText, label: 'Notes', href: `/campaigns/${campaign.id}/notes` },
     { icon: Image, label: 'Gallery', href: `/campaigns/${campaign.id}/gallery` },
     { icon: History, label: 'Recent changes', href: `/campaigns/${campaign.id}/recent-changes` },
   ];
@@ -269,7 +278,7 @@ export default function CampaignLayoutClient({
               borderBottom: `calc(1px * (1 - var(--campaign-bg-expand-to-sidebar, ${campaignStyle?.bgExpandToSidebar ? '1' : '0'}))) solid hsl(var(--border))`,
             }}
           >
-            <div className="flex items-center gap-3 px-1">
+            <div className="flex items-center gap-3 px-1 mb-2">
               {campaign.image && (
                 <div className="relative w-10 h-10 rounded-md overflow-hidden shrink-0">
                   <div
@@ -286,28 +295,24 @@ export default function CampaignLayoutClient({
                 <h2 className="font-semibold text-sm truncate">{campaign.name}</h2>
               </div>
             </div>
+
+            {/* Fixed Dashboard & Bookmarks */}
+            <SidebarMenu>
+              {navMain.map((item) => (
+                <SidebarMenuItem key={item.href}>
+                  <SidebarMenuButton asChild isActive={isActive(item.href)}>
+                    <Link href={item.href}>
+                      <item.icon className="w-4 h-4" />
+                      <span>{item.label}</span>
+                    </Link>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+              ))}
+            </SidebarMenu>
           </SidebarHeader>
 
           <ScrollArea className="flex-1">
             <SidebarContent>
-              {/* Main Navigation */}
-              <SidebarGroup>
-                <SidebarGroupContent>
-                  <SidebarMenu>
-                    {navMain.map((item) => (
-                      <SidebarMenuItem key={item.href}>
-                        <SidebarMenuButton asChild isActive={isActive(item.href)}>
-                          <Link href={item.href}>
-                            <item.icon className="w-4 h-4" />
-                            <span>{item.label}</span>
-                          </Link>
-                        </SidebarMenuButton>
-                      </SidebarMenuItem>
-                    ))}
-                  </SidebarMenu>
-                </SidebarGroupContent>
-              </SidebarGroup>
-
               {/* World Section */}
               <SidebarGroup>
                 <SidebarGroupLabel>
@@ -352,18 +357,24 @@ export default function CampaignLayoutClient({
                 </SidebarGroupContent>
               </SidebarGroup>
 
-              {/* Journals */}
+              {/* Writing Section */}
               <SidebarGroup>
+                <SidebarGroupLabel>
+                  <navWriting.icon className="w-3.5 h-3.5 mr-2 opacity-60" />
+                  {navWriting.label}
+                </SidebarGroupLabel>
                 <SidebarGroupContent>
                   <SidebarMenu>
-                    <SidebarMenuItem>
-                      <SidebarMenuButton asChild isActive={isActive(`/campaigns/${campaign.id}/journals`)}>
-                        <Link href={`/campaigns/${campaign.id}/journals`}>
-                          <Notebook className="w-4 h-4" />
-                          <span>Journals</span>
-                        </Link>
-                      </SidebarMenuButton>
-                    </SidebarMenuItem>
+                    {navWriting.items.map((item) => (
+                      <SidebarMenuItem key={item.href}>
+                        <SidebarMenuButton asChild isActive={isActive(item.href)} size="sm">
+                          <Link href={item.href}>
+                            <item.icon className="w-4 h-4" />
+                            <span>{item.label}</span>
+                          </Link>
+                        </SidebarMenuButton>
+                      </SidebarMenuItem>
+                    ))}
                   </SidebarMenu>
                 </SidebarGroupContent>
               </SidebarGroup>
@@ -386,22 +397,6 @@ export default function CampaignLayoutClient({
                         </SidebarMenuButton>
                       </SidebarMenuItem>
                     ))}
-                  </SidebarMenu>
-                </SidebarGroupContent>
-              </SidebarGroup>
-
-              {/* Notes */}
-              <SidebarGroup>
-                <SidebarGroupContent>
-                  <SidebarMenu>
-                    <SidebarMenuItem>
-                      <SidebarMenuButton asChild isActive={isActive(`/campaigns/${campaign.id}/notes`)}>
-                        <Link href={`/campaigns/${campaign.id}/notes`}>
-                          <FileText className="w-4 h-4" />
-                          <span>Notes</span>
-                        </Link>
-                      </SidebarMenuButton>
-                    </SidebarMenuItem>
                   </SidebarMenu>
                 </SidebarGroupContent>
               </SidebarGroup>
@@ -451,26 +446,24 @@ export default function CampaignLayoutClient({
                   </SidebarMenu>
                 </SidebarGroupContent>
               </SidebarGroup>
+
+              {/* Settings - at bottom of scrollable content */}
+              <SidebarGroup>
+                <SidebarGroupContent>
+                  <SidebarMenu>
+                    <SidebarMenuItem>
+                      <SidebarMenuButton asChild>
+                        <Link href={`/campaigns/${campaign.id}/edit`}>
+                          <Settings className="w-4 h-4" />
+                          <span>Settings</span>
+                        </Link>
+                      </SidebarMenuButton>
+                    </SidebarMenuItem>
+                  </SidebarMenu>
+                </SidebarGroupContent>
+              </SidebarGroup>
             </SidebarContent>
           </ScrollArea>
-
-          {/* Settings Footer */}
-          <SidebarFooter
-            style={{
-              borderTop: `calc(1px * (1 - var(--campaign-bg-expand-to-sidebar, ${campaignStyle?.bgExpandToSidebar ? '1' : '0'}))) solid hsl(var(--border))`,
-            }}
-          >
-            <SidebarMenu>
-              <SidebarMenuItem>
-                <SidebarMenuButton asChild>
-                  <Link href={`/campaigns/${campaign.id}/edit`}>
-                    <Settings className="w-4 h-4" />
-                    <span>Settings</span>
-                  </Link>
-                </SidebarMenuButton>
-              </SidebarMenuItem>
-            </SidebarMenu>
-          </SidebarFooter>
         </Sidebar>
 
         {/* Main Content Area */}
