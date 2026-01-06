@@ -164,9 +164,9 @@ export default function Header() {
                 <HoverCardTrigger asChild>
                   <Button
                     variant="ghost"
-                    className="relative h-8 w-8 rounded-full"
+                    className="group relative h-8 w-8 rounded-full transition-all hover:bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0"
                   >
-                    <Avatar className="h-8 w-8">
+                    <Avatar className="h-8 w-8 transition-transform group-hover:scale-110 group-data-[state=open]:scale-110">
                       <AvatarImage src={session.user.image || undefined} alt={session.user.name || 'User'} />
                       <AvatarFallback>{getUserInitials(session.user.name)}</AvatarFallback>
                     </Avatar>
@@ -193,7 +193,7 @@ export default function Header() {
                   <Separator className="my-1" />
                   <Button
                     variant="ghost"
-                    className="w-full justify-start h-8 px-2 text-sm text-destructive hover:text-destructive"
+                    className="w-full justify-start h-8 px-2 text-sm text-muted-foreground hover:text-destructive hover:bg-destructive/10"
                     onClick={handleSignOut}
                   >
                     <LogOut className="mr-2 h-4 w-4" />

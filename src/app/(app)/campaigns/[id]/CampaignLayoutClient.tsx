@@ -3,17 +3,28 @@
 import { Button } from '@/components/ui/button';
 import type { campaigns as Campaign, campaign_styles as CampaignStyle } from '@prisma/client';
 import {
+  Bookmark,
+  BookOpen,
   Calendar,
   Clock,
   FileText,
+  Gem,
+  History,
   Home,
+  Image,
+  Link as LinkIcon,
   Map as MapIcon,
   MapPin,
+  Mountain,
   Notebook,
+  Package,
   Scroll,
   Settings,
   Shield,
+  Sparkles,
   Swords,
+  Tag,
+  Tags,
   Users,
   Users2
 } from 'lucide-react';
@@ -119,22 +130,40 @@ export default function CampaignLayoutClient({
 
   const sidebarItems = [
     { icon: Home, label: 'Dashboard', href: `/campaigns/${campaign.id}` },
-    { icon: Users, label: 'Characters', href: `/campaigns/${campaign.id}/characters` },
-    { icon: MapPin, label: 'Locations', href: `/campaigns/${campaign.id}/locations` },
-    { icon: MapIcon, label: 'Maps', href: `/campaigns/${campaign.id}/maps` },
-    { icon: Shield, label: 'Organizations', href: `/campaigns/${campaign.id}/organizations` },
-    { icon: Users2, label: 'Families', href: `/campaigns/${campaign.id}/families` },
-    { icon: Swords, label: 'Creatures', href: `/campaigns/${campaign.id}/creatures` },
-    { icon: Clock, label: 'Time', href: `/campaigns/${campaign.id}/timelines` },
-    { icon: Calendar, label: 'Calendars', href: `/campaigns/${campaign.id}/calendars` },
-    { icon: Scroll, label: 'Events', href: `/campaigns/${campaign.id}/events` },
+    { icon: Bookmark, label: 'Bookmarks', href: `/campaigns/${campaign.id}/bookmarks` },
+
+    // World Section
+    { icon: Mountain, label: 'World', href: `/campaigns/${campaign.id}/world`, isSection: true },
+    { icon: Users, label: 'Characters', href: `/campaigns/${campaign.id}/characters`, indent: true },
+    { icon: MapPin, label: 'Locations', href: `/campaigns/${campaign.id}/locations`, indent: true },
+    { icon: MapIcon, label: 'Maps', href: `/campaigns/${campaign.id}/maps`, indent: true },
+    { icon: Shield, label: 'Organizations', href: `/campaigns/${campaign.id}/organizations`, indent: true },
+    { icon: Users2, label: 'Families', href: `/campaigns/${campaign.id}/families`, indent: true },
+    { icon: Swords, label: 'Creatures', href: `/campaigns/${campaign.id}/creatures`, indent: true },
+
+    // Time Section
+    { icon: Clock, label: 'Time', href: `/campaigns/${campaign.id}/time`, isSection: true },
+    { icon: Calendar, label: 'Calendars', href: `/campaigns/${campaign.id}/calendars`, indent: true },
+    { icon: Scroll, label: 'Events', href: `/campaigns/${campaign.id}/events`, indent: true },
+
     { icon: Notebook, label: 'Journals', href: `/campaigns/${campaign.id}/journals` },
-    // { icon: BookOpen, label: 'Lore', href: `/campaigns/${campaign.id}/lore` },
-    { icon: Scroll, label: 'Quests', href: `/campaigns/${campaign.id}/quests` },
-    // { icon: Sparkles, label: 'Abilities', href: `/campaigns/${campaign.id}/abilities` },
-    // { icon: Grid3x3, label: 'Items', href: `/campaigns/${campaign.id}/items` },
+
+    // Game Section
+    { icon: BookOpen, label: 'Game', href: `/campaigns/${campaign.id}/game`, isSection: true },
+    { icon: Scroll, label: 'Quests', href: `/campaigns/${campaign.id}/quests`, indent: true },
+    { icon: Package, label: 'Objects', href: `/campaigns/${campaign.id}/objects`, indent: true },
+    { icon: Sparkles, label: 'Abilities', href: `/campaigns/${campaign.id}/abilities`, indent: true },
+
     { icon: FileText, label: 'Notes', href: `/campaigns/${campaign.id}/notes` },
-    // { icon: Settings, label: 'Settings', href: `/campaigns/${campaign.id}/settings` },
+
+    // Other Section
+    { icon: Gem, label: 'Other', href: `/campaigns/${campaign.id}/other`, isSection: true },
+    { icon: Tags, label: 'Tags', href: `/campaigns/${campaign.id}/tags`, indent: true },
+    { icon: LinkIcon, label: 'Connections', href: `/campaigns/${campaign.id}/connections`, indent: true },
+    { icon: Tag, label: 'Attribute Templates', href: `/campaigns/${campaign.id}/attribute-templates`, indent: true },
+
+    { icon: Image, label: 'Gallery', href: `/campaigns/${campaign.id}/gallery` },
+    { icon: History, label: 'Recent changes', href: `/campaigns/${campaign.id}/recent-changes` },
   ];
 
   const isActive = (href: string) => {
@@ -229,12 +258,28 @@ export default function CampaignLayoutClient({
           {sidebarItems.map((item, index) => {
             const Icon = item.icon;
             const active = isActive(item.href);
+            const isSection = (item as any).isSection;
+            const indent = (item as any).indent;
+
+            if (isSection) {
+              return (
+                <div
+                  key={index}
+                  className="flex items-center gap-2 px-3 pt-4 pb-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground cursor-default select-none"
+                >
+                  <Icon className="w-3.5 h-3.5 opacity-60" />
+                  <span>{item.label}</span>
+                </div>
+              );
+            }
+
             return (
               <Link key={index} href={item.href}>
                 <div
-                  className={`flex items-center gap-3 px-3 py-2 rounded-md text-sm transition-colors ${active
-                    ? 'bg-primary text-primary-foreground'
-                    : 'text-foreground hover:bg-accent hover:text-accent-foreground'
+                  className={`flex items-center gap-3 px-3 py-2 rounded-md text-sm transition-colors ${indent ? 'pl-8' : ''
+                    } ${active
+                      ? 'bg-primary text-primary-foreground'
+                      : 'text-foreground hover:bg-accent hover:text-accent-foreground'
                     }`}
                 >
                   <Icon className="w-4 h-4" />
