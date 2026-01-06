@@ -61,6 +61,15 @@ export default function CampaignLayoutClient({
         backdrop-filter: blur(${cardBlur});
         -webkit-backdrop-filter: blur(${cardBlur});
       }
+      
+      /* Dropdown menu and HoverCard styling */
+      [data-radix-popper-content-wrapper] [role="menu"],
+      [data-radix-popper-content-wrapper] [data-state] {
+        background-color: hsl(var(--card) / ${cardOpacity}) !important;
+        backdrop-filter: blur(${cardBlur}) !important;
+        -webkit-backdrop-filter: blur(${cardBlur}) !important;
+        border-color: hsl(var(--border) / 0.1) !important;
+      }
     `;
 
     return () => {
@@ -91,6 +100,15 @@ export default function CampaignLayoutClient({
           background-color: hsl(var(--card) / ${cardOpacity}) !important;
           backdrop-filter: blur(${cardBlur});
           -webkit-backdrop-filter: blur(${cardBlur});
+        }
+        
+        /* Dropdown menu and HoverCard styling */
+        [data-radix-popper-content-wrapper] [role="menu"],
+        [data-radix-popper-content-wrapper] [data-state] {
+          background-color: hsl(var(--card) / ${cardOpacity}) !important;
+          backdrop-filter: blur(${cardBlur}) !important;
+          -webkit-backdrop-filter: blur(${cardBlur}) !important;
+          border-color: hsl(var(--border) / 0.1) !important;
         }
       `;
     };
