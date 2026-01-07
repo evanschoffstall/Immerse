@@ -36,13 +36,15 @@ import {
   MapPin,
   Mountain,
   Notebook,
-  PenLine,
   Scroll,
   Settings,
   Shield,
+  Sparkles,
   Tags,
+  Target,
   User,
-  Users
+  Users,
+  Zap
 } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
@@ -186,14 +188,14 @@ export default function CampaignLayoutClient({
 
   const navRules = {
     label: 'Rules',
-    icon: ?,
+    icon: Sparkles,
     items: [
-      { icon: ?, label: 'Abilities', href: `/campaigns/${campaign.id}/abilities` },
+      { icon: Zap, label: 'Abilities', href: `/campaigns/${campaign.id}/abilities` },
       { icon: Flame, label: 'Spells', href: `/campaigns/${campaign.id}/spells` },
       { icon: Gem, label: 'Items', href: `/campaigns/${campaign.id}/items` }, //TODO: rename everything "Objects" to "Items"
-      { icon: ?, label: 'Conditions', href: `/campaigns/${campaign.id}/conditions` },
-      { icon: ?, label: 'Classes', href: `/campaigns/${campaign.id}/classes` },
-      { icon: ?, label: 'Races', href: `/campaigns/${campaign.id}/races` },
+      { icon: Target, label: 'Conditions', href: `/campaigns/${campaign.id}/conditions` },
+      { icon: Shield, label: 'Classes', href: `/campaigns/${campaign.id}/classes` },
+      { icon: User, label: 'Races', href: `/campaigns/${campaign.id}/races` },
 
     ],
   };
@@ -320,28 +322,6 @@ export default function CampaignLayoutClient({
 
           <ScrollArea className="flex-1">
             <SidebarContent>
-              {/* Writing Section */}
-              <SidebarGroup>
-                <SidebarGroupLabel>
-                  <navWriting.icon className="w-3.5 h-3.5 mr-2 opacity-60" />
-                  {navWriting.label}
-                </SidebarGroupLabel>
-                <SidebarGroupContent>
-                  <SidebarMenu>
-                    {navWriting.items.map((item) => (
-                      <SidebarMenuItem key={item.href}>
-                        <SidebarMenuButton asChild isActive={isActive(item.href)} size="sm">
-                          <Link href={item.href}>
-                            <item.icon className="w-4 h-4" />
-                            <span>{item.label}</span>
-                          </Link>
-                        </SidebarMenuButton>
-                      </SidebarMenuItem>
-                    ))}
-                  </SidebarMenu>
-                </SidebarGroupContent>
-              </SidebarGroup>
-
               {/* World Section */}
               <SidebarGroup>
                 <SidebarGroupLabel>
@@ -395,6 +375,28 @@ export default function CampaignLayoutClient({
                 <SidebarGroupContent>
                   <SidebarMenu>
                     {navTime.items.map((item) => (
+                      <SidebarMenuItem key={item.href}>
+                        <SidebarMenuButton asChild isActive={isActive(item.href)} size="sm">
+                          <Link href={item.href}>
+                            <item.icon className="w-4 h-4" />
+                            <span>{item.label}</span>
+                          </Link>
+                        </SidebarMenuButton>
+                      </SidebarMenuItem>
+                    ))}
+                  </SidebarMenu>
+                </SidebarGroupContent>
+              </SidebarGroup>
+
+              {/* Rules Section */}
+              <SidebarGroup>
+                <SidebarGroupLabel>
+                  <navRules.icon className="w-3.5 h-3.5 mr-2 opacity-60" />
+                  {navRules.label}
+                </SidebarGroupLabel>
+                <SidebarGroupContent>
+                  <SidebarMenu>
+                    {navRules.items.map((item) => (
                       <SidebarMenuItem key={item.href}>
                         <SidebarMenuButton asChild isActive={isActive(item.href)} size="sm">
                           <Link href={item.href}>
