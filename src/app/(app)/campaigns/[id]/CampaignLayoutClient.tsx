@@ -18,10 +18,7 @@ import type { campaigns as Campaign, campaign_styles as CampaignStyle } from '@p
 import {
   Bookmark,
   BookOpen,
-  CalendarCheck,
-  CalendarDays,
   Clock,
-  Dog,
   FileText,
   Flame,
   Gem,
@@ -31,9 +28,7 @@ import {
   Layers,
   Layout,
   Link as LinkIcon,
-  ListOrdered,
   Map as MapIcon,
-  MapPin,
   Mountain,
   Notebook,
   Scroll,
@@ -153,33 +148,21 @@ export default function CampaignLayoutClient({
   ];
 
   const navWorld = {
-    label: 'Atlas', // TODO: rename everything "World" to "Atlas"
+    label: 'Atlas',
     icon: Mountain,
     items: [
-      { icon: User, label: 'Characters', href: `/campaigns/${campaign.id}/characters` },
-      { icon: MapPin, label: 'Locations', href: `/campaigns/${campaign.id}/locations` },
-      { icon: MapIcon, label: 'Maps', href: `/campaigns/${campaign.id}/maps` },
-      { icon: Shield, label: 'Organizations', href: `/campaigns/${campaign.id}/organizations` },
-      { icon: Users, label: 'Families', href: `/campaigns/${campaign.id}/families` },
-      { icon: Dog, label: 'Creatures', href: `/campaigns/${campaign.id}/creatures` },
+      { icon: User, label: 'Beings', href: `/campaigns/${campaign.id}/beings` },
+      { icon: Users, label: 'Groups', href: `/campaigns/${campaign.id}/groups` },
+      { icon: MapIcon, label: 'Places', href: `/campaigns/${campaign.id}/places` },
     ],
   };
 
-  const navTime = {
-    label: 'Time',
-    icon: Clock,
-    items: [
-      { icon: ListOrdered, label: 'Timelines', href: `/campaigns/${campaign.id}/timelines` },
-      { icon: CalendarDays, label: 'Calendars', href: `/campaigns/${campaign.id}/calendars` },
-    ],
-  };
-
-  const navGame = {
-    label: 'Story', // TODO: rename everything "Game" to "Story"
+  const navStory = {
+    label: 'Story',
     icon: BookOpen,
     items: [
+      { icon: Clock, label: 'Events', href: `/campaigns/${campaign.id}/events` },
       { icon: Scroll, label: 'Quests', href: `/campaigns/${campaign.id}/quests` },
-      { icon: CalendarCheck, label: 'Events', href: `/campaigns/${campaign.id}/events` },
       { icon: Notebook, label: 'Journals', href: `/campaigns/${campaign.id}/journals` },
       { icon: FileText, label: 'Notes', href: `/campaigns/${campaign.id}/notes` },
     ],
@@ -192,7 +175,7 @@ export default function CampaignLayoutClient({
     items: [
       { icon: Zap, label: 'Abilities', href: `/campaigns/${campaign.id}/abilities` },
       { icon: Flame, label: 'Spells', href: `/campaigns/${campaign.id}/spells` },
-      { icon: Gem, label: 'Items', href: `/campaigns/${campaign.id}/items` }, //TODO: rename everything "Objects" to "Items"
+      { icon: Gem, label: 'Items', href: `/campaigns/${campaign.id}/items` },
       { icon: Target, label: 'Conditions', href: `/campaigns/${campaign.id}/conditions` },
       { icon: Shield, label: 'Classes', href: `/campaigns/${campaign.id}/classes` },
       { icon: User, label: 'Races', href: `/campaigns/${campaign.id}/races` },
@@ -209,11 +192,6 @@ export default function CampaignLayoutClient({
       { icon: Layout, label: 'Attribute Templates', href: `/campaigns/${campaign.id}/attribute-templates` },
     ],
   };
-
-  const navStandalone = [
-    { icon: Image, label: 'Gallery', href: `/campaigns/${campaign.id}/gallery` },
-    { icon: Clock, label: 'Recent changes', href: `/campaigns/${campaign.id}/recent-changes` },
-  ];
 
   const isActive = (href: string) => {
     if (href === `/campaigns/${campaign.id}`) {
@@ -347,12 +325,12 @@ export default function CampaignLayoutClient({
               {/* Game Section */}
               <SidebarGroup>
                 <SidebarGroupLabel>
-                  <navGame.icon className="w-3.5 h-3.5 mr-2 opacity-60" />
-                  {navGame.label}
+                  <navStory.icon className="w-3.5 h-3.5 mr-2 opacity-60" />
+                  {navStory.label}
                 </SidebarGroupLabel>
                 <SidebarGroupContent>
                   <SidebarMenu>
-                    {navGame.items.map((item) => (
+                    {navStory.items.map((item) => (
                       <SidebarMenuItem key={item.href}>
                         <SidebarMenuButton asChild isActive={isActive(item.href)} size="sm">
                           <Link href={item.href}>
