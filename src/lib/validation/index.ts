@@ -32,10 +32,21 @@ function omitServerManaged<T extends ModelSchemas>(
   isCampaign = false
 ) {
   const keys = isCampaign ? CAMPAIGN_SERVER_MANAGED : SERVER_MANAGED;
-  const omitShape = Object.fromEntries(keys.map((k) => [k, true])) as Record<
-    ServerManagedKey | CampaignServerManagedKey,
-    true
-  >;
+
+  // Only omit keys that actually exist in the schema
+  const schemaKeys = Object.keys(schemas.optionalDefaults.shape);
+  const keysToOmit = keys.filter((k) => schemaKeys.includes(k as string));
+
+  if (keysToOmit.length === 0) {
+    return {
+      createBase: schemas.optionalDefaults,
+      updateBase: schemas.partial,
+    };
+  }
+
+  const omitShape = Object.fromEntries(
+    keysToOmit.map((k) => [k, true])
+  ) as Record<ServerManagedKey | CampaignServerManagedKey, true>;
 
   return {
     createBase: schemas.optionalDefaults.omit(omitShape),
