@@ -1,0 +1,191 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model users {
+  id            String       @id
+  email         String       @unique
+  name          String
+  password      String
+  avatar        String?
+  emailVerified DateTime?
+  createdAt     DateTime     @default(now())
+  updatedAt     DateTime
+  campaigns     campaigns[]
+  audit_logs    audit_logs[]
+}
+
+model campaigns {
+  id              String       @id
+  name            String
+  slug            String       @unique
+  description     String?
+  image           String?
+  backgroundImage String?
+  visibility      String       @default("private")
+  locale          String       @default("en")
+  createdAt       DateTime     @default(now())
+  updatedAt       DateTime
+  ownerId         String
+  users           users        @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+  beings          beings[]
+  quests          quests[]
+  images          images[]
+  calendars       calendars[]
+}
+
+model beings {
+  id              String     @id
+  name            String
+  slug            String
+  title           String?
+  type            String?
+  age             String?
+  sex             String?
+  pronouns        String?
+  location        String?
+  family          String?
+  description     String?
+  imageId         String?
+  isPrivate       Boolean    @default(false)
+  birthCalendarId String?
+  birthDate       String?
+  createdAt       DateTime   @default(now())
+  updatedAt       DateTime
+  deletedAt       DateTime?
+  campaignId      String
+  createdById     String
+  updatedById     String?
+  calendars       calendars? @relation(fields: [birthCalendarId], references: [id])
+  campaigns       campaigns  @relation(fields: [campaignId], references: [id], onDelete: Restrict)
+  images          images?    @relation(fields: [imageId], references: [id])
+
+  @@unique([campaignId, slug])
+  @@index([campaignId])
+  @@index([createdById])
+  @@index([deletedAt])
+  @@map("characters")
+}
+
+model quests {
+  id          String    @id
+  name        String
+  slug        String
+  type        String?
+  description String?
+  date        String?
+  image       String?
+  location    String?
+  status      String?   @default("active")
+  isPrivate   Boolean   @default(false)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime
+  deletedAt   DateTime?
+  campaignId  String
+  createdById String
+  updatedById String?
+  campaigns   campaigns @relation(fields: [campaignId], references: [id], onDelete: Restrict)
+
+  @@unique([campaignId, slug])
+  @@index([campaignId])
+  @@index([createdById])
+  @@index([deletedAt])
+}
+
+model images {
+  id          String       @id
+  name        String
+  ext         String
+  size        Int
+  width       Int?
+  height      Int?
+  focusX      Int?
+  focusY      Int?
+  isFolder    Boolean      @default(false)
+  isDefault   Boolean      @default(false)
+  visibility  Int          @default(0)
+  campaignId   String
+  folderId     String?
+  createdById  String
+  createdAt    DateTime     @default(now())
+  updatedAt    DateTime
+  deletedAt    DateTime?
+  beings       beings[]
+  campaigns    campaigns    @relation(fields: [campaignId], references: [id], onDelete: Restrict)
+  images       images?      @relation("imagesToimages", fields: [folderId], references: [id], onDelete: Cascade)
+  other_images images[]     @relation("imagesToimages")
+
+  @@index([campaignId])
+  @@index([folderId])
+  @@index([isFolder])
+  @@index([createdById])
+  @@index([deletedAt])
+}
+
+model calendars {
+  id              String       @id
+  name            String
+  slug            String
+  description     String?
+  image           String?
+  date            String?
+  months          Json?
+  weekdays        Json?
+  years           Json?
+  seasons         Json?
+  moons           Json?
+  weekNames       Json?
+  monthAliases    Json?
+  suffix          String?
+  format          String?
+  hasLeapYear     Boolean      @default(false)
+  leapYearAmount  Int?
+  leapYearMonth   Int?
+  leapYearOffset  Int?
+  leapYearStart   Int?
+  startOffset     Int          @default(0)
+  skipYearZero    Boolean      @default(false)
+  showBirthdays   Boolean      @default(true)
+  parameters      Json?
+  isPrivate       Boolean      @default(false)
+  createdAt       DateTime     @default(now())
+  updatedAt       DateTime
+  deletedAt       DateTime?
+  parentId        String?
+  campaignId      String
+  createdById     String
+  updatedById     String?
+  campaigns       campaigns    @relation(fields: [campaignId], references: [id], onDelete: Restrict)
+  calendars       calendars?   @relation("calendarsTocalendars", fields: [parentId], references: [id])
+  other_calendars calendars[]  @relation("calendarsTocalendars")
+  beings          beings[]
+
+  @@unique([campaignId, slug])
+  @@index([campaignId])
+  @@index([parentId])
+  @@index([createdById])
+  @@index([deletedAt])
+}
+
+model audit_logs {
+  id         String   @id
+  entityType String
+  entityId   String
+  action     String   // "create", "update", "delete", "restore"
+  changes    Json?    // JSON diff of what changed
+  metadata   Json?    // Additional context (IP, user agent, etc.)
+  userId     String?
+  campaignId String?
+  createdAt  DateTime @default(now())
+  users      users?   @relation(fields: [userId], references: [id])
+
+  @@index([entityType, entityId])
+  @@index([userId])
+  @@index([campaignId])
+  @@index([action])
+  @@index([createdAt])
+}

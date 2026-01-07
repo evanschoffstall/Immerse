@@ -10,7 +10,7 @@ import { z } from "zod";
 // SCHEMAS
 // ============================================================================
 
-export const createCharacterSchema = z.object({
+export const createBeingSchema = z.object({
   name: z.string().min(1),
   title: z.string().optional(),
   type: z.string().optional(),
@@ -26,9 +26,9 @@ export const createCharacterSchema = z.object({
   birthDate: z.string().optional(),
 });
 
-export const updateCharacterSchema = createCharacterSchema.partial();
+export const updateBeingSchema = createBeingSchema.partial();
 
-export const listCharactersSchema = z.object({
+export const listBeingsSchema = z.object({
   page: z.coerce.number().min(1).default(1),
   limit: z.coerce.number().min(1).max(100).default(20),
   search: z.string().optional(),
@@ -38,21 +38,28 @@ export const listCharactersSchema = z.object({
   sortOrder: z.enum(["asc", "desc"]).default("asc"),
 });
 
-export type CreateCharacter = z.infer<typeof createCharacterSchema>;
-export type UpdateCharacter = z.infer<typeof updateCharacterSchema>;
-export type ListCharactersQuery = z.infer<typeof listCharactersSchema>;
+export type CreateBeing = z.infer<typeof createBeingSchema>;
+export type UpdateBeing = z.infer<typeof updateBeingSchema>;
+export type ListBeingsQuery = z.infer<typeof listBeingsSchema>;
 
 // For backward compatibility
-export const CharacterSchemas = {
-  create: createCharacterSchema,
-  update: updateCharacterSchema,
+export const BeingSchemas = {
+  create: createBeingSchema,
+  update: updateBeingSchema,
 };
+export const CharacterSchemas = BeingSchemas;
+export const createCharacterSchema = createBeingSchema;
+export const updateCharacterSchema = updateBeingSchema;
+export const listCharactersSchema = listBeingsSchema;
+export type CreateCharacter = CreateBeing;
+export type UpdateCharacter = UpdateBeing;
+export type ListCharactersQuery = ListBeingsQuery;
 
 // ============================================================================
 // RESOURCE
 // ============================================================================
 
-const characterInclude = {
+const beingInclude = {
   users: {
     select: {
       id: true,
@@ -76,12 +83,12 @@ const characterInclude = {
   },
 } satisfies Prisma.charactersInclude;
 
-class Characters extends CampaignResource {
+class Beings extends CampaignResource {
   constructor() {
-    super("characters", characterInclude);
+    super("characters", beingInclude);
   }
 
-  async list(campaignId: string, query: ListCharactersQuery) {
+  async list(campaignId: string, query: ListBeingsQuery) {
     const { type, isPrivate, ...baseQuery } = query;
 
     const where: any = {};
@@ -135,24 +142,23 @@ class Characters extends CampaignResource {
   }
 
   async getOne(ctx: CampaignContext, id: string) {
-    const character = await this.get(id, ctx.campaign.id);
-    return { character: await requireResource(character) };
+    const being = await this.get(id, ctx.campaign.id);
+    return {
+      being: await requireResource(being),
+      character: await requireResource(being),
+    };
   }
 
-  async createOne(ctx: CampaignContext, data: CreateCharacter) {
-    const character = await this.create(
-      ctx.campaign.id,
-      ctx.session.user.id,
-      data
-    );
-    return { character };
+  async createOne(ctx: CampaignContext, data: CreateBeing) {
+    const being = await this.create(ctx.campaign.id, ctx.session.user.id, data);
+    return { being, character: being };
   }
 
-  async updateOne(ctx: CampaignContext, id: string, data: UpdateCharacter) {
+  async updateOne(ctx: CampaignContext, id: string, data: UpdateBeing) {
     const existing = await this.get(id, ctx.campaign.id);
     await requireResource(existing);
-    const character = await this.update(id, ctx.campaign.id, data);
-    return { character };
+    const being = await this.update(id, ctx.campaign.id, data);
+    return { being, character: being };
   }
 
   async deleteOne(ctx: CampaignContext, id: string) {
@@ -167,8 +173,10 @@ class Characters extends CampaignResource {
 // EXPORTS
 // ============================================================================
 
-export const characters = new Characters();
+export const beings = new Beings();
 
 // Backward compatibility
-export const characterService = characters;
-export const listCharactersQuerySchema = listCharactersSchema;
+export const characters = beings;
+export const characterService = beings;
+export const listCharactersQuerySchema = listBeingsSchema;
+export const listBeingsQuerySchema = listBeingsSchema;

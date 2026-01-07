@@ -3,7 +3,7 @@ import {
   characters,
   CharacterSchemas,
   listCharactersSchema,
-} from "@/features/campaigns/characters";
+} from "@/features/campaigns/beings";
 import { prisma } from "@/lib/db/prisma";
 import { ApiErrors, apiRoute } from "@/lib/utils/api-proxy";
 import { NextRequest } from "next/server";
