@@ -1,5 +1,8 @@
 import type { CampaignContext } from "@/features/campaigns";
-import { CampaignResource, requireResource } from "@/features/campaigns/base/resource";
+import {
+  CampaignResource,
+  requireResource,
+} from "@/features/campaigns/base/resource";
 import { Prisma } from "@prisma/client";
 import { z } from "zod";
 
@@ -66,7 +69,11 @@ class Journals extends CampaignResource {
   }
 
   async createOne(ctx: CampaignContext, data: CreateJournal) {
-    const journal = await this.create(ctx.campaign.id, ctx.session.user.id, data);
+    const journal = await this.create(
+      ctx.campaign.id,
+      ctx.session.user.id,
+      data
+    );
     return { journal };
   }
 

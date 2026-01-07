@@ -1,5 +1,8 @@
 import type { CampaignContext } from "@/features/campaigns";
-import { CampaignResource, requireResource } from "@/features/campaigns/base/resource";
+import {
+  CampaignResource,
+  requireResource,
+} from "@/features/campaigns/base/resource";
 import { Prisma } from "@prisma/client";
 import { z } from "zod";
 
@@ -71,7 +74,11 @@ class Locations extends CampaignResource {
   }
 
   async createOne(ctx: CampaignContext, data: CreateLocation) {
-    const location = await this.create(ctx.campaign.id, ctx.session.user.id, data);
+    const location = await this.create(
+      ctx.campaign.id,
+      ctx.session.user.id,
+      data
+    );
     return { location };
   }
 
@@ -85,13 +92,13 @@ class Locations extends CampaignResource {
   async deleteOne(ctx: CampaignContext, id: string) {
     const existing = await this.get(id, ctx.campaign.id);
     await requireResource(existing);
-    
+
     // Check if location has children
     const childCount = await this.count(ctx.campaign.id, { parentId: id });
     if (childCount > 0) {
       throw new Error("LOCATION_HAS_CHILDREN");
     }
-    
+
     await this.delete(id, ctx.campaign.id);
     return { success: true };
   }
@@ -100,4 +107,3 @@ class Locations extends CampaignResource {
 export const locations = new Locations();
 export const locationService = locations;
 export const listLocationsQuerySchema = listLocationsSchema;
-

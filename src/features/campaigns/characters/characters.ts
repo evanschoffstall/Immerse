@@ -1,5 +1,8 @@
 import type { CampaignContext } from "@/features/campaigns";
-import { CampaignResource, requireResource } from "@/features/campaigns/base/resource";
+import {
+  CampaignResource,
+  requireResource,
+} from "@/features/campaigns/base/resource";
 import { Prisma } from "@prisma/client";
 import { z } from "zod";
 
@@ -80,7 +83,7 @@ class Characters extends CampaignResource {
 
   async list(campaignId: string, query: ListCharactersQuery) {
     const { type, isPrivate, ...baseQuery } = query;
-    
+
     const where: any = {};
     if (type) where.type = type;
     if (isPrivate !== undefined) where.isPrivate = isPrivate;
@@ -121,7 +124,7 @@ class Characters extends CampaignResource {
           totalPages: Math.ceil(total / query.limit),
           hasNext: query.page * query.limit < total,
           hasPrev: query.page > 1,
-        }
+        },
       };
     }
 
@@ -137,7 +140,11 @@ class Characters extends CampaignResource {
   }
 
   async createOne(ctx: CampaignContext, data: CreateCharacter) {
-    const character = await this.create(ctx.campaign.id, ctx.session.user.id, data);
+    const character = await this.create(
+      ctx.campaign.id,
+      ctx.session.user.id,
+      data
+    );
     return { character };
   }
 

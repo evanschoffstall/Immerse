@@ -1,15 +1,11 @@
 import { prisma } from "@/lib/db/prisma";
-import type { CampaignContext } from "@/features/campaigns";
 
 /**
  * Simple base class for campaign resources
  * Handles common CRUD operations with minimal abstraction
  */
 export class CampaignResource<TModel = any> {
-  constructor(
-    protected tableName: string,
-    protected include?: any
-  ) {}
+  constructor(protected tableName: string, protected include?: any) {}
 
   /** Get prisma model */
   protected get db() {
@@ -17,21 +13,24 @@ export class CampaignResource<TModel = any> {
   }
 
   /** List with pagination and search */
-  async list(campaignId: string, options: {
-    page?: number;
-    limit?: number;
-    search?: string;
-    sortBy?: string;
-    sortOrder?: "asc" | "desc";
-    where?: any;
-  } = {}): Promise<any> {
+  async list(
+    campaignId: string,
+    options: {
+      page?: number;
+      limit?: number;
+      search?: string;
+      sortBy?: string;
+      sortOrder?: "asc" | "desc";
+      where?: any;
+    } = {}
+  ): Promise<any> {
     const {
       page = 1,
       limit = 20,
       search,
       sortBy = "name",
       sortOrder = "asc",
-      where: customWhere = {}
+      where: customWhere = {},
     } = options;
 
     const skip = (page - 1) * limit;
@@ -40,7 +39,7 @@ export class CampaignResource<TModel = any> {
     if (search) {
       where.OR = [
         { name: { contains: search, mode: "insensitive" } },
-        { description: { contains: search, mode: "insensitive" } }
+        { description: { contains: search, mode: "insensitive" } },
       ];
     }
 
@@ -64,7 +63,7 @@ export class CampaignResource<TModel = any> {
         totalPages: Math.ceil(total / limit),
         hasNext: page * limit < total,
         hasPrev: page > 1,
-      }
+      },
     };
   }
 

@@ -1,5 +1,8 @@
 import type { CampaignContext } from "@/features/campaigns";
-import { CampaignResource, requireResource } from "@/features/campaigns/base/resource";
+import {
+  CampaignResource,
+  requireResource,
+} from "@/features/campaigns/base/resource";
 import { Prisma } from "@prisma/client";
 import { z } from "zod";
 
