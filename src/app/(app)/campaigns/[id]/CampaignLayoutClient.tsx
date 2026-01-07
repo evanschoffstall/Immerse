@@ -24,6 +24,7 @@ import {
   Dog,
   FileText,
   Flame,
+  Gem,
   History,
   Home,
   Image,
@@ -35,7 +36,6 @@ import {
   MapPin,
   Mountain,
   Notebook,
-  Package,
   PenLine,
   Scroll,
   Settings,
@@ -151,7 +151,7 @@ export default function CampaignLayoutClient({
   ];
 
   const navWorld = {
-    label: 'World',
+    label: 'Atlas', // TODO: rename everything "World" to "Atlas"
     icon: Mountain,
     items: [
       { icon: User, label: 'Characters', href: `/campaigns/${campaign.id}/characters` },
@@ -169,26 +169,32 @@ export default function CampaignLayoutClient({
     items: [
       { icon: ListOrdered, label: 'Timelines', href: `/campaigns/${campaign.id}/timelines` },
       { icon: CalendarDays, label: 'Calendars', href: `/campaigns/${campaign.id}/calendars` },
-      { icon: CalendarCheck, label: 'Events', href: `/campaigns/${campaign.id}/events` },
     ],
   };
 
-  const navWriting = {
-    label: 'Writing',
-    icon: PenLine,
+  const navGame = {
+    label: 'Story', // TODO: rename everything "Game" to "Story"
+    icon: BookOpen,
     items: [
+      { icon: Scroll, label: 'Quests', href: `/campaigns/${campaign.id}/quests` },
+      { icon: CalendarCheck, label: 'Events', href: `/campaigns/${campaign.id}/events` },
       { icon: Notebook, label: 'Journals', href: `/campaigns/${campaign.id}/journals` },
       { icon: FileText, label: 'Notes', href: `/campaigns/${campaign.id}/notes` },
     ],
   };
 
-  const navGame = {
-    label: 'Game',
-    icon: BookOpen,
+
+  const navRules = {
+    label: 'Rules',
+    icon: ?,
     items: [
-      { icon: Scroll, label: 'Quests', href: `/campaigns/${campaign.id}/quests` },
-      { icon: Package, label: 'Objects', href: `/campaigns/${campaign.id}/objects` },
-      { icon: Flame, label: 'Abilities', href: `/campaigns/${campaign.id}/abilities` },
+      { icon: ?, label: 'Abilities', href: `/campaigns/${campaign.id}/abilities` },
+      { icon: Flame, label: 'Spells', href: `/campaigns/${campaign.id}/spells` },
+      { icon: Gem, label: 'Items', href: `/campaigns/${campaign.id}/items` }, //TODO: rename everything "Objects" to "Items"
+      { icon: ?, label: 'Conditions', href: `/campaigns/${campaign.id}/conditions` },
+      { icon: ?, label: 'Classes', href: `/campaigns/${campaign.id}/classes` },
+      { icon: ?, label: 'Races', href: `/campaigns/${campaign.id}/races` },
+
     ],
   };
 
