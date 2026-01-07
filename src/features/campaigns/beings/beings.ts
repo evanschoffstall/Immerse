@@ -60,13 +60,6 @@ export type ListCharactersQuery = ListBeingsQuery;
 // ============================================================================
 
 const beingInclude = {
-  users: {
-    select: {
-      id: true,
-      name: true,
-      email: true,
-    },
-  },
   images: {
     select: {
       id: true,
@@ -81,11 +74,11 @@ const beingInclude = {
       slug: true,
     },
   },
-} satisfies Prisma.charactersInclude;
+} satisfies Prisma.beingsInclude;
 
 class Beings extends CampaignResource {
   constructor() {
-    super("characters", beingInclude);
+    super("beings", beingInclude);
   }
 
   async list(campaignId: string, query: ListBeingsQuery) {

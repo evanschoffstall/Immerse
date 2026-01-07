@@ -34,7 +34,7 @@ export class CampaignResource<TModel = any> {
     } = options;
 
     const skip = (page - 1) * limit;
-    const where: any = { campaignId, ...customWhere };
+    const where: any = { campaignId, deletedAt: null, ...customWhere };
 
     if (search) {
       where.OR = [
@@ -70,7 +70,7 @@ export class CampaignResource<TModel = any> {
   /** Get by ID */
   async get(id: string, campaignId: string) {
     return this.db.findFirst({
-      where: { id, campaignId },
+      where: { id, campaignId, deletedAt: null },
       include: this.include,
     });
   }
@@ -78,7 +78,7 @@ export class CampaignResource<TModel = any> {
   /** Get by slug */
   async getBySlug(slug: string, campaignId: string) {
     return this.db.findFirst({
-      where: { slug, campaignId },
+      where: { slug, campaignId, deletedAt: null },
       include: this.include,
     });
   }
@@ -98,10 +98,18 @@ export class CampaignResource<TModel = any> {
   }
 
   /** Update */
-  async update(id: string, campaignId: string, data: any) {
+  async update(
+    id: string,
+    campaignId: string,
+    data: any,
+    updatedById?: string
+  ) {
     const updateData = { ...data };
     if (data.name) {
       updateData.slug = this.makeSlug(data.name);
+    }
+    if (updatedById) {
+      updateData.updatedById = updatedById;
     }
     return this.db.update({
       where: { id, campaignId },
@@ -110,15 +118,21 @@ export class CampaignResource<TModel = any> {
     });
   }
 
-  /** Delete */
-  async delete(id: string, campaignId: string) {
-    await this.db.delete({ where: { id, campaignId } });
+  /** Soft delete */
+  async delete(id: string, campaignId: string, deletedById?: string) {
+    await this.db.update({
+      where: { id, campaignId },
+      data: {
+        deletedAt: new Date(),
+        ...(deletedById && { updatedById: deletedById }),
+      },
+    });
   }
 
   /** Count */
   async count(campaignId: string, where?: any) {
     return this.db.count({
-      where: { campaignId, ...where },
+      where: { campaignId, deletedAt: null, ...where },
     });
   }
 

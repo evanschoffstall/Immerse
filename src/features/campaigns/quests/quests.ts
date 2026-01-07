@@ -47,9 +47,7 @@ export const QuestSchemas = {
 // RESOURCE
 // ============================================================================
 
-const questInclude = {
-  users: { select: { id: true, name: true, email: true } },
-} satisfies Prisma.questsInclude;
+const questInclude = {} satisfies Prisma.questsInclude;
 
 class Quests extends CampaignResource {
   constructor() {
