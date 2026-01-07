@@ -1,16 +1,9 @@
 /**
- * Base classes for campaign-scoped resources
+ * Simplified base class for campaign resources
  *
  * Usage:
- * 1. Create repository class extending CampaignResourceRepository
- * 2. Create service class extending CampaignResourceService
- * 3. Override hooks for resource-specific logic
+ * 1. Extend CampaignResource with your table name and includes
+ * 2. Add custom methods as needed
+ * 3. Export an instance
  */
-export {
-  CampaignResourceRepository,
-  type BaseListQuery,
-} from "./CampaignResourceRepository";
-export {
-  CampaignResourceService,
-  type PaginationResponse,
-} from "./CampaignResourceService";
+export { CampaignResource, requireResource } from "./resource";

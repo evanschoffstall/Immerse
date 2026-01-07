@@ -1,9 +1,12 @@
 import { authConfig } from "@/lib/auth";
 import { prisma } from "@/lib/db/prisma";
-import { makeNamedResourceSchemas } from "@/lib/validation";
 import { Prisma } from "@prisma/client";
 import { getServerSession } from "next-auth/next";
-import { z } from "zod";
+import type {
+  CreateCampaignInput,
+  ListCampaignsQuery,
+  UpdateCampaignInput,
+} from "./schemas";
 
 // ============================================================================
 // CONTEXT - Shared infrastructure for loading campaign context
@@ -81,38 +84,14 @@ export async function getCampaignContext(
 // SCHEMAS - For campaign CRUD operations
 // ============================================================================
 
-// In-file Zod schema for campaigns based on Prisma model
-const campaignsOptionalDefaultsSchema = z.object({
-  name: z.string().min(1),
-  description: z.string().optional(),
-  image: z.string().optional(),
-  backgroundImage: z.string().optional(),
-  visibility: z.string().optional(),
-  locale: z.string().optional(),
-});
-
-const campaignsPartialSchema = campaignsOptionalDefaultsSchema.partial();
-
-export const CampaignSchemas = makeNamedResourceSchemas(
-  {
-    optionalDefaults: campaignsOptionalDefaultsSchema,
-    partial: campaignsPartialSchema,
-  },
-  true
-); // true = isCampaign, uses different server-managed fields
-
-// Campaigns don't need standard list filters (they're user-scoped, not campaign-scoped)
-export const listCampaignsQuerySchema = z.object({
-  page: z.coerce.number().int().positive().default(1),
-  limit: z.coerce.number().int().positive().max(100).default(20),
-  search: z.string().optional(),
-  sortBy: z.string().default("updatedAt"),
-  sortOrder: z.enum(["asc", "desc"]).default("desc"),
-});
-
-export type CreateCampaignInput = z.infer<typeof CampaignSchemas.create>;
-export type UpdateCampaignInput = z.infer<typeof CampaignSchemas.update>;
-export type ListCampaignsQuery = z.infer<typeof listCampaignsQuerySchema>;
+export {
+  CampaignSchemas,
+  listCampaignsQuerySchema,
+  type CreateCampaignInput,
+  type ListCampaignsQuery,
+  type UpdateCampaignInput,
+} from "./schemas";
+export { campaignRepo };
 
 // ============================================================================
 // REPOSITORY - Campaign-specific operations
@@ -361,4 +340,3 @@ class CampaignService {
 
 const campaignRepo = new CampaignRepository();
 export const campaignService = new CampaignService(campaignRepo);
-export { campaignRepo };

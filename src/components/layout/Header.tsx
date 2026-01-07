@@ -8,10 +8,11 @@ import {
   HoverCardContent,
   HoverCardTrigger,
 } from '@/components/ui/hover-card'
+import { Input } from '@/components/ui/input'
 import { Separator } from '@/components/ui/separator'
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet'
 import { Skeleton } from '@/components/ui/skeleton'
-import { LogOut, Menu, Settings, Swords } from 'lucide-react'
+import { LogOut, Menu, Search, Settings, Swords } from 'lucide-react'
 import { signOut, useSession } from 'next-auth/react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
@@ -88,7 +89,20 @@ export default function Header() {
           background: 'linear-gradient(to bottom, hsl(var(--background) / 0.6), hsl(var(--background) / 0.4), transparent)'
         }}
       />
-      <div className="flex h-13 items-center px-4 sm:px-6 lg:px-8">
+      <div className="relative flex h-13 items-center px-4 sm:px-6 lg:px-8">
+        {isOnCampaignPage && (
+          <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-full max-w-2xl px-4 pointer-events-none">
+            <div className="relative pointer-events-auto">
+              <Search className="absolute left-1/2 top-1/2 h-4 w-4 -translate-x-[calc(50%+6.5rem)] -translate-y-1/2 text-muted-foreground" />
+              <Input
+                type="search"
+                placeholder="Search campaign content..."
+                className="h-9 w-full px-4 text-center bg-background/60 backdrop-blur-sm border-border/40 focus-visible:border-border focus-visible:bg-background/80 transition-all placeholder:text-center"
+              />
+            </div>
+          </div>
+        )}
+
         <div className="mr-4 hidden md:flex">
           <Link href="/" className="mr-6 flex items-center space-x-2 transition-opacity hover:opacity-80">
             <Swords className="h-5 w-5 text-primary" />
@@ -149,12 +163,7 @@ export default function Header() {
           </SheetContent>
         </Sheet>
 
-        <div className="flex flex-1 items-center justify-between space-x-2 md:justify-end">
-          {isOnCampaignPage && (
-            <div className="w-full flex-1 md:w-auto md:flex-none">
-              {/* <GlobalSearch campaignId={campaignId} /> */}
-            </div>
-          )}
+        <div className="flex flex-1 items-center justify-end">
           <nav className="flex items-center gap-2">
             <ThemeToggle />
             {status === 'loading' ? (

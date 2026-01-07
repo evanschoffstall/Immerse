@@ -41,10 +41,7 @@ export default function NewCampaignPage() {
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({
-          name: data.name,
-          description: data.description || '',
-        }),
+        body: JSON.stringify(data),
       });
 
       if (!response.ok) {

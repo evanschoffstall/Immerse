@@ -12,19 +12,12 @@ import {
 } from '@/components/ui/form';
 import ImageUpload from '@/components/ui/ImageUpload';
 import { Input } from '@/components/ui/input';
+import { CampaignSchemas, type CreateCampaignInput } from '@/features/campaigns/schemas';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
-import { z } from 'zod';
 
-// In-file campaign form schema
-const campaignSchema = z.object({
-  name: z.string().min(1),
-  description: z.string().optional(),
-  image: z.string().optional(),
-  backgroundImage: z.string().optional(),
-});
-
-export type CampaignFormData = z.infer<typeof campaignSchema>;
+// Use business logic layer schema
+export type CampaignFormData = CreateCampaignInput;
 
 export interface CampaignFormProps {
   initialData?: Partial<CampaignFormData>;
@@ -44,12 +37,12 @@ export default function CampaignForm({
   onBackgroundImageChange,
 }: CampaignFormProps) {
   const form = useForm<CampaignFormData>({
-    resolver: zodResolver(campaignSchema),
+    resolver: zodResolver(CampaignSchemas.create),
     defaultValues: {
       name: initialData?.name || '',
-      description: initialData?.description || '',
-      image: initialData?.image || '',
-      backgroundImage: initialData?.backgroundImage || '',
+      description: initialData?.description || undefined,
+      image: initialData?.image || undefined,
+      backgroundImage: initialData?.backgroundImage || undefined,
     },
   });
 
@@ -65,6 +58,7 @@ export default function CampaignForm({
               <FormControl>
                 <Input
                   {...field}
+                  value={field.value as string}
                   placeholder="Enter campaign name"
                   disabled={isLoading}
                 />
@@ -82,7 +76,7 @@ export default function CampaignForm({
               <FormLabel>Description</FormLabel>
               <FormControl>
                 <RichTextEditor
-                  content={field.value || ''}
+                  content={(field.value as string | undefined) || ''}
                   onChange={field.onChange}
                   placeholder="Describe your campaign..."
                   disabled={isLoading}
@@ -103,7 +97,7 @@ export default function CampaignForm({
                 <FormLabel>Campaign Image</FormLabel>
                 <FormControl>
                   <ImageUpload
-                    currentImage={field.value ?? undefined}
+                    currentImage={(field.value as string | undefined) ?? undefined}
                     onImageUpload={(url) => {
                       field.onChange(url);
                       onImageChange?.(url);
@@ -123,7 +117,7 @@ export default function CampaignForm({
                 <FormLabel>Background Image</FormLabel>
                 <FormControl>
                   <ImageUpload
-                    currentImage={field.value ?? undefined}
+                    currentImage={(field.value as string | undefined) ?? undefined}
                     onImageUpload={(url) => {
                       field.onChange(url);
                       onBackgroundImageChange?.(url);

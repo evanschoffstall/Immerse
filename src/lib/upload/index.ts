@@ -19,7 +19,7 @@ function calculateHash(buffer: Buffer): string {
  * Upload and optimize an image to the local file system
  * Uses content-based hashing to deduplicate files - identical files will reuse the same path
  * @param file - The file to upload
- * @param folder - Subfolder within uploads (e.g., 'campaigns', 'characters')
+ * @param folder - Subfolder within uploads (e.g., 'campaigns', etc...)
  * @returns The relative URL path to the uploaded file
  */
 export async function uploadImage(
@@ -126,23 +126,7 @@ export function imageExists(imagePath: string): boolean {
  * Create all upload directories
  */
 export async function initializeUploadDirectories(): Promise<void> {
-  const folders = [
-    "campaigns",
-    "characters",
-    "locations",
-    "locations/maps",
-    "items",
-    "quests",
-    "events",
-    "journals",
-    "notes",
-    "families",
-    "races",
-    "organisations",
-    "timelines",
-    "maps",
-    "general",
-  ];
+  const folders = ["campaigns", "general"];
 
   for (const folder of folders) {
     const folderPath = path.join(UPLOAD_DIR, folder);

@@ -18,12 +18,12 @@ export default async function CampaignLayout({
     redirect('/login');
   }
 
-  // Fetch campaign and style data server-side
-  const [campaign, campaignStyle] = await Promise.all([
+  // Fetch campaign and settings data server-side
+  const [campaign, campaignSettings] = await Promise.all([
     prisma.campaigns.findUnique({
       where: { id },
     }),
-    prisma.campaign_styles.findUnique({
+    prisma.campaign_settings.findUnique({
       where: { campaignId: id },
     }),
   ]);
@@ -38,7 +38,7 @@ export default async function CampaignLayout({
   }
 
   return (
-    <CampaignLayoutClient campaign={campaign} campaignStyle={campaignStyle}>
+    <CampaignLayoutClient campaign={campaign} campaignSettings={campaignSettings}>
       {children}
     </CampaignLayoutClient>
   );
