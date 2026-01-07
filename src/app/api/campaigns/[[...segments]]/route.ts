@@ -1,8 +1,8 @@
 import { getCampaignContext } from "@/features/campaigns";
 import {
+  characters,
   CharacterSchemas,
-  characterService,
-  listCharactersQuerySchema,
+  listCharactersSchema,
 } from "@/features/campaigns/characters";
 import { prisma } from "@/lib/db/prisma";
 import { ApiErrors, apiRoute } from "@/lib/utils/api-proxy";
@@ -69,11 +69,10 @@ export async function GET(
       case "characters":
         if (resourceId) {
           // GET /api/campaigns/[id]/characters/[characterId]
-          const character = await characterService.get(ctx, resourceId);
-          return character;
+          return await characters.getOne(ctx, resourceId);
         }
         // GET /api/campaigns/[id]/characters (list)
-        const parsedQuery = listCharactersQuerySchema.parse({
+        const parsedQuery = listCharactersSchema.parse({
           page: query.get("page") || "1",
           limit: query.get("limit") || "20",
           search: query.get("search") || undefined,
@@ -82,8 +81,7 @@ export async function GET(
           sortBy: query.get("sortBy") || "name",
           sortOrder: query.get("sortOrder") || "asc",
         });
-        const characters = await characterService.list(ctx, parsedQuery);
-        return characters;
+        return await characters.list(ctx.campaign.id, parsedQuery);
 
       default:
         return ApiErrors.notFound();
@@ -131,8 +129,7 @@ export async function POST(
     switch (resource) {
       case "characters":
         const validated = CharacterSchemas.create.parse(body);
-        const character = await characterService.create(ctx, validated);
-        return character;
+        return await characters.createOne(ctx, validated);
 
       default:
         return ApiErrors.notFound();
@@ -194,12 +191,7 @@ export async function PATCH(
           return ApiErrors.notFound();
         }
         const validated = CharacterSchemas.update.parse(data);
-        const character = await characterService.update(
-          ctx,
-          resourceId,
-          validated
-        );
-        return character;
+        return await characters.updateOne(ctx, resourceId, validated);
 
       default:
         return ApiErrors.notFound();
@@ -233,8 +225,7 @@ export async function DELETE(
         if (!resourceId) {
           return ApiErrors.notFound();
         }
-        const result = await characterService.delete(ctx, resourceId);
-        return result;
+        return await characters.deleteOne(ctx, resourceId);
 
       default:
         return ApiErrors.notFound();

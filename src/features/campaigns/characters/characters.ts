@@ -1,10 +1,5 @@
 import type { CampaignContext } from "@/features/campaigns";
-import { CampaignResourceRepository } from "@/features/campaigns/base/CampaignResourceRepository";
-import { CampaignResourceService } from "@/features/campaigns/base/CampaignResourceService";
-import {
-  listResourceQuerySchema,
-  makeNamedResourceSchemas,
-} from "@/lib/validation";
+import { CampaignResource, requireResource } from "@/features/campaigns/base/resource";
 import { Prisma } from "@prisma/client";
 import { z } from "zod";
 
@@ -12,8 +7,7 @@ import { z } from "zod";
 // SCHEMAS
 // ============================================================================
 
-// In-file Zod schema for characters based on Prisma model
-const charactersOptionalDefaultsSchema = z.object({
+export const createCharacterSchema = z.object({
   name: z.string().min(1),
   title: z.string().optional(),
   type: z.string().optional(),
@@ -29,24 +23,30 @@ const charactersOptionalDefaultsSchema = z.object({
   birthDate: z.string().optional(),
 });
 
-const charactersPartialSchema = charactersOptionalDefaultsSchema.partial();
+export const updateCharacterSchema = createCharacterSchema.partial();
 
-export const CharacterSchemas = makeNamedResourceSchemas({
-  optionalDefaults: charactersOptionalDefaultsSchema,
-  partial: charactersPartialSchema,
-});
-
-export const listCharactersQuerySchema = listResourceQuerySchema.extend({
+export const listCharactersSchema = z.object({
+  page: z.coerce.number().min(1).default(1),
+  limit: z.coerce.number().min(1).max(100).default(20),
+  search: z.string().optional(),
   type: z.string().optional(),
   isPrivate: z.coerce.boolean().optional(),
+  sortBy: z.string().default("name"),
+  sortOrder: z.enum(["asc", "desc"]).default("asc"),
 });
 
-export type CreateCharacterInput = z.infer<typeof CharacterSchemas.create>;
-export type UpdateCharacterInput = z.infer<typeof CharacterSchemas.update>;
-export type ListCharactersQuery = z.infer<typeof listCharactersQuerySchema>;
+export type CreateCharacter = z.infer<typeof createCharacterSchema>;
+export type UpdateCharacter = z.infer<typeof updateCharacterSchema>;
+export type ListCharactersQuery = z.infer<typeof listCharactersSchema>;
+
+// For backward compatibility
+export const CharacterSchemas = {
+  create: createCharacterSchema,
+  update: updateCharacterSchema,
+};
 
 // ============================================================================
-// REPOSITORY
+// RESOURCE
 // ============================================================================
 
 const characterInclude = {
@@ -73,82 +73,86 @@ const characterInclude = {
   },
 } satisfies Prisma.charactersInclude;
 
-class CharacterRepository extends CampaignResourceRepository<
-  any,
-  typeof characterInclude,
-  CreateCharacterInput,
-  UpdateCharacterInput,
-  ListCharactersQuery
-> {
+class Characters extends CampaignResource {
   constructor() {
-    super("characters" as Prisma.ModelName, characterInclude);
+    super("characters", characterInclude);
   }
 
-  protected buildSearchFilters(search: string): any[] {
-    return [
-      { name: { contains: search, mode: "insensitive" } },
-      { description: { contains: search, mode: "insensitive" } },
-      { title: { contains: search, mode: "insensitive" } },
-    ];
-  }
+  async list(campaignId: string, query: ListCharactersQuery) {
+    const { type, isPrivate, ...baseQuery } = query;
+    
+    const where: any = {};
+    if (type) where.type = type;
+    if (isPrivate !== undefined) where.isPrivate = isPrivate;
 
-  protected buildCustomFilters(query: ListCharactersQuery): any {
-    const filters: any = {};
-    if (query.type) filters.type = query.type;
-    if (query.isPrivate !== undefined) filters.isPrivate = query.isPrivate;
-    return filters;
-  }
+    const result = await super.list(campaignId, {
+      ...baseQuery,
+      where,
+    });
 
-  async findMany(campaignId: string, query: ListCharactersQuery) {
-    const { items, total } = await super.findMany(campaignId, query);
-    return { items, total };
-  }
-}
+    // Custom search for characters (include title field)
+    if (query.search) {
+      const where: any = { campaignId };
+      where.OR = [
+        { name: { contains: query.search, mode: "insensitive" } },
+        { description: { contains: query.search, mode: "insensitive" } },
+        { title: { contains: query.search, mode: "insensitive" } },
+      ];
+      if (type) where.type = type;
+      if (isPrivate !== undefined) where.isPrivate = isPrivate;
 
-// ============================================================================
-// SERVICE
-// ============================================================================
+      const [items, total] = await Promise.all([
+        this.db.findMany({
+          where,
+          include: this.include,
+          orderBy: { [query.sortBy]: query.sortOrder },
+          skip: (query.page - 1) * query.limit,
+          take: query.limit,
+        }),
+        this.db.count({ where }),
+      ]);
 
-class CharacterService extends CampaignResourceService<
-  any,
-  CharacterRepository,
-  CreateCharacterInput,
-  UpdateCharacterInput,
-  ListCharactersQuery
-> {
-  constructor(repo: CharacterRepository) {
-    super(repo, "character");
-  }
-
-  protected async validateCreate(
-    ctx: CampaignContext,
-    data: CreateCharacterInput
-  ): Promise<void> {
-    const charData = data as any;
-    // Validate calendar exists if provided
-    if (charData.birthCalendarId) {
-      // Add calendar validation here if needed
+      return {
+        characters: items,
+        pagination: {
+          page: query.page,
+          limit: query.limit,
+          total,
+          totalPages: Math.ceil(total / query.limit),
+          hasNext: query.page * query.limit < total,
+          hasPrev: query.page > 1,
+        }
+      };
     }
-    // Validate image exists if provided
-    if (charData.imageId) {
-      // Add image validation here if needed
-    }
+
+    return {
+      characters: result.items,
+      pagination: result.pagination,
+    };
   }
 
-  protected async validateUpdate(
-    ctx: CampaignContext,
-    id: string,
-    data: UpdateCharacterInput
-  ): Promise<void> {
-    const charData = data as any;
-    // Validate calendar exists if provided
-    if (charData.birthCalendarId) {
-      // Add calendar validation here if needed
-    }
-    // Validate image exists if provided
-    if (charData.imageId) {
-      // Add image validation here if needed
-    }
+  async getOne(ctx: CampaignContext, id: string) {
+    const character = await this.get(id, ctx.campaign.id);
+    return { character: await requireResource(character) };
+  }
+
+  async createOne(ctx: CampaignContext, data: CreateCharacter) {
+    const character = await this.create(ctx.campaign.id, ctx.session.user.id, data);
+    return { character };
+  }
+
+  async updateOne(ctx: CampaignContext, id: string, data: UpdateCharacter) {
+    const existing = await this.get(id, ctx.campaign.id);
+    await requireResource(existing);
+    const character = await this.update(id, ctx.campaign.id, data);
+    return { character };
+  }
+
+  async deleteOne(ctx: CampaignContext, id: string) {
+    const existing = await this.get(id, ctx.campaign.id);
+    await requireResource(existing);
+    await this.delete(id, ctx.campaign.id);
+    return { success: true };
   }
 }
 
@@ -156,6 +160,8 @@ class CharacterService extends CampaignResourceService<
 // EXPORTS
 // ============================================================================
 
-const characterRepo = new CharacterRepository();
-export const characterService = new CharacterService(characterRepo);
-export { characterRepo };
+export const characters = new Characters();
+
+// Backward compatibility
+export const characterService = characters;
+export const listCharactersQuerySchema = listCharactersSchema;

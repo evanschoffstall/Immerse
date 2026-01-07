@@ -1,10 +1,5 @@
 import type { CampaignContext } from "@/features/campaigns";
-import { CampaignResourceRepository } from "@/features/campaigns/base/CampaignResourceRepository";
-import { CampaignResourceService } from "@/features/campaigns/base/CampaignResourceService";
-import {
-  listResourceQuerySchema,
-  makeNamedResourceSchemas,
-} from "@/lib/validation";
+import { CampaignResource, requireResource } from "@/features/campaigns/base/resource";
 import { Prisma } from "@prisma/client";
 import { z } from "zod";
 
@@ -12,8 +7,7 @@ import { z } from "zod";
 // SCHEMAS
 // ============================================================================
 
-// In-file Zod schema for journals based on Prisma model
-const journalsOptionalDefaultsSchema = z.object({
+export const createJournalSchema = z.object({
   name: z.string().min(1),
   type: z.string().optional(),
   description: z.string().optional(),
@@ -22,121 +16,75 @@ const journalsOptionalDefaultsSchema = z.object({
   isPrivate: z.boolean().optional(),
 });
 
-const journalsPartialSchema = journalsOptionalDefaultsSchema.partial();
+export const updateJournalSchema = createJournalSchema.partial();
 
-export const JournalsSchemas = makeNamedResourceSchemas({
-  optionalDefaults: journalsOptionalDefaultsSchema,
-  partial: journalsPartialSchema,
-});
-
-export const listJournalssQuerySchema = listResourceQuerySchema.extend({
+export const listJournalsSchema = z.object({
+  page: z.coerce.number().min(1).default(1),
+  limit: z.coerce.number().min(1).max(100).default(20),
+  search: z.string().optional(),
   type: z.string().optional(),
   isPrivate: z.coerce.boolean().optional(),
-  // Add resource-specific filters here
+  sortBy: z.string().default("name"),
+  sortOrder: z.enum(["asc", "desc"]).default("asc"),
 });
 
-export type CreateJournalsInput = z.infer<typeof JournalsSchemas.create>;
-export type UpdateJournalsInput = z.infer<typeof JournalsSchemas.update>;
-export type ListJournalssQuery = z.infer<typeof listJournalssQuerySchema>;
+export type CreateJournal = z.infer<typeof createJournalSchema>;
+export type UpdateJournal = z.infer<typeof updateJournalSchema>;
+export type ListJournalsQuery = z.infer<typeof listJournalsSchema>;
+
+export const JournalsSchemas = {
+  create: createJournalSchema,
+  update: updateJournalSchema,
+};
 
 // ============================================================================
-// REPOSITORY
+// RESOURCE
 // ============================================================================
 
 const journalsInclude = {
-  users: {
-    select: {
-      id: true,
-      name: true,
-      email: true,
-    },
-  },
-  // Add additional relations here
+  users: { select: { id: true, name: true, email: true } },
 } satisfies Prisma.journalsInclude;
 
-class JournalsRepository extends CampaignResourceRepository<
-  any,
-  typeof journalsInclude,
-  CreateJournalsInput,
-  UpdateJournalsInput,
-  ListJournalssQuery
-> {
+class Journals extends CampaignResource {
   constructor() {
-    super("journals" as Prisma.ModelName, journalsInclude);
+    super("journals", journalsInclude);
   }
 
-  protected buildSearchFilters(search: string): any[] {
-    return [
-      { name: { contains: search, mode: "insensitive" } },
-      { description: { contains: search, mode: "insensitive" } },
-      { type: { contains: search, mode: "insensitive" } },
-    ];
+  async list(campaignId: string, query: ListJournalsQuery) {
+    const { type, isPrivate, ...baseQuery } = query;
+    const where: any = {};
+    if (type) where.type = type;
+    if (isPrivate !== undefined) where.isPrivate = isPrivate;
+
+    const result = await super.list(campaignId, { ...baseQuery, where });
+    return { journals: result.items, pagination: result.pagination };
   }
 
-  protected buildCustomFilters(query: ListJournalssQuery): any {
-    const filters: any = {};
-    if (query.type) filters.type = query.type;
-    if (query.isPrivate !== undefined) filters.isPrivate = query.isPrivate;
-    // Add resource-specific filters here
-    return filters;
+  async getOne(ctx: CampaignContext, id: string) {
+    const journal = await this.get(id, ctx.campaign.id);
+    return { journal: await requireResource(journal) };
   }
 
-  async findMany(campaignId: string, query: ListJournalssQuery) {
-    const { items, total } = await super.findMany(campaignId, query);
-    return { items, total };
+  async createOne(ctx: CampaignContext, data: CreateJournal) {
+    const journal = await this.create(ctx.campaign.id, ctx.session.user.id, data);
+    return { journal };
   }
 
-  // Add resource-specific repository methods here
+  async updateOne(ctx: CampaignContext, id: string, data: UpdateJournal) {
+    const existing = await this.get(id, ctx.campaign.id);
+    await requireResource(existing);
+    const journal = await this.update(id, ctx.campaign.id, data);
+    return { journal };
+  }
+
+  async deleteOne(ctx: CampaignContext, id: string) {
+    const existing = await this.get(id, ctx.campaign.id);
+    await requireResource(existing);
+    await this.delete(id, ctx.campaign.id);
+    return { success: true };
+  }
 }
 
-// ============================================================================
-// SERVICE
-// ============================================================================
-
-class JournalsService extends CampaignResourceService<
-  any,
-  JournalsRepository,
-  CreateJournalsInput,
-  UpdateJournalsInput,
-  ListJournalssQuery
-> {
-  constructor() {
-    super(new JournalsRepository(), "journals");
-  }
-
-  protected get pluralResourceName(): string {
-    return "journalss";
-  }
-
-  protected async validateCreate(
-    ctx: CampaignContext,
-    data: CreateJournalsInput
-  ): Promise<void> {
-    // Add custom validation if needed
-  }
-
-  protected async validateUpdate(
-    ctx: CampaignContext,
-    id: string,
-    data: UpdateJournalsInput
-  ): Promise<void> {
-    // Add custom validation if needed
-  }
-
-  protected async validateDelete(
-    ctx: CampaignContext,
-    id: string
-  ): Promise<void> {
-    // Add custom validation if needed
-  }
-
-  // Add resource-specific service methods here
-}
-
-// ============================================================================
-// EXPORTS
-// ============================================================================
-
-const journalsRepo = new JournalsRepository();
-export const journalsService = new JournalsService();
-export { journalsRepo };
+export const journals = new Journals();
+export const journalsService = journals;
+export const listJournalssQuerySchema = listJournalsSchema;

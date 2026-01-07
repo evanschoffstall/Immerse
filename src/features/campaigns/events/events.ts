@@ -1,10 +1,5 @@
 import type { CampaignContext } from "@/features/campaigns";
-import { CampaignResourceRepository } from "@/features/campaigns/base/CampaignResourceRepository";
-import { CampaignResourceService } from "@/features/campaigns/base/CampaignResourceService";
-import {
-  listResourceQuerySchema,
-  makeNamedResourceSchemas,
-} from "@/lib/validation";
+import { CampaignResource, requireResource } from "@/features/campaigns/base/resource";
 import { Prisma } from "@prisma/client";
 import { z } from "zod";
 
@@ -12,8 +7,7 @@ import { z } from "zod";
 // SCHEMAS
 // ============================================================================
 
-// In-file Zod schema for events based on Prisma model
-const eventsOptionalDefaultsSchema = z.object({
+export const createEventSchema = z.object({
   name: z.string().min(1),
   type: z.string().optional(),
   description: z.string().optional(),
@@ -24,95 +18,90 @@ const eventsOptionalDefaultsSchema = z.object({
   calendarId: z.string().optional(),
 });
 
-const eventsPartialSchema = eventsOptionalDefaultsSchema.partial();
+export const updateEventSchema = createEventSchema.partial();
 
-export const EventSchemas = makeNamedResourceSchemas({
-  optionalDefaults: eventsOptionalDefaultsSchema,
-  partial: eventsPartialSchema,
-});
-
-export const listEventsQuerySchema = listResourceQuerySchema.extend({
+export const listEventsSchema = z.object({
+  page: z.coerce.number().min(1).default(1),
+  limit: z.coerce.number().min(1).max(100).default(20),
+  search: z.string().optional(),
   type: z.string().optional(),
   isPrivate: z.coerce.boolean().optional(),
   calendarId: z.string().optional(),
   date: z.string().optional(),
+  sortBy: z.string().default("name"),
+  sortOrder: z.enum(["asc", "desc"]).default("asc"),
 });
 
-export type CreateEventInput = z.infer<typeof EventSchemas.create>;
-export type UpdateEventInput = z.infer<typeof EventSchemas.update>;
-export type ListEventsQuery = z.infer<typeof listEventsQuerySchema>;
+export type CreateEvent = z.infer<typeof createEventSchema>;
+export type UpdateEvent = z.infer<typeof updateEventSchema>;
+export type ListEventsQuery = z.infer<typeof listEventsSchema>;
+
+export const EventSchemas = {
+  create: createEventSchema,
+  update: updateEventSchema,
+};
 
 // ============================================================================
-// REPOSITORY
+// RESOURCE
 // ============================================================================
 
 const eventInclude = {
-  users: {
-    select: {
-      id: true,
-      name: true,
-      email: true,
-    },
-  },
-  calendars: {
-    select: {
-      id: true,
-      name: true,
-      slug: true,
-    },
-  },
+  users: { select: { id: true, name: true, email: true } },
+  calendars: { select: { id: true, name: true, slug: true } },
 } satisfies Prisma.eventsInclude;
 
-class EventRepository extends CampaignResourceRepository<
-  any,
-  typeof eventInclude,
-  CreateEventInput,
-  UpdateEventInput,
-  ListEventsQuery
-> {
+class Events extends CampaignResource {
   constructor() {
-    super("events" as Prisma.ModelName, eventInclude);
+    super("events", eventInclude);
   }
 
-  protected buildSearchFilters(search: string): any[] {
-    return [
-      { name: { contains: search, mode: "insensitive" } },
-      { description: { contains: search, mode: "insensitive" } },
-      { type: { contains: search, mode: "insensitive" } },
-    ];
+  async list(campaignId: string, query: ListEventsQuery) {
+    const { type, isPrivate, calendarId, date, ...baseQuery } = query;
+    const where: any = {};
+    if (type) where.type = type;
+    if (isPrivate !== undefined) where.isPrivate = isPrivate;
+    if (calendarId) where.calendarId = calendarId;
+    if (date) where.date = date;
+
+    const result = await super.list(campaignId, { ...baseQuery, where });
+    return { events: result.items, pagination: result.pagination };
   }
 
-  protected buildCustomFilters(query: ListEventsQuery): any {
-    const filters: any = {};
-    if (query.type) filters.type = query.type;
-    if (query.isPrivate !== undefined) filters.isPrivate = query.isPrivate;
-    if (query.calendarId) filters.calendarId = query.calendarId;
-    if (query.date) filters.date = query.date;
-    return filters;
+  async getOne(ctx: CampaignContext, id: string) {
+    const event = await this.get(id, ctx.campaign.id);
+    return { event: await requireResource(event) };
   }
 
-  async findMany(campaignId: string, query: ListEventsQuery) {
-    const { items, total } = await super.findMany(campaignId, query);
-    return { items, total };
+  async createOne(ctx: CampaignContext, data: CreateEvent) {
+    const event = await this.create(ctx.campaign.id, ctx.session.user.id, data);
+    return { event };
   }
 
-  /**
-   * Find events by calendar and date range
-   */
-  async findByCalendarAndDateRange(
+  async updateOne(ctx: CampaignContext, id: string, data: UpdateEvent) {
+    const existing = await this.get(id, ctx.campaign.id);
+    await requireResource(existing);
+    const event = await this.update(id, ctx.campaign.id, data);
+    return { event };
+  }
+
+  async deleteOne(ctx: CampaignContext, id: string) {
+    const existing = await this.get(id, ctx.campaign.id);
+    await requireResource(existing);
+    await this.delete(id, ctx.campaign.id);
+    return { success: true };
+  }
+
+  async getByCalendarDateRange(
     campaignId: string,
     calendarId: string,
     startDate: string,
     endDate: string
   ) {
-    return this.model.findMany({
+    return this.db.findMany({
       where: {
         campaignId,
         calendarId,
-        date: {
-          gte: startDate,
-          lte: endDate,
-        },
+        date: { gte: startDate, lte: endDate },
       },
       include: this.include,
       orderBy: { date: "asc" },
@@ -120,72 +109,6 @@ class EventRepository extends CampaignResourceRepository<
   }
 }
 
-// ============================================================================
-// SERVICE
-// ============================================================================
-
-class EventService extends CampaignResourceService<
-  any,
-  EventRepository,
-  CreateEventInput,
-  UpdateEventInput,
-  ListEventsQuery
-> {
-  constructor() {
-    super(new EventRepository(), "event");
-  }
-
-  protected get pluralResourceName(): string {
-    return "events";
-  }
-
-  protected async validateCreate(
-    ctx: CampaignContext,
-    data: CreateEventInput
-  ): Promise<void> {
-    // Validate calendar exists in campaign if calendarId provided
-  }
-
-  protected async validateUpdate(
-    ctx: CampaignContext,
-    id: string,
-    data: UpdateEventInput
-  ): Promise<void> {
-    // Add custom validation if needed
-  }
-
-  protected async validateDelete(
-    ctx: CampaignContext,
-    id: string
-  ): Promise<void> {
-    // Add custom validation if needed
-  }
-
-  /**
-   * Get events in a date range for a calendar
-   */
-  async getEventsByCalendarDateRange(
-    ctx: CampaignContext,
-    calendarId: string,
-    startDate: string,
-    endDate: string
-  ) {
-    const events = await (
-      this.repository as EventRepository
-    ).findByCalendarAndDateRange(
-      ctx.campaign.id,
-      calendarId,
-      startDate,
-      endDate
-    );
-    return { events };
-  }
-}
-
-// ============================================================================
-// EXPORTS
-// ============================================================================
-
-const eventRepo = new EventRepository();
-export const eventService = new EventService();
-export { eventRepo };
+export const events = new Events();
+export const eventService = events;
+export const listEventsQuerySchema = listEventsSchema;

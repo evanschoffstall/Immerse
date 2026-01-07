@@ -1,10 +1,5 @@
 import type { CampaignContext } from "@/features/campaigns";
-import { CampaignResourceRepository } from "@/features/campaigns/base/CampaignResourceRepository";
-import { CampaignResourceService } from "@/features/campaigns/base/CampaignResourceService";
-import {
-  listResourceQuerySchema,
-  makeNamedResourceSchemas,
-} from "@/lib/validation";
+import { CampaignResource, requireResource } from "@/features/campaigns/base/resource";
 import { Prisma } from "@prisma/client";
 import { z } from "zod";
 
@@ -12,8 +7,7 @@ import { z } from "zod";
 // SCHEMAS
 // ============================================================================
 
-// In-file Zod schema for items based on Prisma model
-const itemsOptionalDefaultsSchema = z.object({
+export const createItemSchema = z.object({
   name: z.string().min(1),
   type: z.string().optional(),
   description: z.string().optional(),
@@ -25,118 +19,80 @@ const itemsOptionalDefaultsSchema = z.object({
   isPrivate: z.boolean().optional(),
 });
 
-const itemsPartialSchema = itemsOptionalDefaultsSchema.partial();
+export const updateItemSchema = createItemSchema.partial();
 
-export const ItemSchemas = makeNamedResourceSchemas({
-  optionalDefaults: itemsOptionalDefaultsSchema,
-  partial: itemsPartialSchema,
-});
-
-export const listItemsQuerySchema = listResourceQuerySchema.extend({
+export const listItemsSchema = z.object({
+  page: z.coerce.number().min(1).default(1),
+  limit: z.coerce.number().min(1).max(100).default(20),
+  search: z.string().optional(),
   type: z.string().optional(),
   isPrivate: z.coerce.boolean().optional(),
   character: z.string().optional(),
   location: z.string().optional(),
+  sortBy: z.string().default("name"),
+  sortOrder: z.enum(["asc", "desc"]).default("asc"),
 });
 
-export type CreateItemInput = z.infer<typeof ItemSchemas.create>;
-export type UpdateItemInput = z.infer<typeof ItemSchemas.update>;
-export type ListItemsQuery = z.infer<typeof listItemsQuerySchema>;
+export type CreateItem = z.infer<typeof createItemSchema>;
+export type UpdateItem = z.infer<typeof updateItemSchema>;
+export type ListItemsQuery = z.infer<typeof listItemsSchema>;
+
+export const ItemSchemas = {
+  create: createItemSchema,
+  update: updateItemSchema,
+};
 
 // ============================================================================
-// REPOSITORY
+// RESOURCE
 // ============================================================================
 
 const itemInclude = {
-  users: {
-    select: {
-      id: true,
-      name: true,
-      email: true,
-    },
-  },
+  users: { select: { id: true, name: true, email: true } },
 } satisfies Prisma.itemsInclude;
 
-class ItemRepository extends CampaignResourceRepository<
-  any,
-  typeof itemInclude,
-  CreateItemInput,
-  UpdateItemInput,
-  ListItemsQuery
-> {
+class Items extends CampaignResource {
   constructor() {
-    super("items" as Prisma.ModelName, itemInclude);
+    super("items", itemInclude);
   }
 
-  protected buildSearchFilters(search: string): any[] {
-    return [
-      { name: { contains: search, mode: "insensitive" } },
-      { description: { contains: search, mode: "insensitive" } },
-      { type: { contains: search, mode: "insensitive" } },
-    ];
+  async list(campaignId: string, query: ListItemsQuery) {
+    const { type, isPrivate, character, location, ...baseQuery } = query;
+    const where: any = {};
+    if (type) where.type = type;
+    if (isPrivate !== undefined) where.isPrivate = isPrivate;
+    if (character) where.character = character;
+    if (location) where.location = location;
+
+    const result = await super.list(campaignId, { ...baseQuery, where });
+    return { items: result.items, pagination: result.pagination };
   }
 
-  protected buildCustomFilters(query: ListItemsQuery): any {
-    const filters: any = {};
-    if (query.type) filters.type = query.type;
-    if (query.isPrivate !== undefined) filters.isPrivate = query.isPrivate;
-    if (query.character) filters.character = query.character;
-    if (query.location) filters.location = query.location;
-    return filters;
+  async getOne(ctx: CampaignContext, id: string) {
+    const item = await this.get(id, ctx.campaign.id);
+    return { item: await requireResource(item) };
   }
 
-  async findMany(campaignId: string, query: ListItemsQuery) {
-    const { items, total } = await super.findMany(campaignId, query);
-    return { items, total };
+  async createOne(ctx: CampaignContext, data: CreateItem) {
+    const item = await this.create(ctx.campaign.id, ctx.session.user.id, data);
+    return { item };
+  }
+
+  async updateOne(ctx: CampaignContext, id: string, data: UpdateItem) {
+    const existing = await this.get(id, ctx.campaign.id);
+    await requireResource(existing);
+    const item = await this.update(id, ctx.campaign.id, data);
+    return { item };
+  }
+
+  async deleteOne(ctx: CampaignContext, id: string) {
+    const existing = await this.get(id, ctx.campaign.id);
+    await requireResource(existing);
+    await this.delete(id, ctx.campaign.id);
+    return { success: true };
   }
 }
 
-// ============================================================================
-// SERVICE
-// ============================================================================
+export const items = new Items();
+export const itemService = items;
+export const listItemsQuerySchema = listItemsSchema;
 
-class ItemService extends CampaignResourceService<
-  any,
-  ItemRepository,
-  CreateItemInput,
-  UpdateItemInput,
-  ListItemsQuery
-> {
-  constructor() {
-    super(new ItemRepository(), "item");
-  }
-
-  protected get pluralResourceName(): string {
-    return "items";
-  }
-
-  protected async validateCreate(
-    ctx: CampaignContext,
-    data: CreateItemInput
-  ): Promise<void> {
-    // Add custom validation if needed
-  }
-
-  protected async validateUpdate(
-    ctx: CampaignContext,
-    id: string,
-    data: UpdateItemInput
-  ): Promise<void> {
-    // Add custom validation if needed
-  }
-
-  protected async validateDelete(
-    ctx: CampaignContext,
-    id: string
-  ): Promise<void> {
-    // Add custom validation if needed
-  }
-}
-
-// ============================================================================
-// EXPORTS
-// ============================================================================
-
-const itemRepo = new ItemRepository();
-export const itemService = new ItemService();
-export { itemRepo };

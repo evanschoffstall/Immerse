@@ -1,10 +1,5 @@
 import type { CampaignContext } from "@/features/campaigns";
-import { CampaignResourceRepository } from "@/features/campaigns/base/CampaignResourceRepository";
-import { CampaignResourceService } from "@/features/campaigns/base/CampaignResourceService";
-import {
-  listResourceQuerySchema,
-  makeNamedResourceSchemas,
-} from "@/lib/validation";
+import { CampaignResource, requireResource } from "@/features/campaigns/base/resource";
 import { Prisma } from "@prisma/client";
 import { z } from "zod";
 
@@ -12,8 +7,7 @@ import { z } from "zod";
 // SCHEMAS
 // ============================================================================
 
-// In-file Zod schema for organisations based on Prisma model
-const organisationsOptionalDefaultsSchema = z.object({
+export const createOrganisationSchema = z.object({
   name: z.string().min(1),
   type: z.string().optional(),
   description: z.string().optional(),
@@ -22,123 +16,77 @@ const organisationsOptionalDefaultsSchema = z.object({
   isPrivate: z.boolean().optional(),
 });
 
-const organisationsPartialSchema =
-  organisationsOptionalDefaultsSchema.partial();
+export const updateOrganisationSchema = createOrganisationSchema.partial();
 
-export const OrganisationSchemas = makeNamedResourceSchemas({
-  optionalDefaults: organisationsOptionalDefaultsSchema,
-  partial: organisationsPartialSchema,
-});
-
-export const listOrganisationsQuerySchema = listResourceQuerySchema.extend({
+export const listOrganisationsSchema = z.object({
+  page: z.coerce.number().min(1).default(1),
+  limit: z.coerce.number().min(1).max(100).default(20),
+  search: z.string().optional(),
   type: z.string().optional(),
   isPrivate: z.coerce.boolean().optional(),
   location: z.string().optional(),
+  sortBy: z.string().default("name"),
+  sortOrder: z.enum(["asc", "desc"]).default("asc"),
 });
 
-export type CreateOrganisationInput = z.infer<
-  typeof OrganisationSchemas.create
->;
-export type UpdateOrganisationInput = z.infer<
-  typeof OrganisationSchemas.update
->;
-export type ListOrganisationsQuery = z.infer<
-  typeof listOrganisationsQuerySchema
->;
+export type CreateOrganisation = z.infer<typeof createOrganisationSchema>;
+export type UpdateOrganisation = z.infer<typeof updateOrganisationSchema>;
+export type ListOrganisationsQuery = z.infer<typeof listOrganisationsSchema>;
+
+export const OrganisationSchemas = {
+  create: createOrganisationSchema,
+  update: updateOrganisationSchema,
+};
 
 // ============================================================================
-// REPOSITORY
+// RESOURCE
 // ============================================================================
 
 const organisationInclude = {
-  users: {
-    select: {
-      id: true,
-      name: true,
-      email: true,
-    },
-  },
+  users: { select: { id: true, name: true, email: true } },
 } satisfies Prisma.organisationsInclude;
 
-class OrganisationRepository extends CampaignResourceRepository<
-  any,
-  typeof organisationInclude,
-  CreateOrganisationInput,
-  UpdateOrganisationInput,
-  ListOrganisationsQuery
-> {
+class Organisations extends CampaignResource {
   constructor() {
-    super("organisations" as Prisma.ModelName, organisationInclude);
+    super("organisations", organisationInclude);
   }
 
-  protected buildSearchFilters(search: string): any[] {
-    return [
-      { name: { contains: search, mode: "insensitive" } },
-      { description: { contains: search, mode: "insensitive" } },
-      { type: { contains: search, mode: "insensitive" } },
-    ];
+  async list(campaignId: string, query: ListOrganisationsQuery) {
+    const { type, isPrivate, location, ...baseQuery } = query;
+    const where: any = {};
+    if (type) where.type = type;
+    if (isPrivate !== undefined) where.isPrivate = isPrivate;
+    if (location) where.location = location;
+
+    const result = await super.list(campaignId, { ...baseQuery, where });
+    return { organisations: result.items, pagination: result.pagination };
   }
 
-  protected buildCustomFilters(query: ListOrganisationsQuery): any {
-    const filters: any = {};
-    if (query.type) filters.type = query.type;
-    if (query.isPrivate !== undefined) filters.isPrivate = query.isPrivate;
-    if (query.location) filters.location = query.location;
-    return filters;
+  async getOne(ctx: CampaignContext, id: string) {
+    const organisation = await this.get(id, ctx.campaign.id);
+    return { organisation: await requireResource(organisation) };
   }
 
-  async findMany(campaignId: string, query: ListOrganisationsQuery) {
-    const { items, total } = await super.findMany(campaignId, query);
-    return { items, total };
+  async createOne(ctx: CampaignContext, data: CreateOrganisation) {
+    const organisation = await this.create(ctx.campaign.id, ctx.session.user.id, data);
+    return { organisation };
+  }
+
+  async updateOne(ctx: CampaignContext, id: string, data: UpdateOrganisation) {
+    const existing = await this.get(id, ctx.campaign.id);
+    await requireResource(existing);
+    const organisation = await this.update(id, ctx.campaign.id, data);
+    return { organisation };
+  }
+
+  async deleteOne(ctx: CampaignContext, id: string) {
+    const existing = await this.get(id, ctx.campaign.id);
+    await requireResource(existing);
+    await this.delete(id, ctx.campaign.id);
+    return { success: true };
   }
 }
 
-// ============================================================================
-// SERVICE
-// ============================================================================
-
-class OrganisationService extends CampaignResourceService<
-  any,
-  OrganisationRepository,
-  CreateOrganisationInput,
-  UpdateOrganisationInput,
-  ListOrganisationsQuery
-> {
-  constructor() {
-    super(new OrganisationRepository(), "organisation");
-  }
-
-  protected get pluralResourceName(): string {
-    return "organisations";
-  }
-
-  protected async validateCreate(
-    ctx: CampaignContext,
-    data: CreateOrganisationInput
-  ): Promise<void> {
-    // Add custom validation if needed
-  }
-
-  protected async validateUpdate(
-    ctx: CampaignContext,
-    id: string,
-    data: UpdateOrganisationInput
-  ): Promise<void> {
-    // Add custom validation if needed
-  }
-
-  protected async validateDelete(
-    ctx: CampaignContext,
-    id: string
-  ): Promise<void> {
-    // Add custom validation if needed
-  }
-}
-
-// ============================================================================
-// EXPORTS
-// ============================================================================
-
-const organisationRepo = new OrganisationRepository();
-export const organisationService = new OrganisationService();
-export { organisationRepo };
+export const organisations = new Organisations();
+export const organisationService = organisations;
+export const listOrganisationsQuerySchema = listOrganisationsSchema;
