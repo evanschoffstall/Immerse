@@ -468,8 +468,10 @@ export default function CampaignLayoutClient({
         </Sidebar>
 
         {/* Main Content Area */}
-        <SidebarInset className="relative z-10 bg-transparent overflow-y-auto">
-          <div className="pt-14">{children}</div>
+        <SidebarInset className="relative z-10 bg-transparent">
+          <ScrollArea className="h-screen">
+            <div className="pt-14">{children}</div>
+          </ScrollArea>
         </SidebarInset>
       </div>
     </SidebarProvider>
