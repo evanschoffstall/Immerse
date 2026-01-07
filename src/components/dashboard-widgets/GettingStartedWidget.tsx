@@ -25,11 +25,11 @@ export function GettingStartedWidget({ campaignId }: GettingStartedWidgetProps) 
   useEffect(() => {
     const fetchProgress = async () => {
       try {
-        const stats = await cachedFetch<{ hasCharacters: boolean; hasLocations: boolean }>(
+        const stats = await cachedFetch<{ hasBeings: boolean; hasLocations: boolean }>(
           `/api/campaigns/${campaignId}/stats`
         );
 
-        const hasCharacters = stats.hasCharacters || false;
+        const hasBeings = stats.hasBeings || false;
         const hasLocations = stats.hasLocations || false;
 
         setTasks([
@@ -45,9 +45,9 @@ export function GettingStartedWidget({ campaignId }: GettingStartedWidgetProps) 
           },
           {
             id: '3',
-            label: 'Create your first character.',
-            completed: hasCharacters,
-            link: hasCharacters ? undefined : `/characters/new?campaignId=${campaignId}`,
+            label: 'Create your first being.',
+            completed: hasBeings,
+            link: hasBeings ? undefined : `/beings/new?campaignId=${campaignId}`,
           },
           {
             id: '4',

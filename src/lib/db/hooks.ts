@@ -33,7 +33,7 @@ export function useIsMobile() {
 // ============================================================================
 
 interface DashboardStats {
-  hasCharacters: boolean;
+  hasBeings: boolean;
   hasLocations: boolean;
 }
 

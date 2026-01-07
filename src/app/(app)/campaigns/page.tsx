@@ -5,6 +5,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Skeleton } from '@/components/ui/skeleton';
 import { extractTextFromLexical, truncateText } from '@/lib/db/lexical-utils';
 import type { campaigns as Campaign } from '@prisma/client';
+import { Mountain } from 'lucide-react';
 import { useSession } from 'next-auth/react';
 import Image from 'next/image';
 import Link from 'next/link';
@@ -93,6 +94,7 @@ export default function CampaignsPage() {
       ) : campaigns.length === 0 ? (
         <Card className="text-center">
           <CardHeader>
+            <Mountain className="mx-auto mb-4 h-12 w-12 text-muted-foreground" />
             <CardTitle>No campaigns yet</CardTitle>
             <CardDescription>
               Create your first campaign to start your worldbuilding journey.

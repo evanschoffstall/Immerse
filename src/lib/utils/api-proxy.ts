@@ -88,7 +88,14 @@ export function apiRoute(handler: ApiHandler, options: ApiRouteOptions = {}) {
       // Parse body for mutating requests
       let body: unknown;
       const method = request.method;
-      if (method === "POST" || method === "PATCH" || method === "PUT") {
+      const contentType = request.headers.get("content-type") || "";
+
+      // Skip body parsing for multipart/form-data (e.g., file uploads)
+      // The handler will access request.formData() directly
+      if (
+        (method === "POST" || method === "PATCH" || method === "PUT") &&
+        !contentType.includes("multipart/form-data")
+      ) {
         const rawBody = await request.json().catch(() => ({}));
 
         if (bodySchema) {

@@ -3,9 +3,9 @@ import { ApiErrors, apiRoute } from "@/lib/utils/api-proxy";
 import { NextRequest } from "next/server";
 
 export async function POST(request: NextRequest) {
-  return apiRoute(async () => {
+  return apiRoute(async (context) => {
     try {
-      const formData = await request.formData();
+      const formData = await context.request.formData();
       const file = formData.get("file") as File;
       const folder = (formData.get("folder") as string) || "general";
 

@@ -53,7 +53,7 @@ export function RecentActivityWidget({ campaignId }: RecentActivityWidgetProps) 
 
   const getEntityLink = (entity: RecentEntity) => {
     const typeMap: Record<string, string> = {
-      character: 'characters',
+      being: 'beings',
       location: 'locations',
       item: 'items',
       quest: 'quests',

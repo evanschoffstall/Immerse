@@ -1,9 +1,22 @@
 import { getCampaignContext } from "@/features/campaigns";
 import {
-  characters,
-  CharacterSchemas,
-  listCharactersSchema,
+  beings,
+  BeingSchemas,
+  listBeingsSchema,
 } from "@/features/campaigns/beings";
+import {
+  CampaignSchemas,
+  campaignService,
+} from "@/features/campaigns/campaigns";
+import {
+  listQuestsSchema,
+  quests,
+  QuestSchemas,
+} from "@/features/campaigns/quests";
+import {
+  campaignSettingsSchema,
+  campaignSettingsService,
+} from "@/features/campaigns/settings";
 import { prisma } from "@/lib/db/prisma";
 import { ApiErrors, apiRoute } from "@/lib/utils/api-proxy";
 import { NextRequest } from "next/server";
@@ -50,29 +63,63 @@ export async function GET(
         return { entities: [] };
 
       case "stats":
-        const stats = { characters: 0, locations: 0, quests: 0, notes: 0 };
+        const [beingsCount, questsCount, imagesCount, calendarsCount] =
+          await Promise.all([
+            prisma.beings.count({
+              where: { campaignId: ctx.campaign.id, deletedAt: null },
+            }),
+            prisma.quests.count({
+              where: { campaignId: ctx.campaign.id, deletedAt: null },
+            }),
+            prisma.images.count({
+              where: { campaignId: ctx.campaign.id, deletedAt: null },
+            }),
+            prisma.calendars.count({
+              where: { campaignId: ctx.campaign.id, deletedAt: null },
+            }),
+          ]);
+        const stats = {
+          beings: beingsCount,
+          quests: questsCount,
+          images: imagesCount,
+          calendars: calendarsCount,
+        };
         return {
-          hasCharacters: stats.characters > 0,
-          hasLocations: stats.locations > 0,
+          hasBeings: stats.beings > 0,
+          hasQuests: stats.quests > 0,
+          hasImages: stats.images > 0,
+          hasCalendars: stats.calendars > 0,
           stats,
         };
 
-      case "style":
-        const style = await prisma.campaign_styles.findUnique({
-          where: { campaignId: ctx.campaign.id },
-        });
-        return { style };
+      case "settings":
+        return await campaignSettingsService.get(ctx.campaign.id);
 
       case "quests":
-        return { quests: [] };
-
-      case "characters":
         if (resourceId) {
-          // GET /api/campaigns/[id]/characters/[characterId]
-          return await characters.getOne(ctx, resourceId);
+          // GET /api/campaigns/[id]/quests/[questId]
+          return await quests.getOne(ctx, resourceId);
         }
-        // GET /api/campaigns/[id]/characters (list)
-        const parsedQuery = listCharactersSchema.parse({
+        // GET /api/campaigns/[id]/quests (list)
+        const questQuery = listQuestsSchema.parse({
+          page: query.get("page") || "1",
+          limit: query.get("limit") || "20",
+          search: query.get("search") || undefined,
+          type: query.get("type") || undefined,
+          status: query.get("status") || undefined,
+          isPrivate: query.get("isPrivate") || undefined,
+          sortBy: query.get("sortBy") || "name",
+          sortOrder: query.get("sortOrder") || "asc",
+        });
+        return await quests.list(ctx.campaign.id, questQuery);
+
+      case "beings":
+        if (resourceId) {
+          // GET /api/campaigns/[id]/beings/[beingId]
+          return await beings.getOne(ctx, resourceId);
+        }
+        // GET /api/campaigns/[id]/beings (list)
+        const parsedQuery = listBeingsSchema.parse({
           page: query.get("page") || "1",
           limit: query.get("limit") || "20",
           search: query.get("search") || undefined,
@@ -81,7 +128,7 @@ export async function GET(
           sortBy: query.get("sortBy") || "name",
           sortOrder: query.get("sortOrder") || "asc",
         });
-        return await characters.list(ctx.campaign.id, parsedQuery);
+        return await beings.list(ctx.campaign.id, parsedQuery);
 
       default:
         return ApiErrors.notFound();
@@ -96,30 +143,8 @@ export async function POST(
   return apiRoute(async ({ session, segments, body }) => {
     // No segments: POST /api/campaigns (create new campaign)
     if (segments.length === 0) {
-      const { name, description } = body as any;
-
-      if (!name) {
-        return ApiErrors.badRequest("Name is required");
-      }
-
-      const campaign = await prisma.campaigns.create({
-        data: {
-          id: crypto.randomUUID(),
-          name,
-          slug:
-            name
-              .toLowerCase()
-              .replace(/\s+/g, "-")
-              .replace(/[^a-z0-9-]/g, "") +
-            "-" +
-            Date.now(),
-          description: description || "",
-          ownerId: session?.user?.id || "",
-          updatedAt: new Date(),
-        },
-      });
-
-      return { campaign };
+      const validated = CampaignSchemas.create.parse(body);
+      return await campaignService.create(session?.user?.id || "", validated);
     }
 
     // Nested resources
@@ -127,9 +152,13 @@ export async function POST(
     const ctx = await getCampaignContext(campaignId);
 
     switch (resource) {
-      case "characters":
-        const validated = CharacterSchemas.create.parse(body);
-        return await characters.createOne(ctx, validated);
+      case "beings":
+        const validated = BeingSchemas.create.parse(body);
+        return await beings.createOne(ctx, validated);
+
+      case "quests":
+        const validatedQuest = QuestSchemas.create.parse(body);
+        return await quests.createOne(ctx, validatedQuest);
 
       default:
         return ApiErrors.notFound();
@@ -152,46 +181,32 @@ export async function PATCH(
 
     // One segment: PATCH /api/campaigns/[id]
     if (segments.length === 1) {
-      const { name, description, image, backgroundImage, visibility, locale } =
-        data;
-
-      const updatedCampaign = await prisma.campaigns.update({
-        where: { id: campaignId },
-        data: {
-          ...(name !== undefined && { name }),
-          ...(description !== undefined && { description }),
-          ...(image !== undefined && { image }),
-          ...(backgroundImage !== undefined && { backgroundImage }),
-          ...(visibility !== undefined && { visibility }),
-          ...(locale !== undefined && { locale }),
-          updatedAt: new Date(),
-        },
-      });
-
-      return { campaign: updatedCampaign };
+      const validated = CampaignSchemas.update.parse(data);
+      return await campaignService.update(campaignId, ctx.userId, validated);
     }
 
     // Nested resources
     switch (resource) {
-      case "style":
-        const style = await prisma.campaign_styles.upsert({
-          where: { campaignId: ctx.campaign.id },
-          update: { ...data, updatedAt: new Date() },
-          create: {
-            id: crypto.randomUUID(),
-            campaignId: ctx.campaign.id,
-            ...data,
-            updatedAt: new Date(),
-          },
-        });
-        return { style };
+      case "settings":
+        const validatedSettings = campaignSettingsSchema.parse(data);
+        return await campaignSettingsService.update(
+          campaignId,
+          validatedSettings
+        );
 
-      case "characters":
+      case "beings":
         if (!resourceId) {
           return ApiErrors.notFound();
         }
-        const validated = CharacterSchemas.update.parse(data);
-        return await characters.updateOne(ctx, resourceId, validated);
+        const validated = BeingSchemas.update.parse(data);
+        return await beings.updateOne(ctx, resourceId, validated);
+
+      case "quests":
+        if (!resourceId) {
+          return ApiErrors.notFound();
+        }
+        const validatedQuest = QuestSchemas.update.parse(data);
+        return await quests.updateOne(ctx, resourceId, validatedQuest);
 
       default:
         return ApiErrors.notFound();
@@ -221,11 +236,17 @@ export async function DELETE(
 
     // Nested resources
     switch (resource) {
-      case "characters":
+      case "beings":
         if (!resourceId) {
           return ApiErrors.notFound();
         }
-        return await characters.deleteOne(ctx, resourceId);
+        return await beings.deleteOne(ctx, resourceId);
+
+      case "quests":
+        if (!resourceId) {
+          return ApiErrors.notFound();
+        }
+        return await quests.deleteOne(ctx, resourceId);
 
       default:
         return ApiErrors.notFound();

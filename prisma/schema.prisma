@@ -20,22 +20,23 @@ model users {
 }
 
 model campaigns {
-  id              String       @id
+  id              String             @id
   name            String
-  slug            String       @unique
+  slug            String             @unique
   description     String?
   image           String?
   backgroundImage String?
-  visibility      String       @default("private")
-  locale          String       @default("en")
-  createdAt       DateTime     @default(now())
+  visibility      String             @default("private")
+  locale          String             @default("en")
+  createdAt       DateTime           @default(now())
   updatedAt       DateTime
   ownerId         String
-  users           users        @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+  users           users              @relation(fields: [ownerId], references: [id], onDelete: Cascade)
   beings          beings[]
   quests          quests[]
   images          images[]
   calendars       calendars[]
+  settings        campaign_settings?
 }
 
 model beings {
@@ -68,7 +69,6 @@ model beings {
   @@index([campaignId])
   @@index([createdById])
   @@index([deletedAt])
-  @@map("characters")
 }
 
 model quests {
@@ -169,6 +169,26 @@ model calendars {
   @@index([parentId])
   @@index([createdById])
   @@index([deletedAt])
+}
+
+model campaign_settings {
+  id                   String    @id
+  campaignId           String    @unique
+  bgOpacity            Float     @default(0.6)
+  bgBlur               Int       @default(4)
+  bgExpandToSidebar    Boolean   @default(true)
+  bgExpandToHeader     Boolean   @default(true)
+  headerBgOpacity      Float     @default(0.0)
+  headerBlur           Int       @default(4)
+  sidebarBgOpacity     Float     @default(0.0)
+  sidebarBlur          Int       @default(0)
+  cardBgOpacity        Float     @default(0.8)
+  cardBlur             Int       @default(8)
+  createdAt            DateTime  @default(now())
+  updatedAt            DateTime
+  campaigns            campaigns @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+
+  @@index([campaignId])
 }
 
 model audit_logs {

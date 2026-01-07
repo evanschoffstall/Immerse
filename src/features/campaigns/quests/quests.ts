@@ -78,14 +78,19 @@ class Quests extends CampaignResource {
   async updateOne(ctx: CampaignContext, id: string, data: UpdateQuest) {
     const existing = await this.get(id, ctx.campaign.id);
     await requireResource(existing);
-    const quest = await this.update(id, ctx.campaign.id, data);
+    const quest = await this.update(
+      id,
+      ctx.campaign.id,
+      data,
+      ctx.session.user.id
+    );
     return { quest };
   }
 
   async deleteOne(ctx: CampaignContext, id: string) {
     const existing = await this.get(id, ctx.campaign.id);
     await requireResource(existing);
-    await this.delete(id, ctx.campaign.id);
+    await this.delete(id, ctx.campaign.id, ctx.session.user.id);
     return { success: true };
   }
 

@@ -1,4 +1,5 @@
 import { prisma } from "@/lib/db/prisma";
+import { logCreate, logDelete, logUpdate } from "@/lib/utils/audit";
 
 /**
  * Simple base class for campaign resources
@@ -86,7 +87,7 @@ export class CampaignResource<TModel = any> {
   /** Create */
   async create(campaignId: string, createdById: string, data: any) {
     const slug = data.name ? this.makeSlug(data.name) : undefined;
-    return this.db.create({
+    const record = await this.db.create({
       data: {
         ...data,
         campaignId,
@@ -95,6 +96,11 @@ export class CampaignResource<TModel = any> {
       },
       include: this.include,
     });
+
+    // Log creation
+    await logCreate(this.tableName, record.id, data, createdById, campaignId);
+
+    return record;
   }
 
   /** Update */
@@ -104,6 +110,11 @@ export class CampaignResource<TModel = any> {
     data: any,
     updatedById?: string
   ) {
+    // Get existing data for diff
+    const existing = await this.db.findFirst({
+      where: { id, campaignId },
+    });
+
     const updateData = { ...data };
     if (data.name) {
       updateData.slug = this.makeSlug(data.name);
@@ -111,15 +122,35 @@ export class CampaignResource<TModel = any> {
     if (updatedById) {
       updateData.updatedById = updatedById;
     }
-    return this.db.update({
+
+    const record = await this.db.update({
       where: { id, campaignId },
       data: updateData,
       include: this.include,
     });
+
+    // Log update with diff
+    if (existing && updatedById) {
+      await logUpdate(
+        this.tableName,
+        id,
+        existing,
+        data,
+        updatedById,
+        campaignId
+      );
+    }
+
+    return record;
   }
 
   /** Soft delete */
   async delete(id: string, campaignId: string, deletedById?: string) {
+    // Get existing data for audit log
+    const existing = await this.db.findFirst({
+      where: { id, campaignId },
+    });
+
     await this.db.update({
       where: { id, campaignId },
       data: {
@@ -127,6 +158,11 @@ export class CampaignResource<TModel = any> {
         ...(deletedById && { updatedById: deletedById }),
       },
     });
+
+    // Log deletion
+    if (existing && deletedById) {
+      await logDelete(this.tableName, id, existing, deletedById, campaignId);
+    }
   }
 
   /** Count */

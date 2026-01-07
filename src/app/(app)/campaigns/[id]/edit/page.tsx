@@ -21,6 +21,55 @@ import { useParams, useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { toast } from 'sonner';
 
+// Reusable slider control component
+function SliderControl({
+  label,
+  value,
+  onChange,
+  min = 0,
+  max = 1,
+  step = 0.01,
+  formatValue = (v) => `${Math.round(v * 100)}%`,
+}: {
+  label: string;
+  value: number;
+  onChange: (value: number) => void;
+  min?: number;
+  max?: number;
+  step?: number;
+  formatValue?: (value: number) => string;
+}) {
+  return (
+    <div className="space-y-2">
+      <div className="flex items-center justify-between">
+        <Label>{label}</Label>
+        <span className="text-sm text-muted-foreground">{formatValue(value)}</span>
+      </div>
+      <Slider
+        min={min}
+        max={max}
+        step={step}
+        value={[value]}
+        onValueChange={(values) => onChange(values[0])}
+      />
+    </div>
+  );
+}
+
+interface CampaignSettings {
+  bg: { opacity: number; blur: number; expandToSidebar: boolean; expandToHeader: boolean };
+  header: { bgOpacity: number; blur: number };
+  sidebar: { bgOpacity: number; blur: number };
+  card: { bgOpacity: number; blur: number };
+}
+
+const DEFAULT_SETTINGS: CampaignSettings = {
+  bg: { opacity: 0.6, blur: 4, expandToSidebar: true, expandToHeader: true },
+  header: { bgOpacity: 0.0, blur: 4 },
+  sidebar: { bgOpacity: 0.0, blur: 0 },
+  card: { bgOpacity: 0.8, blur: 8 },
+};
+
 export default function EditCampaignPage() {
   const router = useRouter();
   const params = useParams();
@@ -29,40 +78,29 @@ export default function EditCampaignPage() {
   const [isDeleting, setIsDeleting] = useState(false);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [initialData, setInitialData] = useState<Partial<CampaignFormData> | null>(null);
-  const [isSavingStyle, setIsSavingStyle] = useState(false);
+  const [isSavingSettings, setIsSavingSettings] = useState(false);
+  const [settings, setSettings] = useState<CampaignSettings>(DEFAULT_SETTINGS);
 
-  // Background style settings
-  const [bgOpacity, setBgOpacity] = useState(0.6);
-  const [bgBlur, setBgBlur] = useState(4);
-  const [bgExpandToSidebar, setBgExpandToSidebar] = useState(true);
-  const [bgExpandToHeader, setBgExpandToHeader] = useState(true);
-  const [headerBgOpacity, setHeaderBgOpacity] = useState(0.0);
-  const [headerBlur, setHeaderBlur] = useState(4);
-  const [sidebarBgOpacity, setSidebarBgOpacity] = useState(0.0);
-  const [sidebarBlur, setSidebarBlur] = useState(0);
-  const [cardBgOpacity, setCardBgOpacity] = useState(0.8);
-  const [cardBlur, setCardBlur] = useState(8);
-
-  // Apply styles live for preview
+  // Apply settings live for preview
   useEffect(() => {
-    document.documentElement.style.setProperty('--campaign-bg-opacity', bgOpacity.toString());
-    document.documentElement.style.setProperty('--campaign-bg-blur', `${bgBlur}px`);
-    document.documentElement.style.setProperty('--campaign-header-bg-opacity', headerBgOpacity.toString());
-    document.documentElement.style.setProperty('--campaign-header-blur', `${headerBlur}px`);
-    document.documentElement.style.setProperty('--campaign-sidebar-bg-opacity', sidebarBgOpacity.toString());
-    document.documentElement.style.setProperty('--campaign-sidebar-blur', `${sidebarBlur}px`);
-    document.documentElement.style.setProperty('--campaign-bg-expand-to-sidebar', bgExpandToSidebar ? '1' : '0');
-    document.documentElement.style.setProperty('--campaign-bg-expand-to-header', bgExpandToHeader ? '1' : '0');
-    document.documentElement.style.setProperty('--campaign-card-bg-opacity', cardBgOpacity.toString());
-    document.documentElement.style.setProperty('--campaign-card-blur', `${cardBlur}px`);
-  }, [bgOpacity, bgBlur, headerBgOpacity, headerBlur, sidebarBgOpacity, sidebarBlur, bgExpandToSidebar, bgExpandToHeader, cardBgOpacity, cardBlur]);
+    document.documentElement.style.setProperty('--campaign-bg-opacity', settings.bg.opacity.toString());
+    document.documentElement.style.setProperty('--campaign-bg-blur', `${settings.bg.blur}px`);
+    document.documentElement.style.setProperty('--campaign-header-bg-opacity', settings.header.bgOpacity.toString());
+    document.documentElement.style.setProperty('--campaign-header-blur', `${settings.header.blur}px`);
+    document.documentElement.style.setProperty('--campaign-sidebar-bg-opacity', settings.sidebar.bgOpacity.toString());
+    document.documentElement.style.setProperty('--campaign-sidebar-blur', `${settings.sidebar.blur}px`);
+    document.documentElement.style.setProperty('--campaign-bg-expand-to-sidebar', settings.bg.expandToSidebar ? '1' : '0');
+    document.documentElement.style.setProperty('--campaign-bg-expand-to-header', settings.bg.expandToHeader ? '1' : '0');
+    document.documentElement.style.setProperty('--campaign-card-bg-opacity', settings.card.bgOpacity.toString());
+    document.documentElement.style.setProperty('--campaign-card-blur', `${settings.card.blur}px`);
+  }, [settings]);
 
   useEffect(() => {
     const fetchCampaign = async () => {
       try {
-        const [campaignRes, styleRes] = await Promise.all([
+        const [campaignRes, settingsRes] = await Promise.all([
           fetch(`/api/campaigns/${params.id}`),
-          fetch(`/api/campaigns/${params.id}/style`),
+          fetch(`/api/campaigns/${params.id}/settings`),
         ]);
 
         if (!campaignRes.ok) {
@@ -77,20 +115,30 @@ export default function EditCampaignPage() {
           backgroundImage: campaignData.campaign.backgroundImage || '',
         });
 
-        if (styleRes.ok) {
-          const styleData = await styleRes.json();
-          const style = styleData.style;
-          if (style) {
-            setBgOpacity(style.bgOpacity ?? 0.6);
-            setBgBlur(style.bgBlur ?? 4);
-            setBgExpandToSidebar(style.bgExpandToSidebar ?? true);
-            setBgExpandToHeader(style.bgExpandToHeader ?? true);
-            setHeaderBgOpacity(style.headerBgOpacity ?? 0.0);
-            setHeaderBlur(style.headerBlur ?? 4);
-            setSidebarBgOpacity(style.sidebarBgOpacity ?? 0.0);
-            setSidebarBlur(style.sidebarBlur ?? 0);
-            setCardBgOpacity(style.cardBgOpacity ?? 0.8);
-            setCardBlur(style.cardBlur ?? 8);
+        if (settingsRes.ok) {
+          const settingsData = await settingsRes.json();
+          const loadedSettings = settingsData.settings;
+          if (loadedSettings) {
+            setSettings({
+              bg: {
+                opacity: loadedSettings.bgOpacity ?? DEFAULT_SETTINGS.bg.opacity,
+                blur: loadedSettings.bgBlur ?? DEFAULT_SETTINGS.bg.blur,
+                expandToSidebar: loadedSettings.bgExpandToSidebar ?? DEFAULT_SETTINGS.bg.expandToSidebar,
+                expandToHeader: loadedSettings.bgExpandToHeader ?? DEFAULT_SETTINGS.bg.expandToHeader,
+              },
+              header: {
+                bgOpacity: loadedSettings.headerBgOpacity ?? DEFAULT_SETTINGS.header.bgOpacity,
+                blur: loadedSettings.headerBlur ?? DEFAULT_SETTINGS.header.blur,
+              },
+              sidebar: {
+                bgOpacity: loadedSettings.sidebarBgOpacity ?? DEFAULT_SETTINGS.sidebar.bgOpacity,
+                blur: loadedSettings.sidebarBlur ?? DEFAULT_SETTINGS.sidebar.blur,
+              },
+              card: {
+                bgOpacity: loadedSettings.cardBgOpacity ?? DEFAULT_SETTINGS.card.bgOpacity,
+                blur: loadedSettings.cardBlur ?? DEFAULT_SETTINGS.card.blur,
+              },
+            });
           }
         }
       } catch (error) {
@@ -138,40 +186,40 @@ export default function EditCampaignPage() {
     }
   };
 
-  const handleSaveStyle = async () => {
-    setIsSavingStyle(true);
+  const handleSaveSettings = async () => {
+    setIsSavingSettings(true);
 
     try {
-      const response = await fetch(`/api/campaigns/${params.id}/style`, {
+      const response = await fetch(`/api/campaigns/${params.id}/settings`, {
         method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          bgOpacity,
-          bgBlur,
-          bgExpandToSidebar,
-          bgExpandToHeader,
-          headerBgOpacity,
-          headerBlur,
-          sidebarBgOpacity,
-          sidebarBlur,
-          cardBgOpacity,
-          cardBlur,
+          bgOpacity: settings.bg.opacity,
+          bgBlur: settings.bg.blur,
+          bgExpandToSidebar: settings.bg.expandToSidebar,
+          bgExpandToHeader: settings.bg.expandToHeader,
+          headerBgOpacity: settings.header.bgOpacity,
+          headerBlur: settings.header.blur,
+          sidebarBgOpacity: settings.sidebar.bgOpacity,
+          sidebarBlur: settings.sidebar.blur,
+          cardBgOpacity: settings.card.bgOpacity,
+          cardBlur: settings.card.blur,
         }),
       });
 
       if (!response.ok) {
         const error = await response.json();
-        throw new Error(error.error || 'Failed to update style');
+        throw new Error(error.error || 'Failed to update settings');
       }
 
       toast.success('Background settings saved');
     } catch (error) {
-      console.error('Error saving style:', error);
+      console.error('Error saving settings:', error);
       toast.error(error instanceof Error ? error.message : 'Failed to save settings');
     } finally {
-      setIsSavingStyle(false);
+      setIsSavingSettings(false);
     }
   };
 
@@ -260,41 +308,27 @@ export default function EditCampaignPage() {
               <div className="space-y-4">
                 <h3 className="font-semibold text-lg mb-4">Header</h3>
 
-                <div className="space-y-2">
-                  <div className="flex items-center justify-between">
-                    <Label htmlFor="header-opacity">Background Opacity</Label>
-                    <span className="text-sm text-muted-foreground">{Math.round(headerBgOpacity * 100)}%</span>
-                  </div>
-                  <Slider
-                    id="header-opacity"
-                    min={0}
-                    max={1}
-                    step={0.01}
-                    value={[headerBgOpacity]}
-                    onValueChange={(values) => setHeaderBgOpacity(values[0])}
-                  />
-                </div>
+                <SliderControl
+                  label="Background Opacity"
+                  value={settings.header.bgOpacity}
+                  onChange={(v) => setSettings({ ...settings, header: { ...settings.header, bgOpacity: v } })}
+                />
 
-                <div className="space-y-2">
-                  <div className="flex items-center justify-between">
-                    <Label htmlFor="header-blur">Blur</Label>
-                    <span className="text-sm text-muted-foreground">{Math.round(headerBlur)}px</span>
-                  </div>
-                  <Slider
-                    id="header-blur"
-                    min={0}
-                    max={50}
-                    step={1}
-                    value={[headerBlur]}
-                    onValueChange={(values) => setHeaderBlur(values[0])}
-                  />
-                </div>
+                <SliderControl
+                  label="Blur"
+                  value={settings.header.blur}
+                  onChange={(v) => setSettings({ ...settings, header: { ...settings.header, blur: v } })}
+                  min={0}
+                  max={50}
+                  step={1}
+                  formatValue={(v) => `${Math.round(v)}px`}
+                />
 
                 <div className="flex items-center space-x-2">
                   <Checkbox
                     id="bg-header"
-                    checked={bgExpandToHeader}
-                    onCheckedChange={(checked) => setBgExpandToHeader(checked as boolean)}
+                    checked={settings.bg.expandToHeader}
+                    onCheckedChange={(checked) => setSettings({ ...settings, bg: { ...settings.bg, expandToHeader: checked as boolean } })}
                   />
                   <Label htmlFor="bg-header" className="cursor-pointer">
                     Expand background to header
@@ -306,41 +340,27 @@ export default function EditCampaignPage() {
               <div className="space-y-4">
                 <h3 className="font-semibold text-lg mb-4">Sidebar</h3>
 
-                <div className="space-y-2">
-                  <div className="flex items-center justify-between">
-                    <Label htmlFor="sidebar-opacity">Background Opacity</Label>
-                    <span className="text-sm text-muted-foreground">{Math.round(sidebarBgOpacity * 100)}%</span>
-                  </div>
-                  <Slider
-                    id="sidebar-opacity"
-                    min={0}
-                    max={1}
-                    step={0.01}
-                    value={[sidebarBgOpacity]}
-                    onValueChange={(values) => setSidebarBgOpacity(values[0])}
-                  />
-                </div>
+                <SliderControl
+                  label="Background Opacity"
+                  value={settings.sidebar.bgOpacity}
+                  onChange={(v) => setSettings({ ...settings, sidebar: { ...settings.sidebar, bgOpacity: v } })}
+                />
 
-                <div className="space-y-2">
-                  <div className="flex items-center justify-between">
-                    <Label htmlFor="sidebar-blur">Blur</Label>
-                    <span className="text-sm text-muted-foreground">{Math.round(sidebarBlur)}px</span>
-                  </div>
-                  <Slider
-                    id="sidebar-blur"
-                    min={0}
-                    max={50}
-                    step={1}
-                    value={[sidebarBlur]}
-                    onValueChange={(values) => setSidebarBlur(values[0])}
-                  />
-                </div>
+                <SliderControl
+                  label="Blur"
+                  value={settings.sidebar.blur}
+                  onChange={(v) => setSettings({ ...settings, sidebar: { ...settings.sidebar, blur: v } })}
+                  min={0}
+                  max={50}
+                  step={1}
+                  formatValue={(v) => `${Math.round(v)}px`}
+                />
 
                 <div className="flex items-center space-x-2">
                   <Checkbox
                     id="bg-sidebar"
-                    checked={bgExpandToSidebar}
-                    onCheckedChange={(checked) => setBgExpandToSidebar(checked as boolean)}
+                    checked={settings.bg.expandToSidebar}
+                    onCheckedChange={(checked) => setSettings({ ...settings, bg: { ...settings.bg, expandToSidebar: checked as boolean } })}
                   />
                   <Label htmlFor="bg-sidebar" className="cursor-pointer">
                     Expand background to sidebar
@@ -352,76 +372,48 @@ export default function EditCampaignPage() {
               <div className="space-y-4 md:pt-6 md:border-t xl:pt-0 xl:border-t-0">
                 <h3 className="font-semibold text-lg mb-4">Main Background</h3>
 
-                <div className="space-y-2">
-                  <div className="flex items-center justify-between">
-                    <Label htmlFor="bg-opacity">Overlay Opacity</Label>
-                    <span className="text-sm text-muted-foreground">{Math.round(bgOpacity * 100)}%</span>
-                  </div>
-                  <Slider
-                    id="bg-opacity"
-                    min={0}
-                    max={1}
-                    step={0.01}
-                    value={[bgOpacity]}
-                    onValueChange={(values) => setBgOpacity(values[0])}
-                  />
-                </div>
+                <SliderControl
+                  label="Overlay Opacity"
+                  value={settings.bg.opacity}
+                  onChange={(v) => setSettings({ ...settings, bg: { ...settings.bg, opacity: v } })}
+                />
 
-                <div className="space-y-2">
-                  <div className="flex items-center justify-between">
-                    <Label htmlFor="bg-blur">Blur</Label>
-                    <span className="text-sm text-muted-foreground">{Math.round(bgBlur)}px</span>
-                  </div>
-                  <Slider
-                    id="bg-blur"
-                    min={0}
-                    max={50}
-                    step={1}
-                    value={[bgBlur]}
-                    onValueChange={(values) => setBgBlur(values[0])}
-                  />
-                </div>
+                <SliderControl
+                  label="Blur"
+                  value={settings.bg.blur}
+                  onChange={(v) => setSettings({ ...settings, bg: { ...settings.bg, blur: v } })}
+                  min={0}
+                  max={50}
+                  step={1}
+                  formatValue={(v) => `${Math.round(v)}px`}
+                />
               </div>
 
               {/* Card/UI settings */}
               <div className="space-y-4 md:pt-6">
                 <h3 className="font-semibold text-lg mb-4">Cards &amp; UI Elements</h3>
 
-                <div className="space-y-2">
-                  <div className="flex items-center justify-between">
-                    <Label htmlFor="card-opacity">Background Opacity</Label>
-                    <span className="text-sm text-muted-foreground">{Math.round(cardBgOpacity * 100)}%</span>
-                  </div>
-                  <Slider
-                    id="card-opacity"
-                    min={0}
-                    max={1}
-                    step={0.01}
-                    value={[cardBgOpacity]}
-                    onValueChange={(values) => setCardBgOpacity(values[0])}
-                  />
-                </div>
+                <SliderControl
+                  label="Background Opacity"
+                  value={settings.card.bgOpacity}
+                  onChange={(v) => setSettings({ ...settings, card: { ...settings.card, bgOpacity: v } })}
+                />
 
-                <div className="space-y-2">
-                  <div className="flex items-center justify-between">
-                    <Label htmlFor="card-blur">Blur</Label>
-                    <span className="text-sm text-muted-foreground">{Math.round(cardBlur)}px</span>
-                  </div>
-                  <Slider
-                    id="card-blur"
-                    min={0}
-                    max={50}
-                    step={1}
-                    value={[cardBlur]}
-                    onValueChange={(values) => setCardBlur(values[0])}
-                  />
-                </div>
+                <SliderControl
+                  label="Blur"
+                  value={settings.card.blur}
+                  onChange={(v) => setSettings({ ...settings, card: { ...settings.card, blur: v } })}
+                  min={0}
+                  max={50}
+                  step={1}
+                  formatValue={(v) => `${Math.round(v)}px`}
+                />
               </div>
             </div>
 
             <div className="flex justify-end">
-              <Button onClick={handleSaveStyle} disabled={isSavingStyle}>
-                {isSavingStyle ? 'Saving...' : 'Save Background Settings'}
+              <Button onClick={handleSaveSettings} disabled={isSavingSettings}>
+                {isSavingSettings ? 'Saving...' : 'Save Background Settings'}
               </Button>
             </div>
           </CardContent>

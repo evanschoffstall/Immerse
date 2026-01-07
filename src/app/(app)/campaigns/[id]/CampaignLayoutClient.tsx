@@ -14,7 +14,7 @@ import {
   SidebarMenuItem,
   SidebarProvider
 } from '@/components/ui/sidebar';
-import type { campaigns as Campaign, campaign_styles as CampaignStyle } from '@prisma/client';
+import type { campaigns as Campaign, campaign_settings as CampaignSettings } from '@prisma/client';
 import {
   Bookmark,
   BookOpen,
@@ -48,7 +48,7 @@ import { useEffect, useMemo } from 'react';
 
 interface CampaignLayoutClientProps {
   campaign: Campaign;
-  campaignStyle: CampaignStyle | null;
+  campaignSettings: CampaignSettings | null;
   children: React.ReactNode;
 }
 
@@ -66,7 +66,7 @@ interface NavGroup {
 
 export default function CampaignLayoutClient({
   campaign,
-  campaignStyle,
+  campaignSettings,
   children,
 }: CampaignLayoutClientProps) {
   const pathname = usePathname();
@@ -79,11 +79,11 @@ export default function CampaignLayoutClient({
   const generateCardStyles = () => {
     const cardOpacity =
       document.documentElement.style.getPropertyValue('--campaign-card-bg-opacity') ||
-      (campaignStyle as any)?.cardBgOpacity?.toString() ||
+      (campaignSettings as any)?.cardBgOpacity?.toString() ||
       '0.9';
     const cardBlur =
       document.documentElement.style.getPropertyValue('--campaign-card-blur') ||
-      ((campaignStyle as any)?.cardBlur ? `${(campaignStyle as any).cardBlur}px` : '8px');
+      ((campaignSettings as any)?.cardBlur ? `${(campaignSettings as any).cardBlur}px` : '8px');
 
     return `
       [data-campaign-page] .bg-card,
@@ -128,7 +128,7 @@ export default function CampaignLayoutClient({
       const el = document.getElementById(styleId);
       if (el) el.remove();
     };
-  }, [campaignStyle]);
+  }, [campaignSettings]);
 
   // Consolidated navigation structure
   const navigation = useMemo(() => {
@@ -201,8 +201,8 @@ export default function CampaignLayoutClient({
 
   // Helper to calculate background positioning
   const getBackgroundStyle = (position: 'image' | 'overlay') => {
-    const top = `calc(var(--campaign-bg-expand-to-header, ${campaignStyle?.bgExpandToHeader ? '1' : '0'}) * 0px + (1 - var(--campaign-bg-expand-to-header, ${campaignStyle?.bgExpandToHeader ? '1' : '0'})) * 4rem - 10px)`;
-    const left = `calc(var(--campaign-bg-expand-to-sidebar, ${campaignStyle?.bgExpandToSidebar ? '1' : '0'}) * 0px + (1 - var(--campaign-bg-expand-to-sidebar, ${campaignStyle?.bgExpandToSidebar ? '1' : '0'})) * 16rem - 95px)`;
+    const top = `calc(var(--campaign-bg-expand-to-header, ${campaignSettings?.bgExpandToHeader ? '1' : '0'}) * 0px + (1 - var(--campaign-bg-expand-to-header, ${campaignSettings?.bgExpandToHeader ? '1' : '0'})) * 4rem - 10px)`;
+    const left = `calc(var(--campaign-bg-expand-to-sidebar, ${campaignSettings?.bgExpandToSidebar ? '1' : '0'}) * 0px + (1 - var(--campaign-bg-expand-to-sidebar, ${campaignSettings?.bgExpandToSidebar ? '1' : '0'})) * 16rem - 95px)`;
 
     if (position === 'image') {
       return {
@@ -219,9 +219,9 @@ export default function CampaignLayoutClient({
     }
 
     return {
-      backgroundColor: `hsl(var(--background) / var(--campaign-bg-opacity, ${campaignStyle?.bgOpacity ?? 0.8}))`,
-      backdropFilter: `blur(var(--campaign-bg-blur, ${campaignStyle?.bgBlur ?? 4}px))`,
-      WebkitBackdropFilter: `blur(var(--campaign-bg-blur, ${campaignStyle?.bgBlur ?? 4}px))`,
+      backgroundColor: `hsl(var(--background) / var(--campaign-bg-opacity, ${campaignSettings?.bgOpacity ?? 0.8}))`,
+      backdropFilter: `blur(var(--campaign-bg-blur, ${campaignSettings?.bgBlur ?? 4}px))`,
+      WebkitBackdropFilter: `blur(var(--campaign-bg-blur, ${campaignSettings?.bgBlur ?? 4}px))`,
       zIndex: 1,
       top,
       left,
@@ -249,9 +249,9 @@ export default function CampaignLayoutClient({
           collapsible="none"
           style={{
             '--sidebar-background': 'transparent',
-            backdropFilter: `blur(var(--campaign-sidebar-blur, ${campaignStyle?.sidebarBlur ?? 0}px))`,
-            WebkitBackdropFilter: `blur(var(--campaign-sidebar-blur, ${campaignStyle?.sidebarBlur ?? 0}px))`,
-            borderRight: `calc(1px * (1 - var(--campaign-bg-expand-to-sidebar, ${campaignStyle?.bgExpandToSidebar ? '1' : '0'}))) solid hsl(var(--border))`,
+            backdropFilter: `blur(var(--campaign-sidebar-blur, ${campaignSettings?.sidebarBlur ?? 0}px))`,
+            WebkitBackdropFilter: `blur(var(--campaign-sidebar-blur, ${campaignSettings?.sidebarBlur ?? 0}px))`,
+            borderRight: `calc(1px * (1 - var(--campaign-bg-expand-to-sidebar, ${campaignSettings?.bgExpandToSidebar ? '1' : '0'}))) solid hsl(var(--border))`,
           } as React.CSSProperties}
         >
           {/* Background gradient layer */}
@@ -259,7 +259,7 @@ export default function CampaignLayoutClient({
             className="absolute inset-0 -z-10"
             style={{
               background: 'linear-gradient(to right, hsl(var(--card)), hsl(var(--card) / 0.7), transparent)',
-              opacity: `var(--campaign-sidebar-bg-opacity, ${campaignStyle?.sidebarBgOpacity ?? 1.0})`,
+              opacity: `var(--campaign-sidebar-bg-opacity, ${campaignSettings?.sidebarBgOpacity ?? 1.0})`,
             }}
           />
 
@@ -267,7 +267,7 @@ export default function CampaignLayoutClient({
           <SidebarHeader
             className="border-b-0"
             style={{
-              borderBottom: `calc(1px * (1 - var(--campaign-bg-expand-to-sidebar, ${campaignStyle?.bgExpandToSidebar ? '1' : '0'}))) solid hsl(var(--border))`,
+              borderBottom: `calc(1px * (1 - var(--campaign-bg-expand-to-sidebar, ${campaignSettings?.bgExpandToSidebar ? '1' : '0'}))) solid hsl(var(--border))`,
             }}
           >
             <div className="flex items-center gap-3 px-1 mb-2">

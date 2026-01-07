@@ -42,18 +42,10 @@ export type CreateBeing = z.infer<typeof createBeingSchema>;
 export type UpdateBeing = z.infer<typeof updateBeingSchema>;
 export type ListBeingsQuery = z.infer<typeof listBeingsSchema>;
 
-// For backward compatibility
 export const BeingSchemas = {
   create: createBeingSchema,
   update: updateBeingSchema,
 };
-export const CharacterSchemas = BeingSchemas;
-export const createCharacterSchema = createBeingSchema;
-export const updateCharacterSchema = updateBeingSchema;
-export const listCharactersSchema = listBeingsSchema;
-export type CreateCharacter = CreateBeing;
-export type UpdateCharacter = UpdateBeing;
-export type ListCharactersQuery = ListBeingsQuery;
 
 // ============================================================================
 // RESOURCE
@@ -116,7 +108,7 @@ class Beings extends CampaignResource {
       ]);
 
       return {
-        characters: items,
+        beings: items,
         pagination: {
           page: query.page,
           limit: query.limit,
@@ -129,7 +121,7 @@ class Beings extends CampaignResource {
     }
 
     return {
-      characters: result.items,
+      beings: result.items,
       pagination: result.pagination,
     };
   }
@@ -138,26 +130,30 @@ class Beings extends CampaignResource {
     const being = await this.get(id, ctx.campaign.id);
     return {
       being: await requireResource(being),
-      character: await requireResource(being),
     };
   }
 
   async createOne(ctx: CampaignContext, data: CreateBeing) {
     const being = await this.create(ctx.campaign.id, ctx.session.user.id, data);
-    return { being, character: being };
+    return { being };
   }
 
   async updateOne(ctx: CampaignContext, id: string, data: UpdateBeing) {
     const existing = await this.get(id, ctx.campaign.id);
     await requireResource(existing);
-    const being = await this.update(id, ctx.campaign.id, data);
-    return { being, character: being };
+    const being = await this.update(
+      id,
+      ctx.campaign.id,
+      data,
+      ctx.session.user.id
+    );
+    return { being };
   }
 
   async deleteOne(ctx: CampaignContext, id: string) {
     const existing = await this.get(id, ctx.campaign.id);
     await requireResource(existing);
-    await this.delete(id, ctx.campaign.id);
+    await this.delete(id, ctx.campaign.id, ctx.session.user.id);
     return { success: true };
   }
 }
@@ -167,9 +163,4 @@ class Beings extends CampaignResource {
 // ============================================================================
 
 export const beings = new Beings();
-
-// Backward compatibility
-export const characters = beings;
-export const characterService = beings;
-export const listCharactersQuerySchema = listBeingsSchema;
 export const listBeingsQuerySchema = listBeingsSchema;
