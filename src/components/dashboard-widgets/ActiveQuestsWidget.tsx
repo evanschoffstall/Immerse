@@ -29,7 +29,6 @@ export function ActiveQuestsWidget({ campaignId }: ActiveQuestsWidgetProps) {
         );
         setQuests(data.quests || []);
       } catch (error) {
-        console.error('Error fetching quests:', error);
       } finally {
         setLoading(false);
       }

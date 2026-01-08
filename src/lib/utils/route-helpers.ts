@@ -72,8 +72,6 @@ export function campaignRoute(
       // Otherwise wrap in JSON response
       return NextResponse.json(result);
     } catch (error) {
-      console.error("Campaign route error:", error);
-
       if (error instanceof Error) {
         switch (error.message) {
           case "UNAUTHORIZED":

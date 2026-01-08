@@ -67,7 +67,6 @@ export function GettingStartedWidget({ campaignId }: GettingStartedWidgetProps) 
           },
         ]);
       } catch (error) {
-        console.error('Error fetching progress:', error);
       } finally {
         setLoading(false);
       }

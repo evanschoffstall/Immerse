@@ -18,7 +18,6 @@ const editorConfig: InitialConfigType = {
   theme: editorTheme,
   nodes,
   onError: (error: Error) => {
-    console.error(error)
   },
 }
 

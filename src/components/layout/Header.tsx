@@ -32,14 +32,13 @@ export default function Header() {
     const fetchCampaignStyle = async () => {
       if (campaignId) {
         try {
-          const response = await fetch(`/api/campaigns/${campaignId}/style`)
+          const response = await fetch(`/api/campaigns/${campaignId}/settings`)
           if (response.ok) {
             const data = await response.json()
-            console.log('Header fetched campaign style:', data)
-            setCampaignStyle(data.style)
+            setCampaignStyle(data.settings)
           }
         } catch (error) {
-          console.error('Failed to fetch campaign style:', error)
+          throw error;
         }
       } else {
         setCampaignStyle(null)

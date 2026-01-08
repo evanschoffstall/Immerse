@@ -1,4 +1,4 @@
-import { getCampaignContext } from "@/features/campaigns";
+import { getCampaignContext, verifyCampaignAccess } from "@/features/campaigns";
 import {
   beings,
   BeingSchemas,
@@ -42,7 +42,22 @@ export async function GET(
 
     // Load campaign context for all nested routes
     const [campaignId, resource, resourceId] = segments;
-    const ctx = await getCampaignContext(campaignId);
+
+    // For read-only list endpoints, use lightweight access check
+    const isListEndpoint =
+      (resource === "quests" || resource === "beings") && !resourceId;
+    const isReadOnlyEndpoint =
+      resource === "stats" || resource === "recent" || isListEndpoint;
+
+    if (isReadOnlyEndpoint) {
+      // Lightweight check - only verifies ownership, doesn't load full campaign
+      await verifyCampaignAccess(campaignId, session?.user?.id || "");
+    }
+
+    // For other endpoints, load full context
+    const ctx = isReadOnlyEndpoint
+      ? null
+      : await getCampaignContext(campaignId);
 
     // One segment: GET /api/campaigns/[id]
     if (segments.length === 1) {
@@ -66,16 +81,16 @@ export async function GET(
         const [beingsCount, questsCount, imagesCount, calendarsCount] =
           await Promise.all([
             prisma.beings.count({
-              where: { campaignId: ctx.campaign.id, deletedAt: null },
+              where: { campaignId, deletedAt: null },
             }),
             prisma.quests.count({
-              where: { campaignId: ctx.campaign.id, deletedAt: null },
+              where: { campaignId, deletedAt: null },
             }),
             prisma.images.count({
-              where: { campaignId: ctx.campaign.id, deletedAt: null },
+              where: { campaignId, deletedAt: null },
             }),
             prisma.calendars.count({
-              where: { campaignId: ctx.campaign.id, deletedAt: null },
+              where: { campaignId, deletedAt: null },
             }),
           ]);
         const stats = {
@@ -93,11 +108,13 @@ export async function GET(
         };
 
       case "settings":
+        if (!ctx) throw new Error("Context required");
         return await campaignSettingsService.get(ctx.campaign.id);
 
       case "quests":
         if (resourceId) {
           // GET /api/campaigns/[id]/quests/[questId]
+          if (!ctx) throw new Error("Context required");
           return await quests.getOne(ctx, resourceId);
         }
         // GET /api/campaigns/[id]/quests (list)
@@ -111,11 +128,12 @@ export async function GET(
           sortBy: query.get("sortBy") || "name",
           sortOrder: query.get("sortOrder") || "asc",
         });
-        return await quests.list(ctx.campaign.id, questQuery);
+        return await quests.list(campaignId, questQuery);
 
       case "beings":
         if (resourceId) {
           // GET /api/campaigns/[id]/beings/[beingId]
+          if (!ctx) throw new Error("Context required");
           return await beings.getOne(ctx, resourceId);
         }
         // GET /api/campaigns/[id]/beings (list)
@@ -128,7 +146,7 @@ export async function GET(
           sortBy: query.get("sortBy") || "name",
           sortOrder: query.get("sortOrder") || "asc",
         });
-        return await beings.list(ctx.campaign.id, parsedQuery);
+        return await beings.list(campaignId, parsedQuery);
 
       default:
         return ApiErrors.notFound();
