@@ -2,6 +2,7 @@ import { authConfig } from "@/lib/auth";
 import { prisma } from "@/lib/db/prisma";
 import { Prisma } from "@prisma/client";
 import { getServerSession } from "next-auth/next";
+import { cache } from "react";
 import type {
   CreateCampaignInput,
   ListCampaignsQuery,
@@ -38,10 +39,9 @@ export interface CampaignContext {
 }
 
 /**
- * Load campaign context and verify user access
- * Throws standard errors that can be caught by route wrappers
+ * Internal function to load campaign context
  */
-export async function getCampaignContext(
+async function _getCampaignContext(
   campaignId: string
 ): Promise<CampaignContext> {
   const session = await getServerSession(authConfig);
@@ -79,6 +79,44 @@ export async function getCampaignContext(
     isOwner,
   };
 }
+
+/**
+ * Load campaign context and verify user access
+ * Cached per-request to avoid duplicate database queries
+ * Throws standard errors that can be caught by route wrappers
+ */
+export const getCampaignContext = cache(_getCampaignContext);
+
+/**
+ * Lightweight campaign access check (cached)
+ * Only verifies user owns campaign without loading full context
+ * Returns campaignId if authorized, throws error otherwise
+ */
+async function _verifyCampaignAccess(
+  campaignId: string,
+  userId: string
+): Promise<string> {
+  const campaign = await prisma.campaigns.findUnique({
+    where: { id: campaignId },
+    select: { id: true, ownerId: true },
+  });
+
+  if (!campaign) {
+    throw new Error("CAMPAIGN_NOT_FOUND");
+  }
+
+  if (campaign.ownerId !== userId) {
+    throw new Error("FORBIDDEN");
+  }
+
+  return campaignId;
+}
+
+/**
+ * Cached lightweight access check for read-only operations
+ * Use this instead of getCampaignContext when you only need to verify access
+ */
+export const verifyCampaignAccess = cache(_verifyCampaignAccess);
 
 // ============================================================================
 // SCHEMAS - For campaign CRUD operations

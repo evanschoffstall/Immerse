@@ -40,7 +40,6 @@ export async function POST(request: NextRequest) {
         type: file.type,
       };
     } catch (error) {
-      console.error("Upload error:", error);
       throw new Error(
         error instanceof Error ? error.message : "Failed to upload image"
       );

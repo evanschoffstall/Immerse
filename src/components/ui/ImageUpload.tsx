@@ -68,7 +68,6 @@ export default function ImageUpload({
       onImageUpload(data.url)
       toast.success('Image uploaded successfully')
     } catch (error) {
-      console.error('Upload error:', error)
       toast.error(error instanceof Error ? error.message : 'Failed to upload image')
       setPreview(currentImage || null)
     } finally {

@@ -75,7 +75,6 @@ export function useCampaignDashboard(campaignId: string) {
         setData(result);
         setError(null);
       } catch (err) {
-        console.error("Error fetching dashboard:", err);
         setError(err as Error);
       } finally {
         setLoading(false);
@@ -140,7 +139,6 @@ export function useCampaignTheme(campaignId?: string) {
     campaignColors: null,
     setCampaignColors: (colors: Record<string, string>) => {
       // Placeholder for Phase 29
-      console.log("Campaign theme support coming in Phase 29", colors);
     },
   };
 }

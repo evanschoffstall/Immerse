@@ -31,12 +31,7 @@ export const authConfig: AuthOptions = {
         password: { label: "Password", type: "password" },
       },
       async authorize(credentials) {
-        console.log("🔐 [AUTH] Authorize called with:", {
-          email: credentials?.email,
-        });
-
         if (!credentials?.email || !credentials?.password) {
-          console.error("❌ [AUTH] Missing email or password");
           return null;
         }
 
@@ -45,14 +40,7 @@ export const authConfig: AuthOptions = {
           where: { email: credentials.email as string },
         });
 
-        console.log("🔐 [AUTH] User lookup result:", {
-          found: !!user,
-          hasPassword: !!user?.password,
-          email: user?.email,
-        });
-
         if (!user || !user.password) {
-          console.error("❌ [AUTH] User not found or no password");
           return null;
         }
 
@@ -61,14 +49,9 @@ export const authConfig: AuthOptions = {
           user.password
         );
 
-        console.log("🔐 [AUTH] Password match:", passwordMatch);
-
         if (!passwordMatch) {
-          console.error("❌ [AUTH] Password mismatch");
           return null;
         }
-
-        console.log("✅ [AUTH] Authentication successful for:", user.email);
 
         return {
           id: user.id,

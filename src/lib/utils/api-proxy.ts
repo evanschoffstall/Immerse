@@ -131,8 +131,6 @@ export function apiRoute(handler: ApiHandler, options: ApiRouteOptions = {}) {
 
       return NextResponse.json(result);
     } catch (error) {
-      console.error("API route error:", error);
-
       // Handle known errors
       if (error instanceof Error) {
         switch (error.message) {

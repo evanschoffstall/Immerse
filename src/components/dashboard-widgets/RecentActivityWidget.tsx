@@ -31,7 +31,6 @@ export function RecentActivityWidget({ campaignId }: RecentActivityWidgetProps) 
         );
         setEntities(data.entities || []);
       } catch (error) {
-        console.error('Error fetching recent activity:', error);
       } finally {
         setLoading(false);
       }
