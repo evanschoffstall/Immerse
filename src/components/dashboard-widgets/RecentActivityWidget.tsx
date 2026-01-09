@@ -2,7 +2,6 @@
 
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
-import { cachedFetch } from '@/lib/db/api-cache';
 import Image from 'next/image';
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
@@ -26,9 +25,10 @@ export function RecentActivityWidget({ campaignId }: RecentActivityWidgetProps) 
   useEffect(() => {
     const fetchRecentActivity = async () => {
       try {
-        const data = await cachedFetch<{ entities: RecentEntity[] }>(
+        const response = await fetch(
           `/api/campaigns/${campaignId}/recent`
         );
+        const data = await response.json();
         setEntities(data.entities || []);
       } catch (error) {
       } finally {

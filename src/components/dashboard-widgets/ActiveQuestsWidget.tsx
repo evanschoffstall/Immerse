@@ -2,7 +2,6 @@
 
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
-import { cachedFetch } from '@/lib/db/api-cache';
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
 
@@ -24,9 +23,10 @@ export function ActiveQuestsWidget({ campaignId }: ActiveQuestsWidgetProps) {
   useEffect(() => {
     const fetchQuests = async () => {
       try {
-        const data = await cachedFetch<{ quests: Quest[] }>(
+        const response = await fetch(
           `/api/campaigns/${campaignId}/quests?status=active`
         );
+        const data = await response.json();
         setQuests(data.quests || []);
       } catch (error) {
       } finally {

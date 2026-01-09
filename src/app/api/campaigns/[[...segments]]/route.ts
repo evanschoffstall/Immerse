@@ -1,29 +1,25 @@
-import { getCampaignContext, verifyCampaignAccess } from "@/features/campaigns";
-import {
-  beings,
-  BeingSchemas,
-  listBeingsSchema,
-} from "@/features/campaigns/beings";
 import {
   CampaignSchemas,
   campaignService,
 } from "@/features/campaigns/campaigns";
 import {
-  listQuestsSchema,
-  quests,
-  QuestSchemas,
-} from "@/features/campaigns/quests";
-import {
   campaignSettingsSchema,
   campaignSettingsService,
 } from "@/features/campaigns/settings";
-import { prisma } from "@/lib/db/prisma";
-import { ApiErrors, apiRoute } from "@/lib/utils/api-proxy";
+import { ApiErrors, apiRoute } from "@/lib/api/proxy";
+import { getCampaignContext } from "@/lib/context/campaigns";
+import { isValidResource, resourceRegistry } from "@/lib/data/resources";
 import { NextRequest } from "next/server";
 
 /**
  * Single proxy for ALL /api/campaigns/* routes
- * Handles collection, resource, and nested endpoints dynamically
+ *
+ * Architecture:
+ * - Campaign CRUD: Uses campaignService directly
+ * - Nested resources: Delegates to registry handlers (which call services internally)
+ * - ALL business logic in features/ services
+ * - Zero Prisma imports in this layer
+ *
  */
 
 export async function GET(
@@ -33,124 +29,51 @@ export async function GET(
   return apiRoute(async ({ session, segments, query }) => {
     // No segments: GET /api/campaigns (list all)
     if (segments.length === 0) {
-      const campaigns = await prisma.campaigns.findMany({
-        where: { ownerId: session?.user?.id || "" },
-        orderBy: { updatedAt: "desc" },
+      const result = await campaignService.list(session?.user?.id || "", {
+        page: 1,
+        limit: 100,
+        sortBy: "updatedAt",
+        sortOrder: "desc",
       });
-      return { campaigns };
+      return { campaigns: result.campaigns };
     }
 
-    // Load campaign context for all nested routes
     const [campaignId, resource, resourceId] = segments;
 
-    // For read-only list endpoints, use lightweight access check
-    const isListEndpoint =
-      (resource === "quests" || resource === "beings") && !resourceId;
-    const isReadOnlyEndpoint =
-      resource === "stats" || resource === "recent" || isListEndpoint;
-
-    if (isReadOnlyEndpoint) {
-      // Lightweight check - only verifies ownership, doesn't load full campaign
-      await verifyCampaignAccess(campaignId, session?.user?.id || "");
-    }
-
-    // For other endpoints, load full context
-    const ctx = isReadOnlyEndpoint
-      ? null
-      : await getCampaignContext(campaignId);
-
-    // One segment: GET /api/campaigns/[id]
+    // One segment: GET /api/campaigns/[id] (single campaign)
     if (segments.length === 1) {
-      const campaign = await prisma.campaigns.findUnique({
-        where: { id: campaignId },
-        include: {
-          users: {
-            select: { id: true, name: true, email: true },
-          },
-        },
+      const result = await campaignService.get(
+        campaignId,
+        session?.user?.id || ""
+      );
+      return result;
+    }
+
+    // Special read-only endpoints (no full context needed)
+    if (resource === "recent") return { entities: [] };
+
+    if (resource === "stats") {
+      return await campaignService.getStats(campaignId);
+    }
+
+    if (resource === "settings") {
+      const ctx = await getCampaignContext(campaignId);
+      return await campaignSettingsService.get(ctx.campaign.id);
+    }
+
+    // Generic resource handling via unified registry
+    if (isValidResource(resource)) {
+      const registration = resourceRegistry.get(resource);
+      if (!registration) return ApiErrors.notFound();
+
+      // Use the unified API handler
+      return await registration.handler.handleGet(request, {
+        id: campaignId,
+        resourceId,
       });
-      return { campaign };
     }
 
-    // Two+ segments: nested resources
-    switch (resource) {
-      case "recent":
-        return { entities: [] };
-
-      case "stats":
-        const [beingsCount, questsCount, imagesCount, calendarsCount] =
-          await Promise.all([
-            prisma.beings.count({
-              where: { campaignId, deletedAt: null },
-            }),
-            prisma.quests.count({
-              where: { campaignId, deletedAt: null },
-            }),
-            prisma.images.count({
-              where: { campaignId, deletedAt: null },
-            }),
-            prisma.calendars.count({
-              where: { campaignId, deletedAt: null },
-            }),
-          ]);
-        const stats = {
-          beings: beingsCount,
-          quests: questsCount,
-          images: imagesCount,
-          calendars: calendarsCount,
-        };
-        return {
-          hasBeings: stats.beings > 0,
-          hasQuests: stats.quests > 0,
-          hasImages: stats.images > 0,
-          hasCalendars: stats.calendars > 0,
-          stats,
-        };
-
-      case "settings":
-        if (!ctx) throw new Error("Context required");
-        return await campaignSettingsService.get(ctx.campaign.id);
-
-      case "quests":
-        if (resourceId) {
-          // GET /api/campaigns/[id]/quests/[questId]
-          if (!ctx) throw new Error("Context required");
-          return await quests.getOne(ctx, resourceId);
-        }
-        // GET /api/campaigns/[id]/quests (list)
-        const questQuery = listQuestsSchema.parse({
-          page: query.get("page") || "1",
-          limit: query.get("limit") || "20",
-          search: query.get("search") || undefined,
-          type: query.get("type") || undefined,
-          status: query.get("status") || undefined,
-          isPrivate: query.get("isPrivate") || undefined,
-          sortBy: query.get("sortBy") || "name",
-          sortOrder: query.get("sortOrder") || "asc",
-        });
-        return await quests.list(campaignId, questQuery);
-
-      case "beings":
-        if (resourceId) {
-          // GET /api/campaigns/[id]/beings/[beingId]
-          if (!ctx) throw new Error("Context required");
-          return await beings.getOne(ctx, resourceId);
-        }
-        // GET /api/campaigns/[id]/beings (list)
-        const parsedQuery = listBeingsSchema.parse({
-          page: query.get("page") || "1",
-          limit: query.get("limit") || "20",
-          search: query.get("search") || undefined,
-          type: query.get("type") || undefined,
-          isPrivate: query.get("isPrivate") || undefined,
-          sortBy: query.get("sortBy") || "name",
-          sortOrder: query.get("sortOrder") || "asc",
-        });
-        return await beings.list(campaignId, parsedQuery);
-
-      default:
-        return ApiErrors.notFound();
-    }
+    return ApiErrors.notFound();
   })(request, context);
 }
 
@@ -167,20 +90,18 @@ export async function POST(
 
     // Nested resources
     const [campaignId, resource] = segments;
-    const ctx = await getCampaignContext(campaignId);
 
-    switch (resource) {
-      case "beings":
-        const validated = BeingSchemas.create.parse(body);
-        return await beings.createOne(ctx, validated);
+    // Generic resource handling via unified registry
+    if (isValidResource(resource)) {
+      const registration = resourceRegistry.get(resource);
+      if (!registration) return ApiErrors.notFound();
 
-      case "quests":
-        const validatedQuest = QuestSchemas.create.parse(body);
-        return await quests.createOne(ctx, validatedQuest);
-
-      default:
-        return ApiErrors.notFound();
+      return await registration.handler.handlePost(request, {
+        id: campaignId,
+      });
     }
+
+    return ApiErrors.notFound();
   })(request, context);
 }
 
@@ -195,40 +116,31 @@ export async function PATCH(
 
     const [campaignId, resource, resourceId] = segments;
     const ctx = await getCampaignContext(campaignId);
-    const data = body as any;
 
     // One segment: PATCH /api/campaigns/[id]
     if (segments.length === 1) {
-      const validated = CampaignSchemas.update.parse(data);
+      const validated = CampaignSchemas.update.parse(body);
       return await campaignService.update(campaignId, ctx.userId, validated);
     }
 
-    // Nested resources
-    switch (resource) {
-      case "settings":
-        const validatedSettings = campaignSettingsSchema.parse(data);
-        return await campaignSettingsService.update(
-          campaignId,
-          validatedSettings
-        );
-
-      case "beings":
-        if (!resourceId) {
-          return ApiErrors.notFound();
-        }
-        const validated = BeingSchemas.update.parse(data);
-        return await beings.updateOne(ctx, resourceId, validated);
-
-      case "quests":
-        if (!resourceId) {
-          return ApiErrors.notFound();
-        }
-        const validatedQuest = QuestSchemas.update.parse(data);
-        return await quests.updateOne(ctx, resourceId, validatedQuest);
-
-      default:
-        return ApiErrors.notFound();
+    // Special endpoints
+    if (resource === "settings") {
+      const validated = campaignSettingsSchema.parse(body);
+      return await campaignSettingsService.update(campaignId, validated);
     }
+
+    // Generic resource handling via unified registry
+    if (isValidResource(resource)) {
+      const registration = resourceRegistry.get(resource);
+      if (!registration) return ApiErrors.notFound();
+
+      return await registration.handler.handlePatch(request, {
+        id: campaignId,
+        resourceId,
+      });
+    }
+
+    return ApiErrors.notFound();
   })(request, context);
 }
 
@@ -242,32 +154,25 @@ export async function DELETE(
     }
 
     const [campaignId, resource, resourceId] = segments;
-    const ctx = await getCampaignContext(campaignId);
 
     // One segment: DELETE /api/campaigns/[id]
     if (segments.length === 1) {
-      await prisma.campaigns.delete({
-        where: { id: campaignId },
-      });
+      const ctx = await getCampaignContext(campaignId);
+      await campaignService.delete(campaignId, ctx.userId);
       return { success: true };
     }
 
-    // Nested resources
-    switch (resource) {
-      case "beings":
-        if (!resourceId) {
-          return ApiErrors.notFound();
-        }
-        return await beings.deleteOne(ctx, resourceId);
+    // Generic resource handling via unified registry
+    if (isValidResource(resource)) {
+      const registration = resourceRegistry.get(resource);
+      if (!registration) return ApiErrors.notFound();
 
-      case "quests":
-        if (!resourceId) {
-          return ApiErrors.notFound();
-        }
-        return await quests.deleteOne(ctx, resourceId);
-
-      default:
-        return ApiErrors.notFound();
+      return await registration.handler.handleDelete(request, {
+        id: campaignId,
+        resourceId,
+      });
     }
+
+    return ApiErrors.notFound();
   })(request, context);
 }

@@ -1,5 +1,5 @@
+import { ApiErrors, apiRoute } from "@/lib/api/proxy";
 import { uploadImage } from "@/lib/upload";
-import { ApiErrors, apiRoute } from "@/lib/utils/api-proxy";
 import { NextRequest } from "next/server";
 
 export async function POST(request: NextRequest) {

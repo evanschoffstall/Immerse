@@ -1,166 +1,66 @@
-import type { CampaignContext } from "@/features/campaigns";
-import {
-  CampaignResource,
-  requireResource,
-} from "@/features/campaigns/base/resource";
-import { Prisma } from "@prisma/client";
-import { z } from "zod";
+import { beingsResource } from "@/lib/data/resources/beings";
+import type { z } from "zod";
 
 // ============================================================================
-// SCHEMAS
+// SCHEMAS - Re-export from lib for convenience
 // ============================================================================
 
-export const createBeingSchema = z.object({
-  name: z.string().min(1),
-  title: z.string().optional(),
-  type: z.string().optional(),
-  age: z.string().optional(),
-  sex: z.string().optional(),
-  pronouns: z.string().optional(),
-  location: z.string().optional(),
-  family: z.string().optional(),
-  description: z.string().optional(),
-  imageId: z.string().optional(),
-  isPrivate: z.boolean().optional(),
-  birthCalendarId: z.string().optional(),
-  birthDate: z.string().optional(),
-});
+export { beingSchemas } from "@/lib/data/resources/beings";
 
-export const updateBeingSchema = createBeingSchema.partial();
-
-export const listBeingsSchema = z.object({
-  page: z.coerce.number().min(1).default(1),
-  limit: z.coerce.number().min(1).max(100).default(20),
-  search: z.string().optional(),
-  type: z.string().optional(),
-  isPrivate: z.coerce.boolean().optional(),
-  sortBy: z.string().default("name"),
-  sortOrder: z.enum(["asc", "desc"]).default("asc"),
-});
-
-export type CreateBeing = z.infer<typeof createBeingSchema>;
-export type UpdateBeing = z.infer<typeof updateBeingSchema>;
-export type ListBeingsQuery = z.infer<typeof listBeingsSchema>;
-
-export const BeingSchemas = {
-  create: createBeingSchema,
-  update: updateBeingSchema,
-};
+// Infer types from schemas
+import { beingSchemas } from "@/lib/data/resources/beings";
+export type CreateBeingInput = z.infer<typeof beingSchemas.create>;
+export type UpdateBeingInput = z.infer<typeof beingSchemas.update>;
 
 // ============================================================================
-// RESOURCE
+// SERVICE - Being business logic
 // ============================================================================
 
-const beingInclude = {
-  images: {
-    select: {
-      id: true,
-      name: true,
-      ext: true,
-    },
-  },
-  calendars: {
-    select: {
-      id: true,
-      name: true,
-      slug: true,
-    },
-  },
-} satisfies Prisma.beingsInclude;
-
-class Beings extends CampaignResource {
-  constructor() {
-    super("beings", beingInclude);
+class BeingService {
+  /**
+   * Create a new being in a campaign
+   */
+  async create(campaignId: string, data: CreateBeingInput) {
+    // Business logic: Ensure being belongs to campaign
+    const result = await beingsResource.create(campaignId, data);
+    return result;
   }
 
-  async list(campaignId: string, query: ListBeingsQuery) {
-    const { type, isPrivate, ...baseQuery } = query;
+  /**
+   * Get a single being
+   */
+  async get(campaignId: string, beingId: string) {
+    const result = await beingsResource.getOne(beingId);
+    return result;
+  }
 
-    const where: any = {};
-    if (type) where.type = type;
-    if (isPrivate !== undefined) where.isPrivate = isPrivate;
-
-    const result = await super.list(campaignId, {
-      ...baseQuery,
-      where,
+  /**
+   * List all beings in a campaign
+   */
+  async list(campaignId: string, query: any) {
+    const result = await beingsResource.list({
+      where: { campaignId },
+      ...query,
     });
-
-    // Custom search for characters (include title field)
-    if (query.search) {
-      const where: any = { campaignId };
-      where.OR = [
-        { name: { contains: query.search, mode: "insensitive" } },
-        { description: { contains: query.search, mode: "insensitive" } },
-        { title: { contains: query.search, mode: "insensitive" } },
-      ];
-      if (type) where.type = type;
-      if (isPrivate !== undefined) where.isPrivate = isPrivate;
-
-      const [items, total] = await Promise.all([
-        this.db.findMany({
-          where,
-          include: this.include,
-          orderBy: { [query.sortBy]: query.sortOrder },
-          skip: (query.page - 1) * query.limit,
-          take: query.limit,
-        }),
-        this.db.count({ where }),
-      ]);
-
-      return {
-        beings: items,
-        pagination: {
-          page: query.page,
-          limit: query.limit,
-          total,
-          totalPages: Math.ceil(total / query.limit),
-          hasNext: query.page * query.limit < total,
-          hasPrev: query.page > 1,
-        },
-      };
-    }
-
-    return {
-      beings: result.items,
-      pagination: result.pagination,
-    };
+    return result;
   }
 
-  async getOne(ctx: CampaignContext, id: string) {
-    const being = await this.get(id, ctx.campaign.id);
-    return {
-      being: await requireResource(being),
-    };
+  /**
+   * Update an existing being
+   */
+  async update(campaignId: string, beingId: string, data: UpdateBeingInput) {
+    const result = await beingsResource.update(campaignId, beingId, data);
+    return result;
   }
 
-  async createOne(ctx: CampaignContext, data: CreateBeing) {
-    const being = await this.create(ctx.campaign.id, ctx.session.user.id, data);
-    return { being };
-  }
-
-  async updateOne(ctx: CampaignContext, id: string, data: UpdateBeing) {
-    const existing = await this.get(id, ctx.campaign.id);
-    await requireResource(existing);
-    const being = await this.update(
-      id,
-      ctx.campaign.id,
-      data,
-      ctx.session.user.id
-    );
-    return { being };
-  }
-
-  async deleteOne(ctx: CampaignContext, id: string) {
-    const existing = await this.get(id, ctx.campaign.id);
-    await requireResource(existing);
-    await this.delete(id, ctx.campaign.id, ctx.session.user.id);
+  /**
+   * Delete a being
+   */
+  async delete(campaignId: string, beingId: string) {
+    await beingsResource.delete(beingId, { campaignId });
     return { success: true };
   }
 }
 
-// ============================================================================
-// EXPORTS
-// ============================================================================
-
-export const beings = new Beings();
-export const listBeingsQuerySchema = listBeingsSchema;
+// Export singleton instance
+export const beingService = new BeingService();

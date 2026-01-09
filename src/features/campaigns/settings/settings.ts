@@ -1,4 +1,4 @@
-import { prisma } from "@/lib/db/prisma";
+import { campaignSettingsRepo } from "@/lib/data/repositories";
 import { z } from "zod";
 
 // ============================================================================
@@ -21,51 +21,15 @@ export const campaignSettingsSchema = z.object({
 export type CampaignSettingsInput = z.infer<typeof campaignSettingsSchema>;
 
 // ============================================================================
-// REPOSITORY
-// ============================================================================
-
-class CampaignSettingsRepository {
-  /**
-   * Get settings for a campaign (or return defaults if not exists)
-   */
-  async findByCampaignId(campaignId: string) {
-    return prisma.campaign_settings.findUnique({
-      where: { campaignId },
-    });
-  }
-
-  /**
-   * Upsert campaign settings
-   */
-  async upsert(campaignId: string, data: CampaignSettingsInput) {
-    return prisma.campaign_settings.upsert({
-      where: { campaignId },
-      update: {
-        ...data,
-        updatedAt: new Date(),
-      },
-      create: {
-        id: crypto.randomUUID(),
-        campaignId,
-        ...data,
-        updatedAt: new Date(),
-      },
-    });
-  }
-}
-
-// ============================================================================
-// SERVICE
+// SERVICE - Business logic for campaign settings
 // ============================================================================
 
 class CampaignSettingsService {
-  constructor(private repo: CampaignSettingsRepository) {}
-
   /**
    * Get settings for a campaign
    */
   async get(campaignId: string) {
-    const settings = await this.repo.findByCampaignId(campaignId);
+    const settings = await campaignSettingsRepo.findByCampaignId(campaignId);
     return { settings };
   }
 
@@ -73,7 +37,7 @@ class CampaignSettingsService {
    * Update campaign settings
    */
   async update(campaignId: string, data: CampaignSettingsInput) {
-    const settings = await this.repo.upsert(campaignId, data);
+    const settings = await campaignSettingsRepo.upsert(campaignId, data);
     return { settings };
   }
 }
@@ -82,8 +46,4 @@ class CampaignSettingsService {
 // EXPORTS
 // ============================================================================
 
-const settingsRepo = new CampaignSettingsRepository();
-export const campaignSettingsService = new CampaignSettingsService(
-  settingsRepo
-);
-export { settingsRepo };
+export const campaignSettingsService = new CampaignSettingsService();

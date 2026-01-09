@@ -1,4 +1,4 @@
-import { CampaignContext, getCampaignContext } from "@/features/campaigns";
+import { CampaignContext, getCampaignContext } from "@/lib/context/campaigns";
 import { NextRequest, NextResponse } from "next/server";
 import { ZodSchema } from "zod";
 
@@ -103,37 +103,10 @@ export function campaignRoute(
 }
 
 /**
- * Helper for parsing pagination query params
+ * Re-export centralized pagination utilities
+ * @deprecated Import directly from @/lib/utils/pagination instead
  */
-export function getPagination(query: URLSearchParams) {
-  const page = Math.max(1, parseInt(query.get("page") || "1", 10));
-  const limit = Math.min(
-    100,
-    Math.max(1, parseInt(query.get("limit") || "20", 10))
-  );
-  const skip = (page - 1) * limit;
-
-  return { page, limit, skip };
-}
-
-/**
- * Helper for building paginated response
- */
-export function paginatedResponse<T>(
-  data: T[],
-  total: number,
-  page: number,
-  limit: number
-) {
-  return {
-    data,
-    pagination: {
-      page,
-      limit,
-      total,
-      totalPages: Math.ceil(total / limit),
-      hasNext: page * limit < total,
-      hasPrev: page > 1,
-    },
-  };
-}
+export {
+  parsePaginationParams as getPagination,
+  paginatedResponse,
+} from "../utils/pagination";

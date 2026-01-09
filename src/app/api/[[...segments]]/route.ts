@@ -1,4 +1,4 @@
-import { ApiErrors, apiRoute } from "@/lib/utils/api-proxy";
+import { ApiErrors, apiRoute } from "@/lib/api/proxy";
 import { NextRequest } from "next/server";
 
 /**

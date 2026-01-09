@@ -14,7 +14,7 @@ import {
   SidebarMenuItem,
   SidebarProvider
 } from '@/components/ui/sidebar';
-import type { campaigns as Campaign, campaign_settings as CampaignSettings } from '@prisma/client';
+import type { Campaign, CampaignSettings } from '@/lib/data/types';
 import {
   Bookmark,
   BookOpen,

@@ -3,7 +3,6 @@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Skeleton } from '@/components/ui/skeleton';
-import { cachedFetch } from '@/lib/db/api-cache';
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
 
@@ -25,9 +24,10 @@ export function GettingStartedWidget({ campaignId }: GettingStartedWidgetProps) 
   useEffect(() => {
     const fetchProgress = async () => {
       try {
-        const stats = await cachedFetch<{ hasBeings: boolean; hasLocations: boolean }>(
+        const response = await fetch(
           `/api/campaigns/${campaignId}/stats`
         );
+        const stats = await response.json();
 
         const hasBeings = stats.hasBeings || false;
         const hasLocations = stats.hasLocations || false;
