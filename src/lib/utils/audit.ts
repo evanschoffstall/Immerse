@@ -1,4 +1,4 @@
-import { prisma } from "@/lib/db/prisma";
+import { prisma } from "@/lib/data/prisma";
 
 /**
  * Generate a simple diff between two objects

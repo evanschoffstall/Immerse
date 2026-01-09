@@ -1,108 +1,66 @@
-import type { CampaignContext } from "@/features/campaigns";
-import {
-  CampaignResource,
-  requireResource,
-} from "@/features/campaigns/base/resource";
-import { Prisma } from "@prisma/client";
-import { z } from "zod";
+import { questsResource } from "@/lib/data/resources/quests";
+import type { z } from "zod";
 
 // ============================================================================
-// SCHEMAS
+// SCHEMAS - Re-export from lib for convenience
 // ============================================================================
 
-export const createQuestSchema = z.object({
-  name: z.string().min(1),
-  type: z.string().optional(),
-  description: z.string().optional(),
-  date: z.string().optional(),
-  image: z.string().optional(),
-  location: z.string().optional(),
-  status: z.string().optional(),
-  isPrivate: z.boolean().optional(),
-});
+export { questSchemas } from "@/lib/data/resources/quests";
 
-export const updateQuestSchema = createQuestSchema.partial();
-
-export const listQuestsSchema = z.object({
-  page: z.coerce.number().min(1).default(1),
-  limit: z.coerce.number().min(1).max(100).default(20),
-  search: z.string().optional(),
-  type: z.string().optional(),
-  status: z.string().optional(),
-  isPrivate: z.coerce.boolean().optional(),
-  sortBy: z.string().default("name"),
-  sortOrder: z.enum(["asc", "desc"]).default("asc"),
-});
-
-export type CreateQuest = z.infer<typeof createQuestSchema>;
-export type UpdateQuest = z.infer<typeof updateQuestSchema>;
-export type ListQuestsQuery = z.infer<typeof listQuestsSchema>;
-
-export const QuestSchemas = {
-  create: createQuestSchema,
-  update: updateQuestSchema,
-};
+// Infer types from schemas
+import { questSchemas } from "@/lib/data/resources/quests";
+export type CreateQuestInput = z.infer<typeof questSchemas.create>;
+export type UpdateQuestInput = z.infer<typeof questSchemas.update>;
 
 // ============================================================================
-// RESOURCE
+// SERVICE - Quest business logic
 // ============================================================================
 
-const questInclude = {} satisfies Prisma.questsInclude;
-
-class Quests extends CampaignResource {
-  constructor() {
-    super("quests", questInclude);
+class QuestService {
+  /**
+   * Create a new quest in a campaign
+   */
+  async create(campaignId: string, data: CreateQuestInput) {
+    // Business logic: Ensure quest belongs to campaign
+    const result = await questsResource.create(campaignId, data);
+    return result;
   }
 
-  async list(campaignId: string, query: ListQuestsQuery) {
-    const { type, status, isPrivate, ...baseQuery } = query;
-    const where: any = {};
-    if (type) where.type = type;
-    if (status) where.status = status;
-    if (isPrivate !== undefined) where.isPrivate = isPrivate;
-
-    const result = await super.list(campaignId, { ...baseQuery, where });
-    return { quests: result.items, pagination: result.pagination };
+  /**
+   * Get a single quest
+   */
+  async get(campaignId: string, questId: string) {
+    const result = await questsResource.getOne(questId);
+    return result;
   }
 
-  async getOne(ctx: CampaignContext, id: string) {
-    const quest = await this.get(id, ctx.campaign.id);
-    return { quest: await requireResource(quest) };
-  }
-
-  async createOne(ctx: CampaignContext, data: CreateQuest) {
-    const quest = await this.create(ctx.campaign.id, ctx.session.user.id, data);
-    return { quest };
-  }
-
-  async updateOne(ctx: CampaignContext, id: string, data: UpdateQuest) {
-    const existing = await this.get(id, ctx.campaign.id);
-    await requireResource(existing);
-    const quest = await this.update(
-      id,
-      ctx.campaign.id,
-      data,
-      ctx.session.user.id
-    );
-    return { quest };
-  }
-
-  async deleteOne(ctx: CampaignContext, id: string) {
-    const existing = await this.get(id, ctx.campaign.id);
-    await requireResource(existing);
-    await this.delete(id, ctx.campaign.id, ctx.session.user.id);
-    return { success: true };
-  }
-
-  async getByStatus(campaignId: string, status: string) {
-    return this.db.findMany({
-      where: { campaignId, status },
-      include: this.include,
-      orderBy: { updatedAt: "desc" },
+  /**
+   * List all quests in a campaign
+   */
+  async list(campaignId: string, query: any) {
+    const result = await questsResource.list({
+      where: { campaignId },
+      ...query,
     });
+    return result;
+  }
+
+  /**
+   * Update an existing quest
+   */
+  async update(campaignId: string, questId: string, data: UpdateQuestInput) {
+    const result = await questsResource.update(campaignId, questId, data);
+    return result;
+  }
+
+  /**
+   * Delete a quest
+   */
+  async delete(campaignId: string, questId: string) {
+    await questsResource.delete(questId, { campaignId });
+    return { success: true };
   }
 }
 
-export const quests = new Quests();
-export const questService = quests;
-export const listQuestsQuerySchema = listQuestsSchema;
+// Export singleton instance
+export const questService = new QuestService();

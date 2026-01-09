@@ -1,2 +1,7 @@
-// Re-export everything from quests.ts
-export * from "./quests";
+/**
+ * Quests feature module
+ * Exports service and schemas for quest management
+ */
+
+export { questSchemas, questService } from "./quests";
+export type { CreateQuestInput, UpdateQuestInput } from "./quests";
