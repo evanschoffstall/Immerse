@@ -16,37 +16,15 @@ import { LogOut, Menu, Search, Settings, Swords } from 'lucide-react'
 import { signOut, useSession } from 'next-auth/react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { useEffect, useState } from 'react'
 
 export default function Header() {
   const { data: session, status } = useSession()
   const pathname = usePathname()
-  const [campaignStyle, setCampaignStyle] = useState<any>(null)
 
   // Check if we're on a campaign page
   const campaignMatch = pathname?.match(/^\/campaigns\/([^\/]+)/)
   const campaignId = campaignMatch?.[1]
   const isOnCampaignPage = !!campaignId && session?.user
-
-  useEffect(() => {
-    const fetchCampaignStyle = async () => {
-      if (campaignId) {
-        try {
-          const response = await fetch(`/api/campaigns/${campaignId}/settings`)
-          if (response.ok) {
-            const data = await response.json()
-            setCampaignStyle(data.settings)
-          }
-        } catch (error) {
-          throw error;
-        }
-      } else {
-        setCampaignStyle(null)
-      }
-    }
-
-    fetchCampaignStyle()
-  }, [campaignId])
 
   const navigationItems = session?.user ? [
     { href: '/campaigns', label: 'Campaigns' },
@@ -70,8 +48,8 @@ export default function Header() {
     <header
       className={`fixed top-0 z-50 w-full ${isOnCampaignPage ? 'bg-transparent border-transparent' : 'border-b border-border/20'}`}
       style={isOnCampaignPage ? {
-        backdropFilter: `blur(var(--campaign-header-blur, ${campaignStyle?.headerBlur ?? 0}px))`,
-        WebkitBackdropFilter: `blur(var(--campaign-header-blur, ${campaignStyle?.headerBlur ?? 0}px))`,
+        backdropFilter: `blur(var(--campaign-header-blur, 4px))`,
+        WebkitBackdropFilter: `blur(var(--campaign-header-blur, 4px))`,
       } : {
         backdropFilter: 'blur(12px)',
         WebkitBackdropFilter: 'blur(12px)',
@@ -79,14 +57,10 @@ export default function Header() {
     >
       {/* Render internal background layer for both campaign and non-campaign pages */}
       <div
-        className="absolute inset-0 -z-10 "
-        style={isOnCampaignPage && campaignStyle ? {
-          backgroundColor: `hsl(var(--background) / var(--campaign-header-bg-opacity, ${campaignStyle.headerBgOpacity ?? 0.95}))`,
-        } : !isOnCampaignPage && campaignStyle && campaignStyle.headerBgOpacity !== undefined ? {
-          backgroundColor: `hsl(var(--background) / ${campaignStyle.headerBgOpacity})`,
-        } : {
-          background: 'linear-gradient(to bottom, hsl(var(--background) / 0.6), hsl(var(--background) / 0.4), transparent)'
-        }}
+        className={`absolute inset-0 -z-10 ${isOnCampaignPage
+          ? 'bg-background/(--campaign-header-bg-opacity,0.95)'
+          : 'bg-linear-to-b from-background/60 via-background/40 to-transparent'
+          }`}
       />
       <div className="relative flex h-13 items-center px-4 sm:px-6 lg:px-8">
         {isOnCampaignPage && (

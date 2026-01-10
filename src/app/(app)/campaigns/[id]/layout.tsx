@@ -2,7 +2,7 @@ import { db } from '@/db';
 import { authConfig } from '@/lib/auth';
 import { getServerSession } from 'next-auth/next';
 import { redirect } from 'next/navigation';
-import CampaignLayoutClient from './CampaignLayoutClient';
+import CampaignLayoutClient from './client';
 
 export default async function CampaignLayout({
   children,
