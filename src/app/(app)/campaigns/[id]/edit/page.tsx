@@ -17,6 +17,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Label } from '@/components/ui/label';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Slider } from '@/components/ui/slider';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useParams, useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { toast } from 'sonner';
@@ -63,6 +64,16 @@ interface CampaignSettings {
   card: { bgOpacity: number; blur: number };
 }
 
+interface CampaignData {
+  campaign: {
+    name: string;
+    description: string | null;
+    image: string | null;
+    backgroundImage: string | null;
+  };
+  settings: any;
+}
+
 const DEFAULT_SETTINGS: CampaignSettings = {
   bg: { opacity: 0.6, blur: 4, expandToSidebar: true, expandToHeader: true },
   header: { bgOpacity: 0.0, blur: 4 },
@@ -73,13 +84,73 @@ const DEFAULT_SETTINGS: CampaignSettings = {
 export default function EditCampaignPage() {
   const router = useRouter();
   const params = useParams();
-  const [isLoading, setIsLoading] = useState(false);
-  const [isLoadingData, setIsLoadingData] = useState(true);
-  const [isDeleting, setIsDeleting] = useState(false);
+  const queryClient = useQueryClient();
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
-  const [initialData, setInitialData] = useState<Partial<CampaignFormData> | null>(null);
-  const [isSavingSettings, setIsSavingSettings] = useState(false);
   const [settings, setSettings] = useState<CampaignSettings>(DEFAULT_SETTINGS);
+
+  const campaignId = params.id as string;
+
+  // Fetch campaign and settings
+  const { data: campaignData, isLoading: isLoadingData, error } = useQuery<CampaignData>({
+    queryKey: ['campaign', campaignId],
+    queryFn: async () => {
+      const [campaignRes, settingsRes] = await Promise.all([
+        fetch(`/api/campaigns/${campaignId}`),
+        fetch(`/api/campaigns/${campaignId}/settings`),
+      ]);
+
+      if (!campaignRes.ok) {
+        throw new Error('Failed to fetch campaign');
+      }
+
+      const campaignData = await campaignRes.json();
+      const settingsData = settingsRes.ok ? await settingsRes.json() : null;
+
+      return { campaign: campaignData.campaign, settings: settingsData?.settings };
+    },
+  });
+
+  // Update settings when data loads
+  useEffect(() => {
+    if (campaignData?.settings) {
+      const loadedSettings = campaignData.settings;
+      setSettings({
+        bg: {
+          opacity: loadedSettings.bgOpacity ?? DEFAULT_SETTINGS.bg.opacity,
+          blur: loadedSettings.bgBlur ?? DEFAULT_SETTINGS.bg.blur,
+          expandToSidebar: loadedSettings.bgExpandToSidebar ?? DEFAULT_SETTINGS.bg.expandToSidebar,
+          expandToHeader: loadedSettings.bgExpandToHeader ?? DEFAULT_SETTINGS.bg.expandToHeader,
+        },
+        header: {
+          bgOpacity: loadedSettings.headerBgOpacity ?? DEFAULT_SETTINGS.header.bgOpacity,
+          blur: loadedSettings.headerBlur ?? DEFAULT_SETTINGS.header.blur,
+        },
+        sidebar: {
+          bgOpacity: loadedSettings.sidebarBgOpacity ?? DEFAULT_SETTINGS.sidebar.bgOpacity,
+          blur: loadedSettings.sidebarBlur ?? DEFAULT_SETTINGS.sidebar.blur,
+        },
+        card: {
+          bgOpacity: loadedSettings.cardBgOpacity ?? DEFAULT_SETTINGS.card.bgOpacity,
+          blur: loadedSettings.cardBlur ?? DEFAULT_SETTINGS.card.blur,
+        },
+      });
+    }
+  }, [campaignData]);
+
+  // Handle query error
+  useEffect(() => {
+    if (error) {
+      toast.error('Failed to load campaign');
+      router.push('/campaigns');
+    }
+  }, [error, router]);
+
+  const initialData = campaignData ? {
+    name: campaignData.campaign.name,
+    description: campaignData.campaign.description || '',
+    image: campaignData.campaign.image || '',
+    backgroundImage: campaignData.campaign.backgroundImage || '',
+  } : null;
 
   // Apply settings live for preview
   useEffect(() => {
@@ -95,71 +166,10 @@ export default function EditCampaignPage() {
     document.documentElement.style.setProperty('--campaign-card-blur', `${settings.card.blur}px`);
   }, [settings]);
 
-  useEffect(() => {
-    const fetchCampaign = async () => {
-      try {
-        const [campaignRes, settingsRes] = await Promise.all([
-          fetch(`/api/campaigns/${params.id}`),
-          fetch(`/api/campaigns/${params.id}/settings`),
-        ]);
-
-        if (!campaignRes.ok) {
-          throw new Error('Failed to fetch campaign');
-        }
-
-        const campaignData = await campaignRes.json();
-        setInitialData({
-          name: campaignData.campaign.name,
-          description: campaignData.campaign.description || '',
-          image: campaignData.campaign.image || '',
-          backgroundImage: campaignData.campaign.backgroundImage || '',
-        });
-
-        if (settingsRes.ok) {
-          const settingsData = await settingsRes.json();
-          const loadedSettings = settingsData.settings;
-          if (loadedSettings) {
-            setSettings({
-              bg: {
-                opacity: loadedSettings.bgOpacity ?? DEFAULT_SETTINGS.bg.opacity,
-                blur: loadedSettings.bgBlur ?? DEFAULT_SETTINGS.bg.blur,
-                expandToSidebar: loadedSettings.bgExpandToSidebar ?? DEFAULT_SETTINGS.bg.expandToSidebar,
-                expandToHeader: loadedSettings.bgExpandToHeader ?? DEFAULT_SETTINGS.bg.expandToHeader,
-              },
-              header: {
-                bgOpacity: loadedSettings.headerBgOpacity ?? DEFAULT_SETTINGS.header.bgOpacity,
-                blur: loadedSettings.headerBlur ?? DEFAULT_SETTINGS.header.blur,
-              },
-              sidebar: {
-                bgOpacity: loadedSettings.sidebarBgOpacity ?? DEFAULT_SETTINGS.sidebar.bgOpacity,
-                blur: loadedSettings.sidebarBlur ?? DEFAULT_SETTINGS.sidebar.blur,
-              },
-              card: {
-                bgOpacity: loadedSettings.cardBgOpacity ?? DEFAULT_SETTINGS.card.bgOpacity,
-                blur: loadedSettings.cardBlur ?? DEFAULT_SETTINGS.card.blur,
-              },
-            });
-          }
-        }
-      } catch (error) {
-        console.error('Error fetching campaign:', error);
-        toast.error('Failed to load campaign');
-        router.push('/campaigns');
-      } finally {
-        setIsLoadingData(false);
-      }
-    };
-
-    if (params.id) {
-      fetchCampaign();
-    }
-  }, [params.id, router]);
-
-  const handleSubmit = async (data: CampaignFormData) => {
-    setIsLoading(true);
-
-    try {
-      const response = await fetch(`/api/campaigns/${params.id}`, {
+  // Update campaign mutation
+  const updateCampaign = useMutation({
+    mutationFn: async (data: CampaignFormData) => {
+      const response = await fetch(`/api/campaigns/${campaignId}`, {
         method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',
@@ -177,20 +187,23 @@ export default function EditCampaignPage() {
         throw new Error(error.error || 'Failed to update campaign');
       }
 
+      return response.json();
+    },
+    onSuccess: () => {
       toast.success('Campaign updated successfully!');
-    } catch (error) {
+      queryClient.invalidateQueries({ queryKey: ['campaign', campaignId] });
+      queryClient.invalidateQueries({ queryKey: ['campaigns'] });
+    },
+    onError: (error: Error) => {
       console.error('Error updating campaign:', error);
-      toast.error(error instanceof Error ? error.message : 'Failed to update campaign');
-    } finally {
-      setIsLoading(false);
-    }
-  };
+      toast.error(error.message || 'Failed to update campaign');
+    },
+  });
 
-  const handleSaveSettings = async () => {
-    setIsSavingSettings(true);
-
-    try {
-      const response = await fetch(`/api/campaigns/${params.id}/settings`, {
+  // Update settings mutation
+  const updateSettings = useMutation({
+    mutationFn: async () => {
+      const response = await fetch(`/api/campaigns/${campaignId}/settings`, {
         method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',
@@ -214,20 +227,22 @@ export default function EditCampaignPage() {
         throw new Error(error.error || 'Failed to update settings');
       }
 
+      return response.json();
+    },
+    onSuccess: () => {
       toast.success('Background settings saved');
-    } catch (error) {
+      queryClient.invalidateQueries({ queryKey: ['campaign', campaignId] });
+    },
+    onError: (error: Error) => {
       console.error('Error saving settings:', error);
-      toast.error(error instanceof Error ? error.message : 'Failed to save settings');
-    } finally {
-      setIsSavingSettings(false);
-    }
-  };
+      toast.error(error.message || 'Failed to save settings');
+    },
+  });
 
-  const handleDelete = async () => {
-    setIsDeleting(true);
-
-    try {
-      const response = await fetch(`/api/campaigns/${params.id}`, {
+  // Delete campaign mutation
+  const deleteCampaign = useMutation({
+    mutationFn: async () => {
+      const response = await fetch(`/api/campaigns/${campaignId}`, {
         method: 'DELETE',
       });
 
@@ -236,17 +251,19 @@ export default function EditCampaignPage() {
         throw new Error(error.error || 'Failed to delete campaign');
       }
 
+      return response.json();
+    },
+    onSuccess: () => {
       toast.success('Campaign deleted successfully');
+      queryClient.invalidateQueries({ queryKey: ['campaigns'] });
       router.push('/campaigns');
-    } catch (error) {
+    },
+    onError: (error: Error) => {
       console.error('Error deleting campaign:', error);
-      toast.error(error instanceof Error ? error.message : 'Failed to delete campaign');
-      setIsDeleting(false);
+      toast.error(error.message || 'Failed to delete campaign');
       setShowDeleteDialog(false);
-    }
-  };
-
-
+    },
+  });
 
   if (isLoadingData) {
     return (
@@ -281,8 +298,8 @@ export default function EditCampaignPage() {
           <CardContent>
             <CampaignForm
               initialData={initialData}
-              onSubmit={handleSubmit}
-              isLoading={isLoading}
+              onSubmit={async (data) => updateCampaign.mutate(data)}
+              isLoading={updateCampaign.isPending}
               submitText="Update Campaign"
               onImageChange={(url) => {
                 document.documentElement.style.setProperty('--campaign-preview-image', `url(${url})`);
@@ -412,8 +429,8 @@ export default function EditCampaignPage() {
             </div>
 
             <div className="flex justify-end">
-              <Button onClick={handleSaveSettings} disabled={isSavingSettings}>
-                {isSavingSettings ? 'Saving...' : 'Save Background Settings'}
+              <Button onClick={() => updateSettings.mutate()} disabled={updateSettings.isPending}>
+                {updateSettings.isPending ? 'Saving...' : 'Save Background Settings'}
               </Button>
             </div>
           </CardContent>
@@ -459,13 +476,13 @@ export default function EditCampaignPage() {
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel disabled={isDeleting}>Cancel</AlertDialogCancel>
+            <AlertDialogCancel disabled={deleteCampaign.isPending}>Cancel</AlertDialogCancel>
             <AlertDialogAction
-              onClick={handleDelete}
-              disabled={isDeleting}
+              onClick={() => deleteCampaign.mutate()}
+              disabled={deleteCampaign.isPending}
               className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
             >
-              {isDeleting ? 'Deleting...' : 'Delete'}
+              {deleteCampaign.isPending ? 'Deleting...' : 'Delete'}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

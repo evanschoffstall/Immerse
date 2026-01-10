@@ -5,49 +5,44 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Skeleton } from '@/components/ui/skeleton';
 import type { Campaign } from '@/lib/data/types';
 import { extractTextFromLexical, truncateText } from '@/lib/utils/lexical';
+import { useQuery } from '@tanstack/react-query';
 import { Mountain } from 'lucide-react';
 import { useSession } from 'next-auth/react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { useEffect, useState } from 'react';
+import { useEffect } from 'react';
 import { toast } from 'sonner';
 
 export default function CampaignsPage() {
   const { data: session, status } = useSession();
   const router = useRouter();
-  const [campaigns, setCampaigns] = useState<Campaign[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+
+  const { data: campaigns = [], isLoading, error } = useQuery({
+    queryKey: ['campaigns'],
+    queryFn: async () => {
+      const response = await fetch('/api/campaigns');
+      if (!response.ok) {
+        throw new Error('Failed to fetch campaigns');
+      }
+      const data = await response.json();
+      return data.campaigns as Campaign[];
+    },
+    enabled: !!session,
+  });
+
+  useEffect(() => {
+    if (error) {
+      console.error('Error fetching campaigns:', error);
+      toast.error('Failed to load campaigns');
+    }
+  }, [error]);
 
   useEffect(() => {
     if (status === 'unauthenticated') {
       router.push('/login');
     }
   }, [status, router]);
-
-  useEffect(() => {
-    const fetchCampaigns = async () => {
-      try {
-        const response = await fetch('/api/campaigns');
-
-        if (!response.ok) {
-          throw new Error('Failed to fetch campaigns');
-        }
-
-        const data = await response.json();
-        setCampaigns(data.campaigns);
-      } catch (error) {
-        console.error('Error fetching campaigns:', error);
-        toast.error('Failed to load campaigns');
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    if (session) {
-      fetchCampaigns();
-    }
-  }, [session]);
 
   if (status === 'loading') {
     return (

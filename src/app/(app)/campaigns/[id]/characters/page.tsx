@@ -6,12 +6,13 @@ import { Separator } from '@/components/ui/separator';
 import { Skeleton } from '@/components/ui/skeleton';
 import type { Being } from '@/lib/data/types';
 import { extractTextFromLexical, truncateText } from '@/lib/utils/lexical';
+import { useQuery } from '@tanstack/react-query';
 import { Plus, User } from 'lucide-react';
 import { useSession } from 'next-auth/react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { useParams, useRouter } from 'next/navigation';
-import { useEffect, useState } from 'react';
+import { useEffect } from 'react';
 import { toast } from 'sonner';
 
 type BeingWithRelations = Being & {
@@ -26,38 +27,32 @@ export default function BeingsPage() {
   const router = useRouter();
   const params = useParams();
   const campaignId = params.id as string;
-  const [beings, setBeings] = useState<BeingWithRelations[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+
+  const { data: beings = [], isLoading, error } = useQuery({
+    queryKey: ['campaigns', campaignId, 'beings'],
+    queryFn: async () => {
+      const response = await fetch(`/api/campaigns/${campaignId}/beings`);
+      if (!response.ok) {
+        throw new Error('Failed to fetch beings');
+      }
+      const data = await response.json();
+      return data.beings as BeingWithRelations[];
+    },
+    enabled: !!session && !!campaignId,
+  });
+
+  useEffect(() => {
+    if (error) {
+      console.error('Error fetching beings:', error);
+      toast.error('Failed to load beings');
+    }
+  }, [error]);
 
   useEffect(() => {
     if (status === 'unauthenticated') {
       router.push('/login');
     }
   }, [status, router]);
-
-  useEffect(() => {
-    const fetchBeings = async () => {
-      try {
-        const response = await fetch(`/api/campaigns/${campaignId}/beings`);
-
-        if (!response.ok) {
-          throw new Error('Failed to fetch beings');
-        }
-
-        const data = await response.json();
-        setBeings(data.beings);
-      } catch (error) {
-        console.error('Error fetching beings:', error);
-        toast.error('Failed to load beings');
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    if (session && campaignId) {
-      fetchBeings();
-    }
-  }, [session, campaignId]);
 
   if (status === 'loading' || isLoading) {
     return (

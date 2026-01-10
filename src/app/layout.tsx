@@ -1,5 +1,6 @@
 import { ConditionalFooter } from '@/components/layout/ConditionalFooter'
 import Header from '@/components/layout/Header'
+import { QueryProvider } from '@/components/providers/QueryProvider'
 import { SessionProvider } from '@/components/providers/SessionProvider'
 import { ThemeProvider } from '@/components/theme/ThemeProvider'
 import { SonnerToast } from '@/components/ui/SonnerToast'
@@ -22,17 +23,19 @@ export default function RootLayout({
     <html lang="en" suppressHydrationWarning>
       <body className="antialiased min-h-screen flex flex-col">
         <SessionProvider>
-          <ThemeProvider
-            attribute="class"
-            defaultTheme="dark"
-            enableSystem
-            disableTransitionOnChange
-          >
-            <Header />
-            <main className="flex-1">{children}</main>
-            <ConditionalFooter />
-            <SonnerToast />
-          </ThemeProvider>
+          <QueryProvider>
+            <ThemeProvider
+              attribute="class"
+              defaultTheme="dark"
+              enableSystem
+              disableTransitionOnChange
+            >
+              <Header />
+              <main className="flex-1">{children}</main>
+              <ConditionalFooter />
+              <SonnerToast />
+            </ThemeProvider>
+          </QueryProvider>
         </SessionProvider>
       </body>
     </html>

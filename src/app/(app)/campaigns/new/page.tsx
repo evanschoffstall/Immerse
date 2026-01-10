@@ -3,15 +3,44 @@
 import CampaignForm, { type CampaignFormData } from '@/components/forms/CampaignForm';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
-import { useEffect, useState } from 'react';
+import { useEffect } from 'react';
 import { toast } from 'sonner';
 
 export default function NewCampaignPage() {
   const { data: session, status } = useSession();
   const router = useRouter();
-  const [isLoading, setIsLoading] = useState(false);
+  const queryClient = useQueryClient();
+
+  const createCampaign = useMutation({
+    mutationFn: async (data: CampaignFormData) => {
+      const response = await fetch('/api/campaigns', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(data),
+      });
+
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error || 'Failed to create campaign');
+      }
+
+      return response.json();
+    },
+    onSuccess: (result) => {
+      toast.success('Campaign created successfully!');
+      queryClient.invalidateQueries({ queryKey: ['campaigns'] });
+      router.push(`/campaigns/${result.campaign.id}`);
+    },
+    onError: (error: Error) => {
+      console.error('Error creating campaign:', error);
+      toast.error(error.message || 'Failed to create campaign');
+    },
+  });
 
   useEffect(() => {
     if (status === 'unauthenticated') {
@@ -32,34 +61,6 @@ export default function NewCampaignPage() {
     return null;
   }
 
-  const handleSubmit = async (data: CampaignFormData) => {
-    setIsLoading(true);
-
-    try {
-      const response = await fetch('/api/campaigns', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(data),
-      });
-
-      if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.error || 'Failed to create campaign');
-      }
-
-      const result = await response.json();
-      toast.success('Campaign created successfully!');
-      router.push(`/campaigns/${result.campaign.id}`);
-    } catch (error) {
-      console.error('Error creating campaign:', error);
-      toast.error(error instanceof Error ? error.message : 'Failed to create campaign');
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
   return (
     <div className="container mx-auto px-4 py-8 max-w-7xl">
       <Card>
@@ -71,8 +72,8 @@ export default function NewCampaignPage() {
         </CardHeader>
         <CardContent>
           <CampaignForm
-            onSubmit={handleSubmit}
-            isLoading={isLoading}
+            onSubmit={async (data) => createCampaign.mutate(data)}
+            isLoading={createCampaign.isPending}
             submitText="Create Campaign"
           />
         </CardContent>

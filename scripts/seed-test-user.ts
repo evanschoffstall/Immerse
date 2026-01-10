@@ -28,7 +28,7 @@ async function main() {
     },
   });
 
-  console.log("✅ Test user created:", user.email);
+  console.log("Test user created:", user.email);
   console.log("   ID:", user.id);
   console.log("   Email:", user.email);
   console.log("   Password: admin");

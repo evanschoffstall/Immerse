@@ -37,7 +37,7 @@ package-lock.json
 /test-results/
 /playwright-report/
 /playwright/.cache/
-/tests/.auth/
+/.playwright-mcp/
 
 # Prisma
 generated/

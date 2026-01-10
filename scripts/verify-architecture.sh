@@ -1,9 +1,5 @@
 #!/bin/bash
 
-# Immerse Architecture Verification Script
-# This script enforces 33 architecture rules to prevent drift
-# Run before every commit: ./scripts/verify-architecture.sh
-
 RED='\033[0;31m'
 GREEN='\033[0;32m'
 YELLOW='\033[1;33m'
@@ -215,16 +211,26 @@ check_grep "31" "API routes use ApiErrors for error handling" \
     true
 
 # ============================================================================
+# Data Fetching Rules
+# ============================================================================
+
+echo ""
+echo "Data Fetching"
+
+check_grep "32" "Use Tanstack Query instead of useState + useEffect for data fetching" \
+    "find src/app/\(app\) -name '*.tsx' -exec grep -l 'useState' {} \; | xargs grep -l 'useEffect' | xargs grep -l 'fetch(' | xargs grep -L 'useQuery\|useMutation' 2>/dev/null || true"
+
+# ============================================================================
 # Database Rules
 # ============================================================================
 
 echo ""
 echo "Database"
 
-check_grep "32" "No prisma migrate reset in scripts" \
+check_grep "33" "No prisma migrate reset in scripts" \
     "grep -rE 'prisma migrate reset|prisma db push --force-reset' scripts/ package.json | grep -v 'verify-architecture.sh'"
 
-check_grep "33" "No database deletion commands in scripts" \
+check_grep "34" "No database deletion commands in scripts" \
     "grep -rE 'DROP DATABASE|TRUNCATE|DELETE FROM.*WHERE 1=1' scripts/ | grep -v 'verify-architecture.sh'"
 
 # ============================================================================
@@ -235,7 +241,7 @@ echo ""
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 
 if [ $ERRORS -eq 0 ] && [ $WARNINGS -eq 0 ]; then
-    echo -e "${GREEN}SUCCESS: All 33 architecture rules passed!${NC}"
+    echo -e "${GREEN}SUCCESS: All 34 architecture rules passed!${NC}"
     echo ""
     exit 0
 elif [ $ERRORS -eq 0 ]; then
