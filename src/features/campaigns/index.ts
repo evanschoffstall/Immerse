@@ -1,5 +1,7 @@
-// Re-export business logic from campaigns.ts
-export * from "./campaigns";
+/**
+ * Campaigns Feature Module
+ * Business logic for campaign management
+ */
 
-// Re-export components
-export { default as CampaignForm } from "@/components/forms/CampaignForm";
+export * from "./campaigns";
+export * from "./settings";
