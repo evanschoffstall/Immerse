@@ -1,7 +1,7 @@
-import { prisma } from "@/lib/data/prisma";
+import { auditRepository } from "@/lib/data/repositories/audit";
 
 /**
- * Generate a simple diff between two objects
+ * Generate a simple diff between two objects (deprecated - use auditRepository directly)
  */
 function generateDiff(oldData: any, newData: any): Record<string, any> {
   const changes: Record<string, any> = {};
@@ -29,10 +29,8 @@ function generateDiff(oldData: any, newData: any): Record<string, any> {
   return changes;
 }
 
-/**
- * Create an audit log entry
- */
-export async function createAuditLog(params: {
+// Deprecated: Use auditRepository directly
+export const createAuditLog = async (params: {
   entityType: string;
   entityId: string;
   action: "create" | "update" | "delete" | "restore";
@@ -40,22 +38,48 @@ export async function createAuditLog(params: {
   metadata?: Record<string, any>;
   userId?: string;
   campaignId?: string;
-}) {
-  const id = crypto.randomUUID();
-
-  return await prisma.audit_logs.create({
-    data: {
-      id,
-      entityType: params.entityType,
-      entityId: params.entityId,
-      action: params.action,
-      changes: params.changes || undefined,
-      metadata: params.metadata || undefined,
-      userId: params.userId || null,
-      campaignId: params.campaignId || null,
-    },
-  });
-}
+}) => {
+  // Map to appropriate repository method
+  switch (params.action) {
+    case "create":
+      return auditRepository.logCreate(
+        params.entityType,
+        params.entityId,
+        params.changes,
+        params.userId,
+        params.campaignId,
+        params.metadata
+      );
+    case "update":
+      return auditRepository.logUpdate(
+        params.entityType,
+        params.entityId,
+        {},
+        params.changes || {},
+        params.userId,
+        params.campaignId,
+        params.metadata
+      );
+    case "delete":
+      return auditRepository.logDelete(
+        params.entityType,
+        params.entityId,
+        params.changes,
+        params.userId,
+        params.campaignId,
+        params.metadata
+      );
+    case "restore":
+      return auditRepository.logRestore(
+        params.entityType,
+        params.entityId,
+        params.changes,
+        params.userId,
+        params.campaignId,
+        params.metadata
+      );
+  }
+};
 
 /**
  * Log a create action
@@ -68,15 +92,14 @@ export async function logCreate(
   campaignId?: string,
   metadata?: Record<string, any>
 ) {
-  return createAuditLog({
+  return auditRepository.logCreate(
     entityType,
     entityId,
-    action: "create",
-    changes: { created: data },
-    metadata,
+    data,
     userId,
     campaignId,
-  });
+    metadata
+  );
 }
 
 /**
@@ -91,17 +114,15 @@ export async function logUpdate(
   campaignId?: string,
   metadata?: Record<string, any>
 ) {
-  const changes = generateDiff(oldData, newData);
-
-  return createAuditLog({
+  return auditRepository.logUpdate(
     entityType,
     entityId,
-    action: "update",
-    changes,
-    metadata,
+    oldData,
+    newData,
     userId,
     campaignId,
-  });
+    metadata
+  );
 }
 
 /**
@@ -115,15 +136,14 @@ export async function logDelete(
   campaignId?: string,
   metadata?: Record<string, any>
 ) {
-  return createAuditLog({
+  return auditRepository.logDelete(
     entityType,
     entityId,
-    action: "delete",
-    changes: { deleted: data },
-    metadata,
+    data,
     userId,
     campaignId,
-  });
+    metadata
+  );
 }
 
 /**
@@ -137,15 +157,14 @@ export async function logRestore(
   campaignId?: string,
   metadata?: Record<string, any>
 ) {
-  return createAuditLog({
+  return auditRepository.logRestore(
     entityType,
     entityId,
-    action: "restore",
-    changes: { restored: data },
-    metadata,
+    data,
     userId,
     campaignId,
-  });
+    metadata
+  );
 }
 
 /**
@@ -160,17 +179,5 @@ export async function getEntityAuditLogs(
     action?: string;
   } = {}
 ) {
-  const where: any = {
-    entityType,
-    entityId,
-  };
-
-  if (options.userId) where.userId = options.userId;
-  if (options.action) where.action = options.action;
-
-  return await prisma.audit_logs.findMany({
-    where,
-    orderBy: { createdAt: "desc" },
-    take: options.limit || 50,
-  });
+  return auditRepository.getEntityAuditLogs(entityType, entityId, options);
 }

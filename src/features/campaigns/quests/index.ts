@@ -1,7 +1,12 @@
 /**
  * Quests feature module
- * Exports service and schemas for quest management
+ * Re-exports schemas from resource layer
+ * Uses registry-based CRUD via [[...segments]]/route.ts
  */
 
-export { questSchemas, questService } from "./quests";
-export type { CreateQuestInput, UpdateQuestInput } from "./quests";
+export { questSchemas } from "@/lib/data/resources/quests";
+
+import { questSchemas } from "@/lib/data/resources/quests";
+import type { z } from "zod";
+export type CreateQuestInput = z.infer<typeof questSchemas.create>;
+export type UpdateQuestInput = z.infer<typeof questSchemas.update>;

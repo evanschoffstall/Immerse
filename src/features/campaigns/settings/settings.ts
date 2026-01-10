@@ -1,43 +1,63 @@
-import { campaignSettingsRepo } from "@/lib/data/repositories";
-import { z } from "zod";
+import {
+  settingsResource,
+  SettingsSchemas,
+} from "@/lib/data/resources/settings";
 
 // ============================================================================
-// SCHEMAS
+// SCHEMAS - Re-export from resource
 // ============================================================================
 
-export const campaignSettingsSchema = z.object({
-  bgOpacity: z.number().min(0).max(1).optional(),
-  bgBlur: z.number().int().min(0).max(50).optional(),
-  bgExpandToSidebar: z.boolean().optional(),
-  bgExpandToHeader: z.boolean().optional(),
-  headerBgOpacity: z.number().min(0).max(1).optional(),
-  headerBlur: z.number().int().min(0).max(50).optional(),
-  sidebarBgOpacity: z.number().min(0).max(1).optional(),
-  sidebarBlur: z.number().int().min(0).max(50).optional(),
-  cardBgOpacity: z.number().min(0).max(1).optional(),
-  cardBlur: z.number().int().min(0).max(50).optional(),
-});
-
-export type CampaignSettingsInput = z.infer<typeof campaignSettingsSchema>;
+export { SettingsSchemas };
+export const campaignSettingsSchema = SettingsSchemas.update;
 
 // ============================================================================
-// SERVICE - Business logic for campaign settings
+// SERVICE - Business logic for campaign settings (upsert behavior)
 // ============================================================================
 
 class CampaignSettingsService {
   /**
    * Get settings for a campaign
+   * Returns default settings if none exist
    */
   async get(campaignId: string) {
-    const settings = await campaignSettingsRepo.findByCampaignId(campaignId);
-    return { settings };
+    const settings = await settingsResource.list({
+      where: { campaignId },
+      limit: 1,
+    });
+
+    return { settings: settings.items[0] || null };
   }
 
   /**
-   * Update campaign settings
+   * Update campaign settings (upsert behavior)
+   * This service adds value by handling upsert logic
    */
-  async update(campaignId: string, data: CampaignSettingsInput) {
-    const settings = await campaignSettingsRepo.upsert(campaignId, data);
+  async update(
+    campaignId: string,
+    data: z.infer<typeof SettingsSchemas.update>
+  ) {
+    // Check if settings exist
+    const existing = await settingsResource.list({
+      where: { campaignId },
+      limit: 1,
+    });
+
+    let settings;
+    if (existing.items.length > 0) {
+      // Update existing
+      settings = await settingsResource.update(
+        campaignId,
+        existing.items[0].id,
+        data
+      );
+    } else {
+      // Create new with campaign ID
+      settings = await settingsResource.create(campaignId, {
+        ...data,
+        campaignId,
+      } as any);
+    }
+
     return { settings };
   }
 }
@@ -47,3 +67,5 @@ class CampaignSettingsService {
 // ============================================================================
 
 export const campaignSettingsService = new CampaignSettingsService();
+
+import type { z } from "zod";
