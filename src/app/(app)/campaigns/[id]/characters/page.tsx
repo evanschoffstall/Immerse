@@ -1,88 +1,47 @@
-'use client';
-
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
-import { Skeleton } from '@/components/ui/skeleton';
-import type { Being } from '@/lib/data/types';
+import { db } from '@/db';
 import { extractTextFromLexical, truncateText } from '@/lib/utils/lexical';
-import { useQuery } from '@tanstack/react-query';
 import { Plus, User } from 'lucide-react';
-import { useSession } from 'next-auth/react';
+import { getServerSession } from 'next-auth';
 import Image from 'next/image';
 import Link from 'next/link';
-import { useParams, useRouter } from 'next/navigation';
-import { useEffect } from 'react';
-import { toast } from 'sonner';
+import { redirect } from 'next/navigation';
 
-type BeingWithRelations = Being & {
-  users: {
-    id: string;
-    name: string | null;
-  };
-};
+export default async function CharactersPage({
+  params,
+}: {
+  params: Promise<{ id: string }>;
+}) {
+  const session = await getServerSession();
 
-export default function BeingsPage() {
-  const { data: session, status } = useSession();
-  const router = useRouter();
-  const params = useParams();
-  const campaignId = params.id as string;
+  if (!session?.user) {
+    redirect('/login');
+  }
 
-  const { data: beings = [], isLoading, error } = useQuery({
-    queryKey: ['campaigns', campaignId, 'beings'],
-    queryFn: async () => {
-      const response = await fetch(`/api/campaigns/${campaignId}/beings`);
-      if (!response.ok) {
-        throw new Error('Failed to fetch beings');
-      }
-      const data = await response.json();
-      return data.beings as BeingWithRelations[];
+  const { id: campaignId } = await params;
+
+  const beings = await db.beings.findMany({
+    where: {
+      campaignId,
+      type: 'character'
     },
-    enabled: !!session && !!campaignId,
+    orderBy: { createdAt: 'desc' },
   });
-
-  useEffect(() => {
-    if (error) {
-      console.error('Error fetching beings:', error);
-      toast.error('Failed to load beings');
-    }
-  }, [error]);
-
-  useEffect(() => {
-    if (status === 'unauthenticated') {
-      router.push('/login');
-    }
-  }, [status, router]);
-
-  if (status === 'loading' || isLoading) {
-    return (
-      <div className="container mx-auto px-4 py-8">
-        <Skeleton className="h-10 w-64 mb-8" />
-        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-          <Skeleton className="h-64" />
-          <Skeleton className="h-64" />
-          <Skeleton className="h-64" />
-        </div>
-      </div>
-    );
-  }
-
-  if (!session) {
-    return null;
-  }
 
   return (
     <div className="p-8">
       <div className="space-y-6">
         <div className="flex items-center justify-between">
           <h1 className="text-4xl font-bold tracking-tight bg-linear-to-br from-foreground to-foreground/70 bg-clip-text text-transparent">
-            Beings
+            Characters
           </h1>
           {beings.length > 0 && (
             <Button asChild>
               <Link href={`/campaigns/${campaignId}/beings/new`}>
                 <Plus className="mr-2 h-4 w-4" />
-                New Being
+                New Character
               </Link>
             </Button>
           )}
@@ -91,19 +50,18 @@ export default function BeingsPage() {
       </div>
 
       <div className="mt-8">
-
         {beings.length === 0 ? (
           <Card>
             <CardContent className="flex flex-col items-center justify-center py-16">
               <User className="h-16 w-16 text-muted-foreground mb-4" />
-              <h3 className="text-xl font-semibold mb-2">No beings yet</h3>
+              <h3 className="text-xl font-semibold mb-2">No characters yet</h3>
               <p className="text-muted-foreground mb-6">
-                Create your first being to get started
+                Create your first character to get started
               </p>
               <Button asChild>
                 <Link href={`/campaigns/${campaignId}/beings/new`}>
                   <Plus className="mr-2 h-4 w-4" />
-                  Create Being
+                  Create Character
                 </Link>
               </Button>
             </CardContent>

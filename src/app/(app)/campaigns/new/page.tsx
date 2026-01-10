@@ -1,64 +1,18 @@
-'use client';
-
-import CampaignForm, { type CampaignFormData } from '@/components/forms/CampaignForm';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Skeleton } from '@/components/ui/skeleton';
-import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { useSession } from 'next-auth/react';
-import { useRouter } from 'next/navigation';
-import { useEffect } from 'react';
-import { toast } from 'sonner';
+import { getServerSession } from 'next-auth';
+import { redirect } from 'next/navigation';
+import { createCampaign } from '../actions';
 
-export default function NewCampaignPage() {
-  const { data: session, status } = useSession();
-  const router = useRouter();
-  const queryClient = useQueryClient();
+export default async function NewCampaignPage() {
+  const session = await getServerSession();
 
-  const createCampaign = useMutation({
-    mutationFn: async (data: CampaignFormData) => {
-      const response = await fetch('/api/campaigns', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(data),
-      });
-
-      if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.error || 'Failed to create campaign');
-      }
-
-      return response.json();
-    },
-    onSuccess: (result) => {
-      toast.success('Campaign created successfully!');
-      queryClient.invalidateQueries({ queryKey: ['campaigns'] });
-      router.push(`/campaigns/${result.campaign.id}`);
-    },
-    onError: (error: Error) => {
-      console.error('Error creating campaign:', error);
-      toast.error(error.message || 'Failed to create campaign');
-    },
-  });
-
-  useEffect(() => {
-    if (status === 'unauthenticated') {
-      router.push('/login');
-    }
-  }, [status, router]);
-
-  if (status === 'loading') {
-    return (
-      <div className="container mx-auto px-4 py-8">
-        <Skeleton className="h-8 w-64 mb-8" />
-        <Skeleton className="h-96" />
-      </div>
-    );
+  if (!session?.user) {
+    redirect('/login');
   }
 
-  if (!session) {
-    return null;
+  async function handleCreate(formData: FormData) {
+    'use server'
+    await createCampaign(formData);
   }
 
   return (
@@ -71,11 +25,12 @@ export default function NewCampaignPage() {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <CampaignForm
-            onSubmit={async (data) => createCampaign.mutate(data)}
-            isLoading={createCampaign.isPending}
-            submitText="Create Campaign"
-          />
+          <form action={handleCreate}>
+            <input type="text" name="name" placeholder="Campaign Name" required />
+            <input type="text" name="slug" placeholder="campaign-slug" required />
+            <textarea name="description" placeholder="Description" />
+            <button type="submit">Create Campaign</button>
+          </form>
         </CardContent>
       </Card>
     </div>

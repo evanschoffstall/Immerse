@@ -1,4 +1,4 @@
-import { userRepository } from "@/lib/data/repositories/user";
+import { db } from "@/db";
 import bcrypt from "bcryptjs";
 import type { AuthOptions, Session } from "next-auth";
 import NextAuth from "next-auth";
@@ -35,10 +35,10 @@ export const authConfig: AuthOptions = {
           return null;
         }
 
-        // Query database
-        const user = await userRepository.findByEmail(
-          credentials.email as string
-        );
+        // Query database directly
+        const user = await db.users.findUnique({
+          where: { email: credentials.email as string },
+        });
 
         if (!user || !user.password) {
           return null;

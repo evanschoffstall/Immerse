@@ -1,48 +1,55 @@
-import { ApiErrors, apiRoute } from "@/lib/api/proxy";
 import { uploadImage } from "@/lib/upload";
-import { NextRequest } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 
 export async function POST(request: NextRequest) {
-  return apiRoute(async (context) => {
-    try {
-      const formData = await context.request.formData();
-      const file = formData.get("file") as File;
-      const folder = (formData.get("folder") as string) || "general";
+  try {
+    const formData = await request.formData();
+    const file = formData.get("file") as File;
+    const folder = (formData.get("folder") as string) || "general";
 
-      if (!file) {
-        return ApiErrors.badRequest("No file provided");
-      }
+    if (!file) {
+      return NextResponse.json({ error: "No file provided" }, { status: 400 });
+    }
 
-      // Validate file type
-      const validTypes = [
-        "image/jpeg",
-        "image/jpg",
-        "image/png",
-        "image/webp",
-        "image/gif",
-      ];
-      if (!validTypes.includes(file.type)) {
-        return ApiErrors.badRequest(
-          "Invalid file type. Only JPG, PNG, WebP, and GIF are allowed."
-        );
-      }
-
-      // Validate file size (10MB max)
-      if (file.size > 10 * 1024 * 1024) {
-        return ApiErrors.badRequest("File too large. Maximum size is 10MB.");
-      }
-
-      const url = await uploadImage(file, folder);
-
-      return {
-        url,
-        size: file.size,
-        type: file.type,
-      };
-    } catch (error) {
-      throw new Error(
-        error instanceof Error ? error.message : "Failed to upload image"
+    // Validate file type
+    const validTypes = [
+      "image/jpeg",
+      "image/jpg",
+      "image/png",
+      "image/webp",
+      "image/gif",
+    ];
+    if (!validTypes.includes(file.type)) {
+      return NextResponse.json(
+        {
+          error: "Invalid file type. Only JPG, PNG, WebP, and GIF are allowed.",
+        },
+        { status: 400 }
       );
     }
-  })(request);
+
+    // Validate file size (10MB max)
+    if (file.size > 10 * 1024 * 1024) {
+      return NextResponse.json(
+        { error: "File too large. Maximum size is 10MB." },
+        { status: 400 }
+      );
+    }
+
+    const url = await uploadImage(file, folder);
+
+    return NextResponse.json({
+      url,
+      size: file.size,
+      type: file.type,
+    });
+  } catch (error) {
+    return NextResponse.json(
+      {
+        error:
+          error instanceof Error ? error.message : "Failed to upload image",
+      },
+      { status: 500 }
+    );
+  }
 }

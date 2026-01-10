@@ -1,92 +1,37 @@
-'use client';
-
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Skeleton } from '@/components/ui/skeleton';
-import type { Campaign } from '@/lib/data/types';
+import { db } from '@/db';
 import { extractTextFromLexical, truncateText } from '@/lib/utils/lexical';
-import { useQuery } from '@tanstack/react-query';
 import { Mountain } from 'lucide-react';
-import { useSession } from 'next-auth/react';
+import { getServerSession } from 'next-auth';
 import Image from 'next/image';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
-import { useEffect } from 'react';
-import { toast } from 'sonner';
+import { redirect } from 'next/navigation';
 
-export default function CampaignsPage() {
-  const { data: session, status } = useSession();
-  const router = useRouter();
+export default async function CampaignsPage() {
+  const session = await getServerSession();
 
-  const { data: campaigns = [], isLoading, error } = useQuery({
-    queryKey: ['campaigns'],
-    queryFn: async () => {
-      const response = await fetch('/api/campaigns');
-      if (!response.ok) {
-        throw new Error('Failed to fetch campaigns');
-      }
-      const data = await response.json();
-      return data.campaigns as Campaign[];
-    },
-    enabled: !!session,
+  if (!session?.user) {
+    redirect('/login');
+  }
+
+  const campaigns = await db.campaigns.findMany({
+    where: { ownerId: session.user.id },
+    orderBy: { updatedAt: 'desc' }
   });
-
-  useEffect(() => {
-    if (error) {
-      console.error('Error fetching campaigns:', error);
-      toast.error('Failed to load campaigns');
-    }
-  }, [error]);
-
-  useEffect(() => {
-    if (status === 'unauthenticated') {
-      router.push('/login');
-    }
-  }, [status, router]);
-
-  if (status === 'loading') {
-    return (
-      <div className="container mx-auto px-4 py-8">
-        <Skeleton className="h-8 w-48 mb-8" />
-        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-          <Skeleton className="h-64" />
-          <Skeleton className="h-64" />
-          <Skeleton className="h-64" />
-        </div>
-      </div>
-    );
-  }
-
-  if (!session) {
-    return null;
-  }
 
   return (
     <div className="container mx-auto px-4 py-8 mt-16">
       <div className="flex items-center justify-between mb-8">
         <h1 className="text-4xl font-bold">Campaigns</h1>
-        {!isLoading && campaigns.length > 0 && (
+        {campaigns.length > 0 && (
           <Link href="/campaigns/new">
             <Button>Create New Campaign</Button>
           </Link>
         )}
       </div>
 
-      {isLoading ? (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {[1, 2, 3].map((i) => (
-            <Card key={i}>
-              <CardHeader>
-                <Skeleton className="h-6 w-3/4" />
-              </CardHeader>
-              <CardContent>
-                <Skeleton className="h-4 w-full mb-2" />
-                <Skeleton className="h-4 w-2/3" />
-              </CardContent>
-            </Card>
-          ))}
-        </div>
-      ) : campaigns.length === 0 ? (
+      {campaigns.length === 0 ? (
         <Card className="text-center">
           <CardHeader>
             <Mountain className="mx-auto mb-4 h-12 w-12 text-muted-foreground" />
