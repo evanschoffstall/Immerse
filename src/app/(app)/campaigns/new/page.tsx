@@ -1,15 +1,10 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { authConfig } from '@/lib/auth';
 import { getServerSession } from 'next-auth';
-import { redirect } from 'next/navigation';
 import NewCampaignClient from './client';
 
 export default async function NewCampaignPage() {
   const session = await getServerSession(authConfig);
-
-  if (!session?.user) {
-    redirect('/login');
-  }
 
   return (
     <div className="container mx-auto px-4 py-8 max-w-7xl">

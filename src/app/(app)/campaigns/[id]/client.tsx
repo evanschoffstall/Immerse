@@ -17,9 +17,6 @@ import {
 import type { Campaign, CampaignSettings } from '@/db/schema';
 import {
   Bookmark,
-  BookOpen,
-  Clock,
-  FileText,
   Flame,
   Gem,
   History,
@@ -134,6 +131,8 @@ export default function CampaignLayoutClient({
   const navigation = useMemo(() => {
     const mainNav: NavItem[] = [
       { icon: Home, label: 'Dashboard', href: campaignRoute() },
+      { icon: Scroll, label: 'Story', href: campaignRoute('/story') },
+      { icon: Notebook, label: 'Journals', href: campaignRoute('/journals') },
       { icon: Bookmark, label: 'Bookmarks', href: campaignRoute('/bookmarks') },
     ];
 
@@ -145,16 +144,6 @@ export default function CampaignLayoutClient({
           { icon: User, label: 'Beings', href: campaignRoute('/beings') },
           { icon: Users, label: 'Groups', href: campaignRoute('/groups') },
           { icon: MapIcon, label: 'Places', href: campaignRoute('/places') },
-        ],
-      },
-      {
-        label: 'Story',
-        icon: BookOpen,
-        items: [
-          { icon: Clock, label: 'Events', href: campaignRoute('/events') },
-          { icon: Scroll, label: 'Quests', href: campaignRoute('/quests') },
-          { icon: Notebook, label: 'Journals', href: campaignRoute('/journals') },
-          { icon: FileText, label: 'Notes', href: campaignRoute('/notes') },
         ],
       },
       {

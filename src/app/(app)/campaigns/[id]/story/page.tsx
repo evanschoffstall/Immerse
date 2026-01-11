@@ -9,11 +9,11 @@ import { Plus, User } from 'lucide-react';
 import Image from 'next/image';
 import Link from 'next/link';
 
-const PAGE_TITLE = 'Beings';
-const PAGE_DESCRIPTION = 'Manage the characters, NPCs, and creatures in your campaign';
-const CREATE_BUTTON_TEXT = 'Create Being';
-const EMPTY_STATE_TITLE = 'No beings yet';
-const EMPTY_STATE_DESCRIPTION = 'Create your first being to get started';
+const PAGE_TITLE = 'Story';
+const PAGE_DESCRIPTION = "Manage your campaign's story elements";
+const CREATE_BUTTON_TEXT = 'Create Story Element';
+const EMPTY_STATE_TITLE = 'No story elements yet';
+const EMPTY_STATE_DESCRIPTION = 'Create your first story element to get started';
 const DESCRIPTION_TRUNCATE_LENGTH = 150;
 
 export default async function Page({
