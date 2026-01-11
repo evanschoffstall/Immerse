@@ -2,6 +2,7 @@
 
 import { db } from "@/db";
 import { campaigns } from "@/db/schema";
+import { authConfig } from "@/lib/auth";
 import { eq } from "drizzle-orm";
 import { getServerSession } from "next-auth";
 import { revalidatePath } from "next/cache";
@@ -19,7 +20,7 @@ const createCampaignSchema = z.object({
 });
 
 export async function createCampaign(formData: FormData) {
-  const session = await getServerSession();
+  const session = await getServerSession(authConfig);
   if (!session?.user?.id) {
     throw new Error("Unauthorized");
   }
@@ -27,9 +28,9 @@ export async function createCampaign(formData: FormData) {
   const data = {
     name: formData.get("name"),
     slug: formData.get("slug"),
-    description: formData.get("description"),
-    image: formData.get("image"),
-    backgroundImage: formData.get("backgroundImage"),
+    description: formData.get("description") || undefined,
+    image: formData.get("image") || undefined,
+    backgroundImage: formData.get("backgroundImage") || undefined,
     visibility: formData.get("visibility") || "private",
     locale: formData.get("locale") || "en",
   };
@@ -49,7 +50,7 @@ export async function createCampaign(formData: FormData) {
 }
 
 export async function updateCampaign(id: string, formData: FormData) {
-  const session = await getServerSession();
+  const session = await getServerSession(authConfig);
   if (!session?.user?.id) {
     throw new Error("Unauthorized");
   }
@@ -66,9 +67,9 @@ export async function updateCampaign(id: string, formData: FormData) {
   const data = {
     name: formData.get("name"),
     slug: formData.get("slug"),
-    description: formData.get("description"),
-    image: formData.get("image"),
-    backgroundImage: formData.get("backgroundImage"),
+    description: formData.get("description") || undefined,
+    image: formData.get("image") || undefined,
+    backgroundImage: formData.get("backgroundImage") || undefined,
     visibility: formData.get("visibility"),
     locale: formData.get("locale"),
   };
@@ -88,7 +89,7 @@ export async function updateCampaign(id: string, formData: FormData) {
 }
 
 export async function deleteCampaign(id: string) {
-  const session = await getServerSession();
+  const session = await getServerSession(authConfig);
   if (!session?.user?.id) {
     throw new Error("Unauthorized");
   }

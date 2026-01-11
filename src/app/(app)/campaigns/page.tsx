@@ -18,9 +18,6 @@ export default async function CampaignsPage() {
     redirect('/login');
   }
 
-  console.log('Session user:', session.user);
-  console.log('Session user ID:', session.user.id);
-
   const campaignsList = await db.query.campaigns.findMany({
     where: eq(campaigns.ownerId, session.user.id!),
     orderBy: [desc(campaigns.updatedAt)],

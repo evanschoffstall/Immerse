@@ -1,18 +1,14 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { authConfig } from '@/lib/auth';
 import { getServerSession } from 'next-auth';
 import { redirect } from 'next/navigation';
-import { createCampaign } from '../actions';
+import NewCampaignClient from './client';
 
 export default async function NewCampaignPage() {
-  const session = await getServerSession();
+  const session = await getServerSession(authConfig);
 
   if (!session?.user) {
     redirect('/login');
-  }
-
-  async function handleCreate(formData: FormData) {
-    'use server'
-    await createCampaign(formData);
   }
 
   return (
@@ -25,12 +21,7 @@ export default async function NewCampaignPage() {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <form action={handleCreate}>
-            <input type="text" name="name" placeholder="Campaign Name" required />
-            <input type="text" name="slug" placeholder="campaign-slug" required />
-            <textarea name="description" placeholder="Description" />
-            <button type="submit">Create Campaign</button>
-          </form>
+          <NewCampaignClient />
         </CardContent>
       </Card>
     </div>

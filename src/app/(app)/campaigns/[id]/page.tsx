@@ -2,6 +2,7 @@ import { ActiveQuestsWidget } from '@/components/dashboard-widgets/ActiveQuestsW
 import { GettingStartedWidget } from '@/components/dashboard-widgets/GettingStartedWidget';
 import { RecentActivityWidget } from '@/components/dashboard-widgets/RecentActivityWidget';
 import { Separator } from '@/components/ui/separator';
+import { authConfig } from '@/lib/auth';
 import { getServerSession } from 'next-auth';
 import { redirect } from 'next/navigation';
 
@@ -10,7 +11,7 @@ export default async function CampaignDashboardPage({
 }: {
   params: Promise<{ id: string }>;
 }) {
-  const session = await getServerSession();
+  const session = await getServerSession(authConfig);
 
   if (!session?.user) {
     redirect('/login');

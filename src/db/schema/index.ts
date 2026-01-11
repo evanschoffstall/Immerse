@@ -56,5 +56,14 @@ export type {
   User,
 };
 
-// Re-export relations
-export { relations };
+// Re-export all relations individually
+export const {
+  usersRelations,
+  campaignsRelations,
+  beingsRelations,
+  questsRelations,
+  imagesRelations,
+  calendarsRelations,
+  campaignSettingsRelations,
+  auditLogsRelations,
+} = relations;

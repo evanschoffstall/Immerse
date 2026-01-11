@@ -3,6 +3,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Separator } from '@/components/ui/separator';
 import { db } from '@/db';
 import { beings } from '@/db/schema';
+import { authConfig } from '@/lib/auth';
 import { extractTextFromLexical, truncateText } from '@/lib/utils/lexical';
 import { desc, eq } from 'drizzle-orm';
 import { Plus, User } from 'lucide-react';
@@ -16,7 +17,7 @@ export default async function BeingsPage({
 }: {
   params: Promise<{ id: string }>;
 }) {
-  const session = await getServerSession();
+  const session = await getServerSession(authConfig);
 
   if (!session?.user) {
     redirect('/login');
