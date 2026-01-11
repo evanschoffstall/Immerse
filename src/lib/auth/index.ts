@@ -1,5 +1,7 @@
 import { db } from "@/db";
+import { users } from "@/db/schema";
 import bcrypt from "bcryptjs";
+import { eq } from "drizzle-orm";
 import type { AuthOptions, Session } from "next-auth";
 import NextAuth from "next-auth";
 import type { JWT } from "next-auth/jwt";
@@ -36,8 +38,8 @@ export const authConfig: AuthOptions = {
         }
 
         // Query database directly
-        const user = await db.users.findUnique({
-          where: { email: credentials.email as string },
+        const user = await db.query.users.findFirst({
+          where: eq(users.email, credentials.email as string),
         });
 
         if (!user || !user.password) {

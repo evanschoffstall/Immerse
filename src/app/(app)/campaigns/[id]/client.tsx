@@ -14,7 +14,7 @@ import {
   SidebarMenuItem,
   SidebarProvider
 } from '@/components/ui/sidebar';
-import type { campaign_settings, campaigns } from '@prisma/client';
+import type { Campaign, CampaignSettings } from '@/db/schema';
 import {
   Bookmark,
   BookOpen,
@@ -47,8 +47,8 @@ import { usePathname } from 'next/navigation';
 import { useEffect, useMemo } from 'react';
 
 interface CampaignLayoutClientProps {
-  campaign: campaigns;
-  campaignSettings: campaign_settings | null;
+  campaign: Campaign;
+  campaignSettings: CampaignSettings | null;
   children: React.ReactNode;
 }
 

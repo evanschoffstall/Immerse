@@ -1,7 +1,9 @@
 "use server";
 
 import { db } from "@/db";
+import { campaigns, campaignSettings } from "@/db/schema";
 import { authConfig } from "@/lib/auth";
+import { eq } from "drizzle-orm";
 import { getServerSession } from "next-auth";
 import { revalidatePath } from "next/cache";
 
@@ -21,25 +23,25 @@ export async function updateCampaign(
   }
 
   // Verify ownership
-  const campaign = await db.campaigns.findUnique({
-    where: { id: campaignId },
-    select: { ownerId: true },
+  const campaign = await db.query.campaigns.findFirst({
+    where: eq(campaigns.id, campaignId),
+    columns: { ownerId: true },
   });
 
   if (!campaign || campaign.ownerId !== session.user.id) {
     throw new Error("Unauthorized");
   }
 
-  await db.campaigns.update({
-    where: { id: campaignId },
-    data: {
+  await db
+    .update(campaigns)
+    .set({
       name: data.name,
       description: data.description || null,
       image: data.image || null,
       backgroundImage: data.backgroundImage || null,
       updatedAt: new Date(),
-    },
-  });
+    })
+    .where(eq(campaigns.id, campaignId));
 
   revalidatePath(`/campaigns/${campaignId}`);
   revalidatePath("/campaigns");
@@ -67,28 +69,36 @@ export async function updateCampaignSettings(
   }
 
   // Verify ownership
-  const campaign = await db.campaigns.findUnique({
-    where: { id: campaignId },
-    select: { ownerId: true },
+  const campaign = await db.query.campaigns.findFirst({
+    where: eq(campaigns.id, campaignId),
+    columns: { ownerId: true },
   });
 
   if (!campaign || campaign.ownerId !== session.user.id) {
     throw new Error("Unauthorized");
   }
 
-  await db.campaign_settings.upsert({
-    where: { campaignId },
-    create: {
+  // Check if settings exist
+  const existing = await db.query.campaignSettings.findFirst({
+    where: eq(campaignSettings.campaignId, campaignId),
+  });
+
+  if (existing) {
+    await db
+      .update(campaignSettings)
+      .set({
+        ...settings,
+        updatedAt: new Date(),
+      })
+      .where(eq(campaignSettings.campaignId, campaignId));
+  } else {
+    await db.insert(campaignSettings).values({
       id: `settings_${campaignId}`,
       campaignId,
       updatedAt: new Date(),
       ...settings,
-    },
-    update: {
-      ...settings,
-      updatedAt: new Date(),
-    },
-  });
+    });
+  }
 
   revalidatePath(`/campaigns/${campaignId}`);
 }
@@ -101,18 +111,16 @@ export async function deleteCampaign(campaignId: string) {
   }
 
   // Verify ownership
-  const campaign = await db.campaigns.findUnique({
-    where: { id: campaignId },
-    select: { ownerId: true },
+  const campaign = await db.query.campaigns.findFirst({
+    where: eq(campaigns.id, campaignId),
+    columns: { ownerId: true },
   });
 
   if (!campaign || campaign.ownerId !== session.user.id) {
     throw new Error("Unauthorized");
   }
 
-  await db.campaigns.delete({
-    where: { id: campaignId },
-  });
+  await db.delete(campaigns).where(eq(campaigns.id, campaignId));
 
   revalidatePath("/campaigns");
 }

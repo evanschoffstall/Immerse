@@ -2,7 +2,9 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
 import { db } from '@/db';
+import { beings } from '@/db/schema';
 import { extractTextFromLexical, truncateText } from '@/lib/utils/lexical';
+import { desc, eq } from 'drizzle-orm';
 import { Plus, User } from 'lucide-react';
 import { getServerSession } from 'next-auth';
 import Image from 'next/image';
@@ -22,9 +24,9 @@ export default async function BeingsPage({
 
   const { id: campaignId } = await params;
 
-  const beings = await db.beings.findMany({
-    where: { campaignId },
-    orderBy: { createdAt: 'desc' },
+  const beingsList = await db.query.beings.findMany({
+    where: eq(beings.campaignId, campaignId),
+    orderBy: [desc(beings.createdAt)],
   });
 
   return (
@@ -37,7 +39,7 @@ export default async function BeingsPage({
               Manage the characters, NPCs, and creatures in your campaign
             </p>
           </div>
-          {beings.length > 0 && (
+          {beingsList.length > 0 && (
             <Button asChild>
               <Link href={`/campaigns/${campaignId}/beings/new`}>
                 <Plus className="mr-2 h-4 w-4" />
@@ -49,7 +51,7 @@ export default async function BeingsPage({
 
         <Separator />
 
-        {beings.length === 0 ? (
+        {beingsList.length === 0 ? (
           <Card className="text-center py-12">
             <CardContent>
               <User className="mx-auto h-12 w-12 text-muted-foreground mb-4" />
@@ -67,7 +69,7 @@ export default async function BeingsPage({
           </Card>
         ) : (
           <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-            {beings.map((being) => (
+            {beingsList.map((being) => (
               <Link
                 key={being.id}
                 href={`/campaigns/${campaignId}/beings/${being.id}`}

@@ -1,7 +1,10 @@
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { db } from '@/db';
+import { campaigns } from '@/db/schema';
+import { authConfig } from '@/lib/auth';
 import { extractTextFromLexical, truncateText } from '@/lib/utils/lexical';
+import { desc, eq } from 'drizzle-orm';
 import { Mountain } from 'lucide-react';
 import { getServerSession } from 'next-auth';
 import Image from 'next/image';
@@ -9,29 +12,32 @@ import Link from 'next/link';
 import { redirect } from 'next/navigation';
 
 export default async function CampaignsPage() {
-  const session = await getServerSession();
+  const session = await getServerSession(authConfig);
 
   if (!session?.user) {
     redirect('/login');
   }
 
-  const campaigns = await db.campaigns.findMany({
-    where: { ownerId: session.user.id },
-    orderBy: { updatedAt: 'desc' }
+  console.log('Session user:', session.user);
+  console.log('Session user ID:', session.user.id);
+
+  const campaignsList = await db.query.campaigns.findMany({
+    where: eq(campaigns.ownerId, session.user.id!),
+    orderBy: [desc(campaigns.updatedAt)],
   });
 
   return (
     <div className="container mx-auto px-4 py-8 mt-16">
       <div className="flex items-center justify-between mb-8">
         <h1 className="text-4xl font-bold">Campaigns</h1>
-        {campaigns.length > 0 && (
+        {campaignsList.length > 0 && (
           <Link href="/campaigns/new">
             <Button>Create New Campaign</Button>
           </Link>
         )}
       </div>
 
-      {campaigns.length === 0 ? (
+      {campaignsList.length === 0 ? (
         <Card className="text-center">
           <CardHeader>
             <Mountain className="mx-auto mb-4 h-12 w-12 text-muted-foreground" />
@@ -48,7 +54,7 @@ export default async function CampaignsPage() {
         </Card>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6" data-testid="campaigns-list">
-          {campaigns.map((campaign) => (
+          {campaignsList.map((campaign) => (
             <Link key={campaign.id} href={`/campaigns/${campaign.id}`} data-testid="campaign-card">
               <Card className="group overflow-hidden border bg-card transition-all hover:shadow-lg h-full">
                 {campaign.image && (

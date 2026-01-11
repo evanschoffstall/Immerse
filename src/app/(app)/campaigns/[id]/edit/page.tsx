@@ -1,5 +1,7 @@
 import { db } from '@/db';
+import { campaigns } from '@/db/schema';
 import { authConfig } from '@/lib/auth';
+import { eq } from 'drizzle-orm';
 import { getServerSession } from 'next-auth';
 import { redirect } from 'next/navigation';
 import EditCampaignClient from './client';
@@ -18,9 +20,9 @@ export default async function EditCampaignPage({
   const { id: campaignId } = await params;
 
   // Fetch campaign and verify ownership
-  const campaign = await db.campaigns.findUnique({
-    where: { id: campaignId },
-    include: {
+  const campaign = await db.query.campaigns.findFirst({
+    where: eq(campaigns.id, campaignId),
+    with: {
       settings: true,
     },
   });

@@ -1,6 +1,8 @@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Checkbox } from '@/components/ui/checkbox';
 import { db } from '@/db';
+import { beings } from '@/db/schema';
+import { count, eq } from 'drizzle-orm';
 import Link from 'next/link';
 
 interface Task {
@@ -16,12 +18,12 @@ interface GettingStartedWidgetProps {
 
 export async function GettingStartedWidget({ campaignId }: GettingStartedWidgetProps) {
   // Fetch stats for this campaign
-  const [beingsCount, locationsCount] = await Promise.all([
-    db.beings.count({ where: { campaignId } }),
-    // When locations table exists, add this:
-    // db.locations.count({ where: { campaignId } }),
-    Promise.resolve(0), // Placeholder until locations table exists
+  const [beingsCountResult] = await Promise.all([
+    db.select({ count: count() }).from(beings).where(eq(beings.campaignId, campaignId)),
   ]);
+
+  const beingsCount = beingsCountResult[0]?.count ?? 0;
+  const locationsCount = 0; // Placeholder until locations table exists
 
   const hasBeings = beingsCount > 0;
   const hasLocations = locationsCount > 0;

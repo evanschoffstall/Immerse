@@ -1,6 +1,8 @@
 "use server";
 
 import { db } from "@/db";
+import { campaigns } from "@/db/schema";
+import { eq } from "drizzle-orm";
 import { getServerSession } from "next-auth";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
@@ -34,17 +36,16 @@ export async function createCampaign(formData: FormData) {
 
   const validated = createCampaignSchema.parse(data);
 
-  const campaign = await db.campaigns.create({
-    data: {
-      id: crypto.randomUUID(),
-      ...validated,
-      ownerId: session.user.id,
-      updatedAt: new Date(),
-    },
+  const campaignId = crypto.randomUUID();
+  await db.insert(campaigns).values({
+    id: campaignId,
+    ...validated,
+    ownerId: session.user.id,
+    updatedAt: new Date(),
   });
 
   revalidatePath("/campaigns");
-  redirect(`/campaigns/${campaign.id}`);
+  redirect(`/campaigns/${campaignId}`);
 }
 
 export async function updateCampaign(id: string, formData: FormData) {
@@ -53,9 +54,9 @@ export async function updateCampaign(id: string, formData: FormData) {
     throw new Error("Unauthorized");
   }
 
-  const campaign = await db.campaigns.findUnique({
-    where: { id },
-    select: { ownerId: true },
+  const campaign = await db.query.campaigns.findFirst({
+    where: eq(campaigns.id, id),
+    columns: { ownerId: true },
   });
 
   if (!campaign || campaign.ownerId !== session.user.id) {
@@ -74,13 +75,13 @@ export async function updateCampaign(id: string, formData: FormData) {
 
   const validated = createCampaignSchema.partial().parse(data);
 
-  await db.campaigns.update({
-    where: { id },
-    data: {
+  await db
+    .update(campaigns)
+    .set({
       ...validated,
       updatedAt: new Date(),
-    },
-  });
+    })
+    .where(eq(campaigns.id, id));
 
   revalidatePath(`/campaigns/${id}`);
   revalidatePath("/campaigns");
@@ -92,16 +93,16 @@ export async function deleteCampaign(id: string) {
     throw new Error("Unauthorized");
   }
 
-  const campaign = await db.campaigns.findUnique({
-    where: { id },
-    select: { ownerId: true },
+  const campaign = await db.query.campaigns.findFirst({
+    where: eq(campaigns.id, id),
+    columns: { ownerId: true },
   });
 
   if (!campaign || campaign.ownerId !== session.user.id) {
     throw new Error("Forbidden");
   }
 
-  await db.campaigns.delete({ where: { id } });
+  await db.delete(campaigns).where(eq(campaigns.id, id));
 
   revalidatePath("/campaigns");
   redirect("/campaigns");

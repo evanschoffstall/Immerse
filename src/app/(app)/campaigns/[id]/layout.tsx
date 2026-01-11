@@ -1,5 +1,7 @@
 import { db } from '@/db';
+import { campaigns } from '@/db/schema';
 import { authConfig } from '@/lib/auth';
+import { eq } from 'drizzle-orm';
 import { getServerSession } from 'next-auth/next';
 import { redirect } from 'next/navigation';
 import CampaignLayoutClient from './client';
@@ -18,11 +20,11 @@ export default async function CampaignLayout({
     redirect('/login');
   }
 
-  const campaign = await db.campaigns.findUnique({
-    where: { id },
-    include: {
+  const campaign = await db.query.campaigns.findFirst({
+    where: eq(campaigns.id, id),
+    with: {
       settings: true,
-    }
+    },
   });
 
   if (!campaign || campaign.ownerId !== session.user.id) {

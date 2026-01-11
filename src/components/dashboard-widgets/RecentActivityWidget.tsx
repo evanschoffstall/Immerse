@@ -1,5 +1,7 @@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { db } from '@/db';
+import { beings } from '@/db/schema';
+import { desc, eq } from 'drizzle-orm';
 import Image from 'next/image';
 import Link from 'next/link';
 
@@ -17,11 +19,11 @@ interface RecentActivityWidgetProps {
 
 export async function RecentActivityWidget({ campaignId }: RecentActivityWidgetProps) {
   // Fetch recent beings for this campaign
-  const recentBeings = await db.beings.findMany({
-    where: { campaignId },
-    orderBy: { updatedAt: 'desc' },
-    take: 5,
-    select: {
+  const recentBeings = await db.query.beings.findMany({
+    where: eq(beings.campaignId, campaignId),
+    orderBy: [desc(beings.updatedAt)],
+    limit: 5,
+    columns: {
       id: true,
       name: true,
       updatedAt: true,

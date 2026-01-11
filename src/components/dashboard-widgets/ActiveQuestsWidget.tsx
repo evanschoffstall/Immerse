@@ -1,12 +1,14 @@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { db } from '@/db';
+import { quests } from '@/db/schema';
+import { and, desc, eq, isNull } from 'drizzle-orm';
 import Link from 'next/link';
 
 interface Quest {
   id: string;
   name: string;
   updatedAt: Date;
-  status: string;
+  status: string | null;
 }
 
 interface ActiveQuestsWidgetProps {
@@ -15,15 +17,15 @@ interface ActiveQuestsWidgetProps {
 
 export async function ActiveQuestsWidget({ campaignId }: ActiveQuestsWidgetProps) {
   // Fetch active quests for this campaign
-  const quests = await db.quests.findMany({
-    where: {
-      campaignId,
-      status: 'active',
-      deletedAt: null,
-    },
-    orderBy: { updatedAt: 'desc' },
-    take: 5,
-    select: {
+  const questsList = await db.query.quests.findMany({
+    where: and(
+      eq(quests.campaignId, campaignId),
+      eq(quests.status, 'active'),
+      isNull(quests.deletedAt)
+    ),
+    orderBy: [desc(quests.updatedAt)],
+    limit: 5,
+    columns: {
       id: true,
       name: true,
       updatedAt: true,
@@ -47,14 +49,14 @@ export async function ActiveQuestsWidget({ campaignId }: ActiveQuestsWidgetProps
         <CardTitle>Active Quests</CardTitle>
       </CardHeader>
       <CardContent>
-        {quests.length === 0 ? (
+        {questsList.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-8 text-center">
             <p className="text-sm text-muted-foreground">No active quests</p>
             <p className="text-xs text-muted-foreground mt-1">Create your first quest to get started</p>
           </div>
         ) : (
           <div className="space-y-3">
-            {quests.map((quest) => (
+            {questsList.map((quest) => (
               <Link
                 key={quest.id}
                 href={`/campaigns/${campaignId}/quests/${quest.id}`}
