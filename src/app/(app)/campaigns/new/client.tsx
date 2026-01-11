@@ -19,7 +19,7 @@ export default function NewCampaignClient() {
       if (data.description) formData.append('description', data.description);
       if (data.image) formData.append('image', data.image);
       if (data.backgroundImage) formData.append('backgroundImage', data.backgroundImage);
-      
+
       await createCampaign(formData);
       // createCampaign redirects automatically, no need for router.push
       toast.success('Campaign created successfully!');
