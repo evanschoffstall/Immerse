@@ -39,7 +39,7 @@ export function PageHeader({
 }) {
   return (
     <div className="group flex items-center gap-2">
-      <h1 className="text-4xl font-bold tracking-tight">{campaignName}</h1>
+      <h1 className="text-3xl font-bold tracking-tight">{campaignName}</h1>
       <EditCampaignField
         campaignId={campaignId}
         currentData={{
@@ -81,7 +81,7 @@ export function CampaignDescriptionCard({
             <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-primary/10">
               <ScrollText className="h-6 w-6 text-primary" />
             </div>
-            <CardTitle className="text-2xl leading-tight">Overview</CardTitle>
+            <CardTitle className="text-xl leading-tight">Overview</CardTitle>
           </div>
           <EditCampaignField
             campaignId={campaignId}
@@ -99,8 +99,10 @@ export function CampaignDescriptionCard({
       </CardHeader>
       {hasContent && description && (
         <CardContent>
-          <div className="prose dark:prose-invert max-w-none">
-            <RichTextViewer content={description} />
+          <div className="flex min-h-14 flex-col justify-center">
+            <div className="prose prose-sm dark:prose-invert max-w-none">
+              <RichTextViewer content={description} />
+            </div>
           </div>
         </CardContent>
       )}
@@ -163,7 +165,7 @@ export function SceneCard({
               <BookOpen className="h-4 w-4 text-primary" />
             </div>
             <div className="flex-1 min-w-0">
-              <CardTitle className="text-lg leading-tight">
+              <CardTitle className="text-base leading-tight">
                 {scene.name}
               </CardTitle>
             </div>
@@ -188,8 +190,10 @@ export function SceneCard({
       <InteractiveContainer stopPropagation>
         <CardContent className="space-y-4">
           {hasContent && scene.content && (
-            <div className="prose prose-sm dark:prose-invert max-w-none">
-              <RichTextViewer content={scene.content} />
+            <div className="flex min-h-14 flex-col justify-center">
+              <div className="prose prose-sm dark:prose-invert max-w-none">
+                <RichTextViewer content={scene.content} />
+              </div>
             </div>
           )}
           {hasBeats && (
@@ -227,7 +231,7 @@ export function ActCard({
               <Theater className="h-6 w-6 text-primary" />
             </div>
             <div className="flex-1 min-w-0">
-              <CardTitle className="text-xl leading-tight">
+              <CardTitle className="text-lg leading-tight">
                 {act.name}
               </CardTitle>
             </div>
@@ -248,8 +252,10 @@ export function ActCard({
       <InteractiveContainer stopPropagation>
         <CardContent className="space-y-6">
           {hasContent && act.content && (
-            <div className="prose dark:prose-invert max-w-none">
-              <RichTextViewer content={act.content} />
+            <div className="flex min-h-16 flex-col justify-center">
+              <div className="prose prose-sm dark:prose-invert max-w-none">
+                <RichTextViewer content={act.content} />
+              </div>
             </div>
           )}
           {hasScenes && (
@@ -284,7 +290,7 @@ export function ActsList({
             <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-primary/10">
               <Theater className="h-6 w-6 text-primary" />
             </div>
-            <CardTitle className="text-2xl leading-tight">Acts</CardTitle>
+            <CardTitle className="text-xl leading-tight">Acts</CardTitle>
           </div>
           <div className="acts-list-header-actions opacity-0 pointer-events-none transition-opacity group-hover/acts-list-header:opacity-100 group-hover/acts-list-header:pointer-events-auto">
             <CreateActInlineButton campaignId={campaignId} />
