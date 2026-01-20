@@ -1,9 +1,9 @@
-'use client';
+"use client";
 
-import SceneForm, { type SceneFormData } from '@/components/forms/SceneForm';
-import { useState } from 'react';
-import { toast } from 'sonner';
-import { createScene } from '../../../../actions';
+import SceneForm, { type SceneFormData } from "@/components/forms/SceneForm";
+import { useState } from "react";
+import { toast } from "sonner";
+import { createScene } from "../../../../actions";
 
 export default function NewSceneClient({
   actId,
@@ -18,14 +18,14 @@ export default function NewSceneClient({
     setIsCreating(true);
     try {
       const formData = new FormData();
-      formData.append('name', data.name);
-      if (data.content) formData.append('content', data.content);
+      formData.append("name", data.name);
+      if (data.content) formData.append("content", data.content);
 
       await createScene(actId, formData);
-      toast.success('Scene created successfully!');
+      toast.success("Scene created successfully!");
     } catch (error: any) {
-      console.error('Error creating scene:', error);
-      toast.error(error.message || 'Failed to create scene');
+      console.error("Error creating scene:", error);
+      toast.error(error.message || "Failed to create scene");
       setIsCreating(false);
     }
   };

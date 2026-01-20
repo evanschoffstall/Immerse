@@ -1,7 +1,7 @@
 "use client";
 
-import RichTextEditor from "@/components/editor/RichTextEditor";
 import { Button } from "@/components/ui/button";
+import RichTextEditor from "@/components/ui/custom/RichTextEditor";
 import {
   Dialog,
   DialogContent,
@@ -46,7 +46,7 @@ export function EditCampaignField({
 }: EditCampaignFieldProps) {
   const [open, setOpen] = useState(false);
   const [value, setValue] = useState(
-    field === "name" ? currentData.name : currentData.description || ""
+    field === "name" ? currentData.name : currentData.description || "",
   );
   const [isPending, startTransition] = useTransition();
   const router = useRouter();
@@ -56,7 +56,8 @@ export function EditCampaignField({
     try {
       const updateData: CampaignData = {
         name: field === "name" ? value : currentData.name,
-        description: field === "description" ? value : currentData.description || "",
+        description:
+          field === "description" ? value : currentData.description || "",
         image: currentData.image || "",
         backgroundImage: currentData.backgroundImage || "",
       };
@@ -66,7 +67,7 @@ export function EditCampaignField({
       toast.success(
         field === "name"
           ? "Campaign name updated"
-          : "Campaign description updated"
+          : "Campaign description updated",
       );
 
       startTransition(() => {

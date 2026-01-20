@@ -1,8 +1,14 @@
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { authConfig } from '@/lib/auth';
-import { getServerSession } from 'next-auth';
-import { redirect } from 'next/navigation';
-import NewSceneClient from './client';
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { authConfig } from "@/lib/auth";
+import { getServerSession } from "next-auth";
+import { redirect } from "next/navigation";
+import NewSceneClient from "./client";
 
 export default async function NewScenePage({
   params,
@@ -11,7 +17,7 @@ export default async function NewScenePage({
 }) {
   const session = await getServerSession(authConfig);
   if (!session?.user?.id) {
-    redirect('/login');
+    redirect("/login");
   }
 
   const { id: campaignId, actId } = await params;
@@ -21,9 +27,7 @@ export default async function NewScenePage({
       <Card>
         <CardHeader>
           <CardTitle className="text-3xl">Create New Scene</CardTitle>
-          <CardDescription>
-            Create a new scene within this act.
-          </CardDescription>
+          <CardDescription>Create a new scene within this act.</CardDescription>
         </CardHeader>
         <CardContent>
           <NewSceneClient actId={actId} campaignId={campaignId} />

@@ -1,6 +1,8 @@
 "use client";
 
-import CampaignForm, { type CampaignFormData } from "@/components/forms/CampaignForm";
+import CampaignForm, {
+  type CampaignFormData,
+} from "@/components/forms/CampaignForm";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -12,7 +14,13 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
 import {
   Dialog,
@@ -23,11 +31,14 @@ import {
 } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { Slider } from "@/components/ui/slider";
-import { Edit2 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useEffect, useState, useTransition } from "react";
 import { toast } from "sonner";
-import { deleteCampaign, updateCampaign, updateCampaignSettings } from "../edit/actions";
+import {
+  deleteCampaign,
+  updateCampaign,
+  updateCampaignSettings,
+} from "../../../app/(app)/campaigns/[id]/edit/actions";
 
 // Reusable slider control component
 function SliderControl({
@@ -51,7 +62,9 @@ function SliderControl({
     <div className="space-y-2">
       <div className="flex items-center justify-between">
         <Label>{label}</Label>
-        <span className="text-sm text-muted-foreground">{formatValue(value)}</span>
+        <span className="text-sm text-muted-foreground">
+          {formatValue(value)}
+        </span>
       </div>
       <Slider
         min={min}
@@ -65,7 +78,12 @@ function SliderControl({
 }
 
 interface CampaignSettings {
-  bg: { opacity: number; blur: number; expandToSidebar: boolean; expandToHeader: boolean };
+  bg: {
+    opacity: number;
+    blur: number;
+    expandToSidebar: boolean;
+    expandToHeader: boolean;
+  };
   header: { bgOpacity: number; blur: number };
   sidebar: { bgOpacity: number; blur: number };
   card: { bgOpacity: number; blur: number };
@@ -108,19 +126,27 @@ export function EditCampaignDialog({
       bg: {
         opacity: initialSettings.bgOpacity ?? DEFAULT_SETTINGS.bg.opacity,
         blur: initialSettings.bgBlur ?? DEFAULT_SETTINGS.bg.blur,
-        expandToSidebar: initialSettings.bgExpandToSidebar ?? DEFAULT_SETTINGS.bg.expandToSidebar,
-        expandToHeader: initialSettings.bgExpandToHeader ?? DEFAULT_SETTINGS.bg.expandToHeader,
+        expandToSidebar:
+          initialSettings.bgExpandToSidebar ??
+          DEFAULT_SETTINGS.bg.expandToSidebar,
+        expandToHeader:
+          initialSettings.bgExpandToHeader ??
+          DEFAULT_SETTINGS.bg.expandToHeader,
       },
       header: {
-        bgOpacity: initialSettings.headerBgOpacity ?? DEFAULT_SETTINGS.header.bgOpacity,
+        bgOpacity:
+          initialSettings.headerBgOpacity ?? DEFAULT_SETTINGS.header.bgOpacity,
         blur: initialSettings.headerBlur ?? DEFAULT_SETTINGS.header.blur,
       },
       sidebar: {
-        bgOpacity: initialSettings.sidebarBgOpacity ?? DEFAULT_SETTINGS.sidebar.bgOpacity,
+        bgOpacity:
+          initialSettings.sidebarBgOpacity ??
+          DEFAULT_SETTINGS.sidebar.bgOpacity,
         blur: initialSettings.sidebarBlur ?? DEFAULT_SETTINGS.sidebar.blur,
       },
       card: {
-        bgOpacity: initialSettings.cardBgOpacity ?? DEFAULT_SETTINGS.card.bgOpacity,
+        bgOpacity:
+          initialSettings.cardBgOpacity ?? DEFAULT_SETTINGS.card.bgOpacity,
         blur: initialSettings.cardBlur ?? DEFAULT_SETTINGS.card.blur,
       },
     };
@@ -129,35 +155,65 @@ export function EditCampaignDialog({
   // Apply settings live for preview
   useEffect(() => {
     if (!open) return;
-    
-    document.documentElement.style.setProperty('--campaign-bg-opacity', settings.bg.opacity.toString());
-    document.documentElement.style.setProperty('--campaign-bg-blur', `${settings.bg.blur}px`);
-    document.documentElement.style.setProperty('--campaign-header-bg-opacity', settings.header.bgOpacity.toString());
-    document.documentElement.style.setProperty('--campaign-header-blur', `${settings.header.blur}px`);
-    document.documentElement.style.setProperty('--campaign-sidebar-bg-opacity', settings.sidebar.bgOpacity.toString());
-    document.documentElement.style.setProperty('--campaign-sidebar-blur', `${settings.sidebar.blur}px`);
-    document.documentElement.style.setProperty('--campaign-bg-expand-to-sidebar', settings.bg.expandToSidebar ? '1' : '0');
-    document.documentElement.style.setProperty('--campaign-bg-expand-to-header', settings.bg.expandToHeader ? '1' : '0');
-    document.documentElement.style.setProperty('--campaign-card-bg-opacity', settings.card.bgOpacity.toString());
-    document.documentElement.style.setProperty('--campaign-card-blur', `${settings.card.blur}px`);
+
+    document.documentElement.style.setProperty(
+      "--campaign-bg-opacity",
+      settings.bg.opacity.toString(),
+    );
+    document.documentElement.style.setProperty(
+      "--campaign-bg-blur",
+      `${settings.bg.blur}px`,
+    );
+    document.documentElement.style.setProperty(
+      "--campaign-header-bg-opacity",
+      settings.header.bgOpacity.toString(),
+    );
+    document.documentElement.style.setProperty(
+      "--campaign-header-blur",
+      `${settings.header.blur}px`,
+    );
+    document.documentElement.style.setProperty(
+      "--campaign-sidebar-bg-opacity",
+      settings.sidebar.bgOpacity.toString(),
+    );
+    document.documentElement.style.setProperty(
+      "--campaign-sidebar-blur",
+      `${settings.sidebar.blur}px`,
+    );
+    document.documentElement.style.setProperty(
+      "--campaign-bg-expand-to-sidebar",
+      settings.bg.expandToSidebar ? "1" : "0",
+    );
+    document.documentElement.style.setProperty(
+      "--campaign-bg-expand-to-header",
+      settings.bg.expandToHeader ? "1" : "0",
+    );
+    document.documentElement.style.setProperty(
+      "--campaign-card-bg-opacity",
+      settings.card.bgOpacity.toString(),
+    );
+    document.documentElement.style.setProperty(
+      "--campaign-card-blur",
+      `${settings.card.blur}px`,
+    );
   }, [settings, open]);
 
   const handleUpdateCampaign = async (data: CampaignFormData) => {
     try {
       await updateCampaign(campaignId, {
         name: data.name,
-        description: data.description || '',
-        image: data.image || '',
-        backgroundImage: data.backgroundImage || '',
+        description: data.description || "",
+        image: data.image || "",
+        backgroundImage: data.backgroundImage || "",
       });
-      toast.success('Campaign updated successfully!');
+      toast.success("Campaign updated successfully!");
       startUpdateTransition(() => {
         router.refresh();
         setOpen(false);
       });
     } catch (error: any) {
-      console.error('Error updating campaign:', error);
-      toast.error(error.message || 'Failed to update campaign');
+      console.error("Error updating campaign:", error);
+      toast.error(error.message || "Failed to update campaign");
     }
   };
 
@@ -175,13 +231,13 @@ export function EditCampaignDialog({
         cardBgOpacity: settings.card.bgOpacity,
         cardBlur: settings.card.blur,
       });
-      toast.success('Background settings saved');
+      toast.success("Background settings saved");
       startSettingsTransition(() => {
         router.refresh();
       });
     } catch (error: any) {
-      console.error('Error saving settings:', error);
-      toast.error(error.message || 'Failed to save settings');
+      console.error("Error saving settings:", error);
+      toast.error(error.message || "Failed to save settings");
     }
   };
 
@@ -189,14 +245,14 @@ export function EditCampaignDialog({
     setIsDeleting(true);
     try {
       await deleteCampaign(campaignId);
-      toast.success('Campaign deleted successfully');
+      toast.success("Campaign deleted successfully");
       setShowDeleteDialog(false);
       setOpen(false);
-      router.push('/campaigns');
+      router.push("/campaigns");
       router.refresh();
     } catch (error: any) {
-      console.error('Error deleting campaign:', error);
-      toast.error(error.message || 'Failed to delete campaign');
+      console.error("Error deleting campaign:", error);
+      toast.error(error.message || "Failed to delete campaign");
       setShowDeleteDialog(false);
       setIsDeleting(false);
     }
@@ -229,10 +285,16 @@ export function EditCampaignDialog({
                   isLoading={isPendingUpdate}
                   submitText="Update Campaign"
                   onImageChange={(url) => {
-                    document.documentElement.style.setProperty('--campaign-preview-image', `url(${url})`);
+                    document.documentElement.style.setProperty(
+                      "--campaign-preview-image",
+                      `url(${url})`,
+                    );
                   }}
                   onBackgroundImageChange={(url) => {
-                    document.documentElement.style.setProperty('--campaign-preview-bg-image', `url(${url})`);
+                    document.documentElement.style.setProperty(
+                      "--campaign-preview-bg-image",
+                      `url(${url})`,
+                    );
                   }}
                 />
               </CardContent>
@@ -243,7 +305,8 @@ export function EditCampaignDialog({
               <CardHeader>
                 <CardTitle>Background Settings</CardTitle>
                 <CardDescription>
-                  Customize how your background image is displayed (live preview)
+                  Customize how your background image is displayed (live
+                  preview)
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-6">
@@ -255,13 +318,23 @@ export function EditCampaignDialog({
                     <SliderControl
                       label="Background Opacity"
                       value={settings.header.bgOpacity}
-                      onChange={(v) => setSettings({ ...settings, header: { ...settings.header, bgOpacity: v } })}
+                      onChange={(v) =>
+                        setSettings({
+                          ...settings,
+                          header: { ...settings.header, bgOpacity: v },
+                        })
+                      }
                     />
 
                     <SliderControl
                       label="Blur"
                       value={settings.header.blur}
-                      onChange={(v) => setSettings({ ...settings, header: { ...settings.header, blur: v } })}
+                      onChange={(v) =>
+                        setSettings({
+                          ...settings,
+                          header: { ...settings.header, blur: v },
+                        })
+                      }
                       min={0}
                       max={50}
                       step={1}
@@ -272,7 +345,15 @@ export function EditCampaignDialog({
                       <Checkbox
                         id="bg-header"
                         checked={settings.bg.expandToHeader}
-                        onCheckedChange={(checked) => setSettings({ ...settings, bg: { ...settings.bg, expandToHeader: checked as boolean } })}
+                        onCheckedChange={(checked) =>
+                          setSettings({
+                            ...settings,
+                            bg: {
+                              ...settings.bg,
+                              expandToHeader: checked as boolean,
+                            },
+                          })
+                        }
                       />
                       <Label htmlFor="bg-header" className="cursor-pointer">
                         Expand background to header
@@ -287,13 +368,23 @@ export function EditCampaignDialog({
                     <SliderControl
                       label="Background Opacity"
                       value={settings.sidebar.bgOpacity}
-                      onChange={(v) => setSettings({ ...settings, sidebar: { ...settings.sidebar, bgOpacity: v } })}
+                      onChange={(v) =>
+                        setSettings({
+                          ...settings,
+                          sidebar: { ...settings.sidebar, bgOpacity: v },
+                        })
+                      }
                     />
 
                     <SliderControl
                       label="Blur"
                       value={settings.sidebar.blur}
-                      onChange={(v) => setSettings({ ...settings, sidebar: { ...settings.sidebar, blur: v } })}
+                      onChange={(v) =>
+                        setSettings({
+                          ...settings,
+                          sidebar: { ...settings.sidebar, blur: v },
+                        })
+                      }
                       min={0}
                       max={50}
                       step={1}
@@ -304,7 +395,15 @@ export function EditCampaignDialog({
                       <Checkbox
                         id="bg-sidebar"
                         checked={settings.bg.expandToSidebar}
-                        onCheckedChange={(checked) => setSettings({ ...settings, bg: { ...settings.bg, expandToSidebar: checked as boolean } })}
+                        onCheckedChange={(checked) =>
+                          setSettings({
+                            ...settings,
+                            bg: {
+                              ...settings.bg,
+                              expandToSidebar: checked as boolean,
+                            },
+                          })
+                        }
                       />
                       <Label htmlFor="bg-sidebar" className="cursor-pointer">
                         Expand background to sidebar
@@ -314,18 +413,30 @@ export function EditCampaignDialog({
 
                   {/* Main background settings */}
                   <div className="space-y-4 md:pt-6 md:border-t xl:pt-0 xl:border-t-0">
-                    <h3 className="font-semibold text-lg mb-4">Main Background</h3>
+                    <h3 className="font-semibold text-lg mb-4">
+                      Main Background
+                    </h3>
 
                     <SliderControl
                       label="Overlay Opacity"
                       value={settings.bg.opacity}
-                      onChange={(v) => setSettings({ ...settings, bg: { ...settings.bg, opacity: v } })}
+                      onChange={(v) =>
+                        setSettings({
+                          ...settings,
+                          bg: { ...settings.bg, opacity: v },
+                        })
+                      }
                     />
 
                     <SliderControl
                       label="Blur"
                       value={settings.bg.blur}
-                      onChange={(v) => setSettings({ ...settings, bg: { ...settings.bg, blur: v } })}
+                      onChange={(v) =>
+                        setSettings({
+                          ...settings,
+                          bg: { ...settings.bg, blur: v },
+                        })
+                      }
                       min={0}
                       max={50}
                       step={1}
@@ -335,18 +446,30 @@ export function EditCampaignDialog({
 
                   {/* Card/UI settings */}
                   <div className="space-y-4 md:pt-6 md:border-t xl:pt-0 xl:border-t-0">
-                    <h3 className="font-semibold text-lg mb-4">Cards &amp; UI Elements</h3>
+                    <h3 className="font-semibold text-lg mb-4">
+                      Cards &amp; UI Elements
+                    </h3>
 
                     <SliderControl
                       label="Background Opacity"
                       value={settings.card.bgOpacity}
-                      onChange={(v) => setSettings({ ...settings, card: { ...settings.card, bgOpacity: v } })}
+                      onChange={(v) =>
+                        setSettings({
+                          ...settings,
+                          card: { ...settings.card, bgOpacity: v },
+                        })
+                      }
                     />
 
                     <SliderControl
                       label="Blur"
                       value={settings.card.blur}
-                      onChange={(v) => setSettings({ ...settings, card: { ...settings.card, blur: v } })}
+                      onChange={(v) =>
+                        setSettings({
+                          ...settings,
+                          card: { ...settings.card, blur: v },
+                        })
+                      }
                       min={0}
                       max={50}
                       step={1}
@@ -356,8 +479,13 @@ export function EditCampaignDialog({
                 </div>
 
                 <div className="flex justify-end">
-                  <Button onClick={handleSaveSettings} disabled={isPendingSettings}>
-                    {isPendingSettings ? 'Saving...' : 'Save Background Settings'}
+                  <Button
+                    onClick={handleSaveSettings}
+                    disabled={isPendingSettings}
+                  >
+                    {isPendingSettings
+                      ? "Saving..."
+                      : "Save Background Settings"}
                   </Button>
                 </div>
               </CardContent>
@@ -375,9 +503,12 @@ export function EditCampaignDialog({
                 <div className="rounded-lg border border-destructive/50 bg-destructive/10 p-4">
                   <div className="flex items-start justify-between">
                     <div className="space-y-1">
-                      <h4 className="text-sm font-semibold text-destructive">Delete Campaign</h4>
+                      <h4 className="text-sm font-semibold text-destructive">
+                        Delete Campaign
+                      </h4>
                       <p className="text-sm text-muted-foreground">
-                        Permanently delete this campaign and all its data. This action cannot be undone.
+                        Permanently delete this campaign and all its data. This
+                        action cannot be undone.
                       </p>
                     </div>
                     <Button
@@ -401,7 +532,8 @@ export function EditCampaignDialog({
           <AlertDialogHeader>
             <AlertDialogTitle>Delete Campaign</AlertDialogTitle>
             <AlertDialogDescription>
-              Are you sure you want to delete this campaign? This action cannot be undone and will delete all associated data.
+              Are you sure you want to delete this campaign? This action cannot
+              be undone and will delete all associated data.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
@@ -411,7 +543,7 @@ export function EditCampaignDialog({
               disabled={isDeleting}
               className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
             >
-              {isDeleting ? 'Deleting...' : 'Delete'}
+              {isDeleting ? "Deleting..." : "Delete"}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

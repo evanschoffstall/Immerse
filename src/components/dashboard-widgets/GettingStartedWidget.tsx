@@ -1,9 +1,9 @@
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Checkbox } from '@/components/ui/checkbox';
-import { db } from '@/db';
-import { beings } from '@/db/schema';
-import { count, eq } from 'drizzle-orm';
-import Link from 'next/link';
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Checkbox } from "@/components/ui/checkbox";
+import { db } from "@/db";
+import { beings } from "@/db/schema";
+import { count, eq } from "drizzle-orm";
+import Link from "next/link";
 
 interface Task {
   id: string;
@@ -16,10 +16,15 @@ interface GettingStartedWidgetProps {
   campaignId: string;
 }
 
-export async function GettingStartedWidget({ campaignId }: GettingStartedWidgetProps) {
+export async function GettingStartedWidget({
+  campaignId,
+}: GettingStartedWidgetProps) {
   // Fetch stats for this campaign
   const [beingsCountResult] = await Promise.all([
-    db.select({ count: count() }).from(beings).where(eq(beings.campaignId, campaignId)),
+    db
+      .select({ count: count() })
+      .from(beings)
+      .where(eq(beings.campaignId, campaignId)),
   ]);
 
   const beingsCount = beingsCountResult[0]?.count ?? 0;
@@ -30,35 +35,35 @@ export async function GettingStartedWidget({ campaignId }: GettingStartedWidgetP
 
   const tasks: Task[] = [
     {
-      id: '1',
-      label: 'Your first world is ready.',
+      id: "1",
+      label: "Your first world is ready.",
       completed: true,
     },
     {
-      id: '2',
-      label: 'Name your campaign.',
+      id: "2",
+      label: "Name your campaign.",
       completed: true,
     },
     {
-      id: '3',
-      label: 'Create your first being.',
+      id: "3",
+      label: "Create your first being.",
       completed: hasBeings,
       link: hasBeings ? undefined : `/campaigns/${campaignId}/beings/new`,
     },
     {
-      id: '4',
-      label: 'Create your first location.',
+      id: "4",
+      label: "Create your first location.",
       completed: hasLocations,
       link: hasLocations ? undefined : `/campaigns/${campaignId}/locations/new`,
     },
     {
-      id: '5',
-      label: 'Invite a friend or co-author.',
+      id: "5",
+      label: "Invite a friend or co-author.",
       completed: false,
     },
     {
-      id: '6',
-      label: 'Customise your dashboard.',
+      id: "6",
+      label: "Customise your dashboard.",
       completed: true,
     },
   ];
@@ -85,9 +90,15 @@ export async function GettingStartedWidget({ campaignId }: GettingStartedWidgetP
       <CardContent className="space-y-3 pt-6">
         {tasks.map((task) => (
           <div key={task.id} className="flex items-center gap-3 text-sm">
-            <Checkbox checked={task.completed} disabled className="cursor-default" />
+            <Checkbox
+              checked={task.completed}
+              disabled
+              className="cursor-default"
+            />
             {task.completed ? (
-              <span className="line-through text-muted-foreground/70">{task.label}</span>
+              <span className="line-through text-muted-foreground/70">
+                {task.label}
+              </span>
             ) : task.link ? (
               <Link href={task.link} className="hover:underline font-medium">
                 {task.label}

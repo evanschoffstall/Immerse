@@ -14,7 +14,7 @@ export async function updateCampaign(
     description: string;
     image: string;
     backgroundImage: string;
-  }
+  },
 ) {
   const session = await getServerSession(authConfig);
 
@@ -60,7 +60,7 @@ export async function updateCampaignSettings(
     sidebarBlur: number;
     cardBgOpacity: number;
     cardBlur: number;
-  }
+  },
 ) {
   const session = await getServerSession(authConfig);
 

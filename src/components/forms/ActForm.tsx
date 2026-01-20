@@ -1,7 +1,7 @@
 "use client";
 
-import RichTextEditor from "@/components/editor/RichTextEditor";
 import { Button } from "@/components/ui/button";
+import RichTextEditor from "@/components/ui/custom/RichTextEditor";
 import {
   Form,
   FormControl,

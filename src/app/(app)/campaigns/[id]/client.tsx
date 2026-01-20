@@ -1,6 +1,7 @@
-'use client';
+"use client";
 
-import { ScrollArea } from '@/components/ui/scroll-area';
+import { EditCampaignDialog } from "@/components/ui/custom/EditCampaignDialog";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import {
   Sidebar,
   SidebarContent,
@@ -12,9 +13,9 @@ import {
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
-  SidebarProvider
-} from '@/components/ui/sidebar';
-import type { Campaign, CampaignSettings } from '@/db/schema';
+  SidebarProvider,
+} from "@/components/ui/sidebar";
+import type { Campaign, CampaignSettings } from "@/db/schema";
 import {
   Bookmark,
   Flame,
@@ -37,12 +38,11 @@ import {
   Target,
   User,
   Users,
-  Zap
-} from 'lucide-react';
-import Link from 'next/link';
-import { usePathname } from 'next/navigation';
-import { useEffect, useMemo, useState } from 'react';
-import { EditCampaignDialog } from './story/EditCampaignDialog';
+  Zap,
+} from "lucide-react";
+import Link from "next/link";
+import { usePathname } from "next/navigation";
+import { useEffect, useMemo, useState } from "react";
 
 interface CampaignLayoutClientProps {
   campaign: Campaign;
@@ -112,17 +112,22 @@ export default function CampaignLayoutClient({
   const campaignId = campaign.id;
 
   // Helper function to construct campaign routes
-  const campaignRoute = (path: string = '') => `/campaigns/${campaignId}${path}`;
+  const campaignRoute = (path: string = "") =>
+    `/campaigns/${campaignId}${path}`;
 
   // Helper function to generate card styles CSS
   const generateCardStyles = () => {
     const cardOpacity =
-      document.documentElement.style.getPropertyValue('--campaign-card-bg-opacity') ||
+      document.documentElement.style.getPropertyValue(
+        "--campaign-card-bg-opacity",
+      ) ||
       (campaignSettings as any)?.cardBgOpacity?.toString() ||
-      '0.9';
+      "0.9";
     const cardBlur =
-      document.documentElement.style.getPropertyValue('--campaign-card-blur') ||
-      ((campaignSettings as any)?.cardBlur ? `${(campaignSettings as any).cardBlur}px` : '8px');
+      document.documentElement.style.getPropertyValue("--campaign-card-blur") ||
+      ((campaignSettings as any)?.cardBlur
+        ? `${(campaignSettings as any).cardBlur}px`
+        : "8px");
 
     return `
       [data-campaign-page] .bg-card,
@@ -145,11 +150,11 @@ export default function CampaignLayoutClient({
 
   // Apply and update card backdrop styles dynamically
   useEffect(() => {
-    const styleId = 'campaign-card-styles';
+    const styleId = "campaign-card-styles";
     let styleEl = document.getElementById(styleId) as HTMLStyleElement;
 
     if (!styleEl) {
-      styleEl = document.createElement('style');
+      styleEl = document.createElement("style");
       styleEl.id = styleId;
       document.head.appendChild(styleEl);
     }
@@ -172,48 +177,64 @@ export default function CampaignLayoutClient({
   // Consolidated navigation structure
   const navigation = useMemo(() => {
     const mainNav: NavItem[] = [
-      { icon: Home, label: 'Dashboard', href: campaignRoute() },
-      { icon: Scroll, label: 'Story', href: campaignRoute('/story') },
-      { icon: Notebook, label: 'Journals', href: campaignRoute('/journals') },
-      { icon: Bookmark, label: 'Bookmarks', href: campaignRoute('/bookmarks') },
+      { icon: Home, label: "Dashboard", href: campaignRoute() },
+      { icon: Scroll, label: "Story", href: campaignRoute("/story") },
+      { icon: Notebook, label: "Journals", href: campaignRoute("/journals") },
+      { icon: Bookmark, label: "Bookmarks", href: campaignRoute("/bookmarks") },
     ];
 
     const groupedNav: NavGroup[] = [
       {
-        label: 'Atlas',
+        label: "Atlas",
         icon: Mountain,
         items: [
-          { icon: User, label: 'Beings', href: campaignRoute('/beings') },
-          { icon: Users, label: 'Groups', href: campaignRoute('/groups') },
-          { icon: MapIcon, label: 'Places', href: campaignRoute('/places') },
+          { icon: User, label: "Beings", href: campaignRoute("/beings") },
+          { icon: Users, label: "Groups", href: campaignRoute("/groups") },
+          { icon: MapIcon, label: "Places", href: campaignRoute("/places") },
         ],
       },
       {
-        label: 'Rules',
+        label: "Rules",
         icon: Sparkles,
         items: [
-          { icon: Zap, label: 'Abilities', href: campaignRoute('/abilities') },
-          { icon: Flame, label: 'Spells', href: campaignRoute('/spells') },
-          { icon: Gem, label: 'Items', href: campaignRoute('/items') },
-          { icon: Target, label: 'Conditions', href: campaignRoute('/conditions') },
-          { icon: Shield, label: 'Classes', href: campaignRoute('/classes') },
-          { icon: User, label: 'Races', href: campaignRoute('/races') },
+          { icon: Zap, label: "Abilities", href: campaignRoute("/abilities") },
+          { icon: Flame, label: "Spells", href: campaignRoute("/spells") },
+          { icon: Gem, label: "Items", href: campaignRoute("/items") },
+          {
+            icon: Target,
+            label: "Conditions",
+            href: campaignRoute("/conditions"),
+          },
+          { icon: Shield, label: "Classes", href: campaignRoute("/classes") },
+          { icon: User, label: "Races", href: campaignRoute("/races") },
         ],
       },
       {
-        label: 'Other',
+        label: "Other",
         icon: Layers,
         items: [
-          { icon: Tags, label: 'Tags', href: campaignRoute('/tags') },
-          { icon: LinkIcon, label: 'Connections', href: campaignRoute('/connections') },
-          { icon: Layout, label: 'Attribute Templates', href: campaignRoute('/attribute-templates') },
+          { icon: Tags, label: "Tags", href: campaignRoute("/tags") },
+          {
+            icon: LinkIcon,
+            label: "Connections",
+            href: campaignRoute("/connections"),
+          },
+          {
+            icon: Layout,
+            label: "Attribute Templates",
+            href: campaignRoute("/attribute-templates"),
+          },
         ],
       },
     ];
 
     const standaloneNav: NavItem[] = [
-      { icon: Image, label: 'Gallery', href: campaignRoute('/gallery') },
-      { icon: History, label: 'Recent changes', href: campaignRoute('/recent-changes') },
+      { icon: Image, label: "Gallery", href: campaignRoute("/gallery") },
+      {
+        icon: History,
+        label: "Recent changes",
+        href: campaignRoute("/recent-changes"),
+      },
     ];
 
     return { mainNav, groupedNav, standaloneNav };
@@ -227,21 +248,21 @@ export default function CampaignLayoutClient({
   };
 
   // Helper to calculate background positioning
-  const getBackgroundStyle = (position: 'image' | 'overlay') => {
-    const top = `calc(var(--campaign-bg-expand-to-header, ${campaignSettings?.bgExpandToHeader ? '1' : '0'}) * 0px + (1 - var(--campaign-bg-expand-to-header, ${campaignSettings?.bgExpandToHeader ? '1' : '0'})) * 4rem - 10px)`;
-    const left = `calc(var(--campaign-bg-expand-to-sidebar, ${campaignSettings?.bgExpandToSidebar ? '1' : '0'}) * 0px + (1 - var(--campaign-bg-expand-to-sidebar, ${campaignSettings?.bgExpandToSidebar ? '1' : '0'})) * 16rem - 95px)`;
+  const getBackgroundStyle = (position: "image" | "overlay") => {
+    const top = `calc(var(--campaign-bg-expand-to-header, ${campaignSettings?.bgExpandToHeader ? "1" : "0"}) * 0px + (1 - var(--campaign-bg-expand-to-header, ${campaignSettings?.bgExpandToHeader ? "1" : "0"})) * 4rem - 10px)`;
+    const left = `calc(var(--campaign-bg-expand-to-sidebar, ${campaignSettings?.bgExpandToSidebar ? "1" : "0"}) * 0px + (1 - var(--campaign-bg-expand-to-sidebar, ${campaignSettings?.bgExpandToSidebar ? "1" : "0"})) * 16rem - 95px)`;
 
-    if (position === 'image') {
+    if (position === "image") {
       return {
         backgroundImage: `var(--campaign-preview-bg-image, url(${campaign.backgroundImage}))`,
-        backgroundSize: 'cover',
-        backgroundPosition: 'center',
-        backgroundAttachment: 'fixed',
+        backgroundSize: "cover",
+        backgroundPosition: "center",
+        backgroundAttachment: "fixed",
         zIndex: 0,
         top,
         left,
-        right: '0',
-        bottom: '0',
+        right: "0",
+        bottom: "0",
       };
     }
 
@@ -252,40 +273,52 @@ export default function CampaignLayoutClient({
       zIndex: 1,
       top,
       left,
-      right: '0',
-      bottom: '0',
+      right: "0",
+      bottom: "0",
     };
   };
 
   return (
     <SidebarProvider defaultOpen={true}>
-      <div className="flex h-screen w-full relative overflow-hidden" data-campaign-page>
+      <div
+        className="flex h-screen w-full relative overflow-hidden"
+        data-campaign-page
+      >
         {/* Fixed background image layer - covers entire viewport including header */}
         {campaign.backgroundImage && (
-          <div className="fixed pointer-events-none" style={getBackgroundStyle('image')} />
+          <div
+            className="fixed pointer-events-none"
+            style={getBackgroundStyle("image")}
+          />
         )}
 
         {/* Fixed background overlay with opacity and blur */}
         {campaign.backgroundImage && (
-          <div className="fixed pointer-events-none" style={getBackgroundStyle('overlay')} />
+          <div
+            className="fixed pointer-events-none"
+            style={getBackgroundStyle("overlay")}
+          />
         )}
 
         {/* Shadcn Sidebar */}
         <Sidebar
           className="pt-14 z-10"
           collapsible="none"
-          style={{
-            '--sidebar-background': 'transparent',
-            backdropFilter: `blur(var(--campaign-sidebar-blur, ${campaignSettings?.sidebarBlur ?? 0}px))`,
-            WebkitBackdropFilter: `blur(var(--campaign-sidebar-blur, ${campaignSettings?.sidebarBlur ?? 0}px))`,
-            borderRight: `calc(1px * (1 - var(--campaign-bg-expand-to-sidebar, ${campaignSettings?.bgExpandToSidebar ? '1' : '0'}))) solid hsl(var(--border))`,
-          } as React.CSSProperties}
+          style={
+            {
+              "--sidebar-background": "transparent",
+              backdropFilter: `blur(var(--campaign-sidebar-blur, ${campaignSettings?.sidebarBlur ?? 0}px))`,
+              WebkitBackdropFilter: `blur(var(--campaign-sidebar-blur, ${campaignSettings?.sidebarBlur ?? 0}px))`,
+              borderRight: `calc(1px * (1 - var(--campaign-bg-expand-to-sidebar, ${campaignSettings?.bgExpandToSidebar ? "1" : "0"}))) solid hsl(var(--border))`,
+            } as React.CSSProperties
+          }
         >
           {/* Background gradient layer */}
           <div
             className="absolute inset-0 -z-10"
             style={{
-              background: 'linear-gradient(to right, hsl(var(--card)), hsl(var(--card) / 0.7), transparent)',
+              background:
+                "linear-gradient(to right, hsl(var(--card)), hsl(var(--card) / 0.7), transparent)",
               opacity: `var(--campaign-sidebar-bg-opacity, ${campaignSettings?.sidebarBgOpacity ?? 1.0})`,
             }}
           />
@@ -294,7 +327,7 @@ export default function CampaignLayoutClient({
           <SidebarHeader
             className="border-b-0"
             style={{
-              borderBottom: `calc(1px * (1 - var(--campaign-bg-expand-to-sidebar, ${campaignSettings?.bgExpandToSidebar ? '1' : '0'}))) solid hsl(var(--border))`,
+              borderBottom: `calc(1px * (1 - var(--campaign-bg-expand-to-sidebar, ${campaignSettings?.bgExpandToSidebar ? "1" : "0"}))) solid hsl(var(--border))`,
             }}
           >
             <div className="flex items-center gap-3 px-1 mb-2">
@@ -304,14 +337,16 @@ export default function CampaignLayoutClient({
                     className="w-full h-full"
                     style={{
                       backgroundImage: `var(--campaign-preview-image, url(${campaign.image}))`,
-                      backgroundSize: 'cover',
-                      backgroundPosition: 'center',
+                      backgroundSize: "cover",
+                      backgroundPosition: "center",
                     }}
                   />
                 </div>
               )}
               <div className="flex-1 min-w-0">
-                <h2 className="font-semibold text-sm truncate">{campaign.name}</h2>
+                <h2 className="font-semibold text-sm truncate">
+                  {campaign.name}
+                </h2>
               </div>
             </div>
 
@@ -343,7 +378,11 @@ export default function CampaignLayoutClient({
                     <SidebarMenu>
                       {group.items.map((item) => (
                         <SidebarMenuItem key={item.href}>
-                          <SidebarMenuButton asChild isActive={isActive(item.href)} size="sm">
+                          <SidebarMenuButton
+                            asChild
+                            isActive={isActive(item.href)}
+                            size="sm"
+                          >
                             <Link href={item.href}>
                               <item.icon className="w-4 h-4" />
                               <span>{item.label}</span>
@@ -362,7 +401,10 @@ export default function CampaignLayoutClient({
                   <SidebarMenu>
                     {navigation.standaloneNav.map((item) => (
                       <SidebarMenuItem key={item.href}>
-                        <SidebarMenuButton asChild isActive={isActive(item.href)}>
+                        <SidebarMenuButton
+                          asChild
+                          isActive={isActive(item.href)}
+                        >
                           <Link href={item.href}>
                             <item.icon className="w-4 h-4" />
                             <span>{item.label}</span>

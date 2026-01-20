@@ -1,27 +1,27 @@
-'use client';
+"use client";
 
-import RichTextEditor from '@/components/editor/RichTextEditor';
-import { Button } from '@/components/ui/button';
+import { Button } from "@/components/ui/button";
+import RichTextEditor from "@/components/ui/custom/RichTextEditor";
 import {
   Form,
   FormControl,
   FormField,
   FormItem,
   FormLabel,
-  FormMessage
-} from '@/components/ui/form';
-import ImageUpload from '@/components/ui/ImageUpload';
-import { Input } from '@/components/ui/input';
-import { zodResolver } from '@hookform/resolvers/zod';
-import { useForm } from 'react-hook-form';
-import { z } from 'zod';
+  FormMessage,
+} from "@/components/ui/form";
+import ImageUpload from "@/components/ui/ImageUpload";
+import { Input } from "@/components/ui/input";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { useForm } from "react-hook-form";
+import { z } from "zod";
 
 const campaignSchema = z.object({
-  name: z.string().min(3, 'Name must be at least 3 characters'),
+  name: z.string().min(3, "Name must be at least 3 characters"),
   description: z.string().optional(),
   image: z.string().optional(),
   backgroundImage: z.string().optional(),
-})
+});
 
 export type CampaignFormData = z.infer<typeof campaignSchema>;
 
@@ -38,14 +38,14 @@ export default function CampaignForm({
   initialData,
   onSubmit,
   isLoading = false,
-  submitText = 'Save Campaign',
+  submitText = "Save Campaign",
   onImageChange,
   onBackgroundImageChange,
 }: CampaignFormProps) {
   const form = useForm<CampaignFormData>({
     resolver: zodResolver(campaignSchema),
     defaultValues: {
-      name: initialData?.name || '',
+      name: initialData?.name || "",
       description: initialData?.description || undefined,
       image: initialData?.image || undefined,
       backgroundImage: initialData?.backgroundImage || undefined,
@@ -82,7 +82,7 @@ export default function CampaignForm({
               <FormLabel>Description</FormLabel>
               <FormControl>
                 <RichTextEditor
-                  content={(field.value as string | undefined) || ''}
+                  content={(field.value as string | undefined) || ""}
                   onChange={field.onChange}
                   placeholder="Describe your campaign..."
                   disabled={isLoading}
@@ -103,7 +103,9 @@ export default function CampaignForm({
                 <FormLabel>Campaign Image</FormLabel>
                 <FormControl>
                   <ImageUpload
-                    currentImage={(field.value as string | undefined) ?? undefined}
+                    currentImage={
+                      (field.value as string | undefined) ?? undefined
+                    }
                     onImageUpload={(url) => {
                       field.onChange(url);
                       onImageChange?.(url);
@@ -123,7 +125,9 @@ export default function CampaignForm({
                 <FormLabel>Background Image</FormLabel>
                 <FormControl>
                   <ImageUpload
-                    currentImage={(field.value as string | undefined) ?? undefined}
+                    currentImage={
+                      (field.value as string | undefined) ?? undefined
+                    }
                     onImageUpload={(url) => {
                       field.onChange(url);
                       onBackgroundImageChange?.(url);
@@ -138,7 +142,7 @@ export default function CampaignForm({
         </div>
         <div className="flex justify-end">
           <Button type="submit" disabled={isLoading}>
-            {isLoading ? 'Saving...' : submitText}
+            {isLoading ? "Saving..." : submitText}
           </Button>
         </div>
       </form>

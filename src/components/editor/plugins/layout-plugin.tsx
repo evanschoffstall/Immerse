@@ -1,5 +1,5 @@
 // @ts-nocheck - Lexical editor uses non-serializable props which is valid for client components
-"use client"
+"use client";
 
 /**
  * Copyright (c) Meta Platforms, Inc. and affiliates.
@@ -8,13 +8,18 @@
  * LICENSE file in the root directory of this source tree.
  *
  */
-import { useLexicalComposerContext } from "@lexical/react/LexicalComposerContext"
+import { useLexicalComposerContext } from "@lexical/react/LexicalComposerContext";
 import {
   $findMatchingParent,
   $insertNodeToNearestRoot,
   mergeRegister,
-} from "@lexical/utils"
-import type { ElementNode, LexicalCommand, LexicalNode, NodeKey } from "lexical"
+} from "@lexical/utils";
+import type {
+  ElementNode,
+  LexicalCommand,
+  LexicalNode,
+  NodeKey,
+} from "lexical";
 import {
   $createParagraphNode,
   $getNodeByKey,
@@ -26,28 +31,28 @@ import {
   KEY_ARROW_DOWN_COMMAND,
   KEY_ARROW_LEFT_COMMAND,
   KEY_ARROW_RIGHT_COMMAND,
-  KEY_ARROW_UP_COMMAND
-} from "lexical"
-import { JSX, useEffect, useState } from "react"
+  KEY_ARROW_UP_COMMAND,
+} from "lexical";
+import { JSX, useEffect, useState } from "react";
 
 import {
   $createLayoutContainerNode,
   $isLayoutContainerNode,
   LayoutContainerNode,
-} from "@/components/editor/nodes/layout-container-node"
+} from "@/components/editor/nodes/layout-container-node";
 import {
   $createLayoutItemNode,
   $isLayoutItemNode,
   LayoutItemNode,
-} from "@/components/editor/nodes/layout-item-node"
-import { Button } from "@/components/ui/button"
+} from "@/components/editor/nodes/layout-item-node";
+import { Button } from "@/components/ui/button";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select"
+} from "@/components/ui/select";
 
 const LAYOUTS = [
   { label: "2 columns (equal width)", value: "1fr 1fr" },
@@ -55,24 +60,24 @@ const LAYOUTS = [
   { label: "3 columns (equal width)", value: "1fr 1fr 1fr" },
   { label: "3 columns (25% - 50% - 25%)", value: "1fr 2fr 1fr" },
   { label: "4 columns (equal width)", value: "1fr 1fr 1fr 1fr" },
-]
+];
 
 export type InsertLayoutDialogProps = {
-  activeEditor: any
-  onClose: any
-}
+  activeEditor: any;
+  onClose: any;
+};
 
 export function InsertLayoutDialog({
   activeEditor,
   onClose,
 }: InsertLayoutDialogProps): JSX.Element {
-  const [layout, setLayout] = useState(LAYOUTS[0].value)
-  const buttonLabel = LAYOUTS.find((item) => item.value === layout)?.label
+  const [layout, setLayout] = useState(LAYOUTS[0].value);
+  const buttonLabel = LAYOUTS.find((item) => item.value === layout)?.label;
 
   const onClick = () => {
-    activeEditor.dispatchCommand(INSERT_LAYOUT_COMMAND, layout)
-    onClose()
-  }
+    activeEditor.dispatchCommand(INSERT_LAYOUT_COMMAND, layout);
+    onClose();
+  };
 
   return (
     <>
@@ -90,28 +95,28 @@ export function InsertLayoutDialog({
       </Select>
       <Button onClick={onClick}>Insert</Button>
     </>
-  )
+  );
 }
 
 export const INSERT_LAYOUT_COMMAND: LexicalCommand<string> =
-  createCommand<string>()
+  createCommand<string>();
 
 export const UPDATE_LAYOUT_COMMAND: LexicalCommand<{
-  template: string
-  nodeKey: NodeKey
-}> = createCommand<{ template: string; nodeKey: NodeKey }>()
+  template: string;
+  nodeKey: NodeKey;
+}> = createCommand<{ template: string; nodeKey: NodeKey }>();
 
 export function LayoutPlugin(): null {
-  const [editor] = useLexicalComposerContext()
+  const [editor] = useLexicalComposerContext();
   useEffect(() => {
     if (!editor.hasNodes([LayoutContainerNode, LayoutItemNode])) {
       throw new Error(
-        "LayoutPlugin: LayoutContainerNode, or LayoutItemNode not registered on editor"
-      )
+        "LayoutPlugin: LayoutContainerNode, or LayoutItemNode not registered on editor",
+      );
     }
 
     const $onEscape = (before: boolean) => {
-      const selection = $getSelection()
+      const selection = $getSelection();
       if (
         $isRangeSelection(selection) &&
         selection.isCollapsed() &&
@@ -119,19 +124,19 @@ export function LayoutPlugin(): null {
       ) {
         const container = $findMatchingParent(
           selection.anchor.getNode(),
-          $isLayoutContainerNode
-        )
+          $isLayoutContainerNode,
+        );
 
         if ($isLayoutContainerNode(container)) {
-          const parent = container.getParent<ElementNode>()
+          const parent = container.getParent<ElementNode>();
           const child =
             parent &&
             (before
               ? parent.getFirstChild<LexicalNode>()
-              : parent?.getLastChild<LexicalNode>())
+              : parent?.getLastChild<LexicalNode>());
           const descendant = before
             ? container.getFirstDescendant<LexicalNode>()?.getKey()
-            : container.getLastDescendant<LexicalNode>()?.getKey()
+            : container.getLastDescendant<LexicalNode>()?.getKey();
 
           if (
             parent !== null &&
@@ -139,16 +144,16 @@ export function LayoutPlugin(): null {
             selection.anchor.key === descendant
           ) {
             if (before) {
-              container.insertBefore($createParagraphNode())
+              container.insertBefore($createParagraphNode());
             } else {
-              container.insertAfter($createParagraphNode())
+              container.insertAfter($createParagraphNode());
             }
           }
         }
       }
 
-      return false
-    }
+      return false;
+    };
 
     return mergeRegister(
       // When layout is the last child pressing down/right arrow will insert paragraph
@@ -158,12 +163,12 @@ export function LayoutPlugin(): null {
       editor.registerCommand(
         KEY_ARROW_DOWN_COMMAND,
         () => $onEscape(false),
-        COMMAND_PRIORITY_LOW
+        COMMAND_PRIORITY_LOW,
       ),
       editor.registerCommand(
         KEY_ARROW_RIGHT_COMMAND,
         () => $onEscape(false),
-        COMMAND_PRIORITY_LOW
+        COMMAND_PRIORITY_LOW,
       ),
       // When layout is the first child pressing up/left arrow will insert paragraph
       // above it to allow adding more content. It's similar what $insertBlockNode
@@ -172,101 +177,101 @@ export function LayoutPlugin(): null {
       editor.registerCommand(
         KEY_ARROW_UP_COMMAND,
         () => $onEscape(true),
-        COMMAND_PRIORITY_LOW
+        COMMAND_PRIORITY_LOW,
       ),
       editor.registerCommand(
         KEY_ARROW_LEFT_COMMAND,
         () => $onEscape(true),
-        COMMAND_PRIORITY_LOW
+        COMMAND_PRIORITY_LOW,
       ),
       editor.registerCommand(
         INSERT_LAYOUT_COMMAND,
         (template) => {
           editor.update(() => {
-            const container = $createLayoutContainerNode(template)
-            const itemsCount = getItemsCountFromTemplate(template)
+            const container = $createLayoutContainerNode(template);
+            const itemsCount = getItemsCountFromTemplate(template);
 
             for (let i = 0; i < itemsCount; i++) {
               container.append(
-                $createLayoutItemNode().append($createParagraphNode())
-              )
+                $createLayoutItemNode().append($createParagraphNode()),
+              );
             }
 
-            $insertNodeToNearestRoot(container)
-            container.selectStart()
-          })
+            $insertNodeToNearestRoot(container);
+            container.selectStart();
+          });
 
-          return true
+          return true;
         },
-        COMMAND_PRIORITY_EDITOR
+        COMMAND_PRIORITY_EDITOR,
       ),
       editor.registerCommand(
         UPDATE_LAYOUT_COMMAND,
         ({ template, nodeKey }) => {
           editor.update(() => {
-            const container = $getNodeByKey<LexicalNode>(nodeKey)
+            const container = $getNodeByKey<LexicalNode>(nodeKey);
 
             if (!$isLayoutContainerNode(container)) {
-              return
+              return;
             }
 
-            const itemsCount = getItemsCountFromTemplate(template)
+            const itemsCount = getItemsCountFromTemplate(template);
             const prevItemsCount = getItemsCountFromTemplate(
-              container.getTemplateColumns()
-            )
+              container.getTemplateColumns(),
+            );
 
             // Add or remove extra columns if new template does not match existing one
             if (itemsCount > prevItemsCount) {
               for (let i = prevItemsCount; i < itemsCount; i++) {
                 container.append(
-                  $createLayoutItemNode().append($createParagraphNode())
-                )
+                  $createLayoutItemNode().append($createParagraphNode()),
+                );
               }
             } else if (itemsCount < prevItemsCount) {
               for (let i = prevItemsCount - 1; i >= itemsCount; i--) {
-                const layoutItem = container.getChildAtIndex<LexicalNode>(i)
+                const layoutItem = container.getChildAtIndex<LexicalNode>(i);
 
                 if ($isLayoutItemNode(layoutItem)) {
-                  layoutItem.remove()
+                  layoutItem.remove();
                 }
               }
             }
 
-            container.setTemplateColumns(template)
-          })
+            container.setTemplateColumns(template);
+          });
 
-          return true
+          return true;
         },
-        COMMAND_PRIORITY_EDITOR
+        COMMAND_PRIORITY_EDITOR,
       ),
       // Structure enforcing transformers for each node type. In case nesting structure is not
       // "Container > Item" it'll unwrap nodes and convert it back
       // to regular content.
       editor.registerNodeTransform(LayoutItemNode, (node) => {
-        const parent = node.getParent<ElementNode>()
+        const parent = node.getParent<ElementNode>();
         if (!$isLayoutContainerNode(parent)) {
-          const children = node.getChildren<LexicalNode>()
+          const children = node.getChildren<LexicalNode>();
           for (const child of children) {
-            node.insertBefore(child)
+            node.insertBefore(child);
           }
-          node.remove()
+          node.remove();
         }
       }),
       editor.registerNodeTransform(LayoutContainerNode, (node) => {
-        const children = node.getChildren<LexicalNode>()
+        const children = node.getChildren<LexicalNode>();
         if (!children.every($isLayoutItemNode)) {
           for (const child of children) {
-            node.insertBefore(child)
+            node.insertBefore(child);
           }
-          node.remove()
+          node.remove();
         }
-      })
-    )
-  }, [editor])
+      }),
+    );
+  }, [editor]);
 
-  return null
+  return null;
 }
 
 function getItemsCountFromTemplate(template: string): number {
-  return template.trim().split(/\s+/).length
+  return template.trim().split(/\s+/).length;
 }

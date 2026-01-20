@@ -1,34 +1,33 @@
-"use client"
+"use client";
 
 import {
   InitialConfigType,
   LexicalComposer,
-} from "@lexical/react/LexicalComposer"
-import { OnChangePlugin } from "@lexical/react/LexicalOnChangePlugin"
-import { SerializedEditorState } from "lexical"
+} from "@lexical/react/LexicalComposer";
+import { OnChangePlugin } from "@lexical/react/LexicalOnChangePlugin";
+import { SerializedEditorState } from "lexical";
 
-import { editorTheme } from "@/components/editor/themes/editor-theme"
-import { TooltipProvider } from "@/components/ui/tooltip"
+import { editorTheme } from "@/components/editor/themes/editor-theme";
+import { TooltipProvider } from "@/components/ui/tooltip";
 
-import { nodes } from "./nodes"
-import { Plugins } from "./plugins"
+import { nodes } from "./nodes";
+import { Plugins } from "./plugins";
 
 const editorConfig: InitialConfigType = {
   namespace: "Editor",
   theme: editorTheme,
   nodes,
-  onError: (error: Error) => {
-  },
-}
+  onError: (error: Error) => { },
+};
 
 // Type the props properly to avoid Next.js serialization warnings
 type EditorProps = {
-  editorState?: any
-  editorSerializedState?: SerializedEditorState
-  onChange?: any
-  onSerializedChange?: any
-  className?: string
-}
+  editorState?: any;
+  editorSerializedState?: SerializedEditorState;
+  onChange?: any;
+  onSerializedChange?: any;
+  className?: string;
+};
 
 export function Editor({
   editorState,
@@ -38,7 +37,9 @@ export function Editor({
   className,
 }: EditorProps) {
   return (
-    <div className={`bg-transparent overflow-hidden rounded-lg border shadow ${className || ''}`}>
+    <div
+      className={`bg-transparent overflow-hidden rounded-lg border shadow ${className || ""}`}
+    >
       <LexicalComposer
         key={className}
         initialConfig={{
@@ -55,12 +56,12 @@ export function Editor({
           <OnChangePlugin
             ignoreSelectionChange={true}
             onChange={(editorState) => {
-              onChange?.(editorState)
-              onSerializedChange?.(editorState.toJSON())
+              onChange?.(editorState);
+              onSerializedChange?.(editorState.toJSON());
             }}
           />
         </TooltipProvider>
       </LexicalComposer>
     </div>
-  )
+  );
 }

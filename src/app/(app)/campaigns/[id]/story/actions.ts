@@ -23,14 +23,23 @@ const createSceneSchema = z.object({
   actId: z.string().uuid(),
 });
 
-export async function createAct(campaignId: string, formData: FormData, shouldRedirect: boolean = true) {
+export async function createAct(
+  campaignId: string,
+  formData: FormData,
+  shouldRedirect: boolean = true,
+) {
   const session = await getServerSession(authConfig);
   if (!session?.user?.id) {
     throw new Error("Unauthorized");
   }
 
   const name = formData.get("name") as string;
-  const slug = formData.get("slug") as string || name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
+  const slug =
+    (formData.get("slug") as string) ||
+    name
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, "-")
+      .replace(/(^-|-$)/g, "");
   const content = formData.get("content") as string | null;
 
   const validated = createActSchema.parse({
@@ -49,13 +58,17 @@ export async function createAct(campaignId: string, formData: FormData, shouldRe
   });
 
   revalidatePath(`/campaigns/${campaignId}/story`);
-  
+
   if (shouldRedirect) {
     redirect(`/campaigns/${campaignId}/story`);
   }
 }
 
-export async function createScene(actId: string, formData: FormData, shouldRedirect: boolean = true) {
+export async function createScene(
+  actId: string,
+  formData: FormData,
+  shouldRedirect: boolean = true,
+) {
   const session = await getServerSession(authConfig);
   if (!session?.user?.id) {
     throw new Error("Unauthorized");
@@ -72,7 +85,12 @@ export async function createScene(actId: string, formData: FormData, shouldRedir
   }
 
   const name = formData.get("name") as string;
-  const slug = formData.get("slug") as string || name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
+  const slug =
+    (formData.get("slug") as string) ||
+    name
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, "-")
+      .replace(/(^-|-$)/g, "");
   const content = formData.get("content") as string | null;
 
   const validated = createSceneSchema.parse({
@@ -91,7 +109,7 @@ export async function createScene(actId: string, formData: FormData, shouldRedir
   });
 
   revalidatePath(`/campaigns/${act.campaignId}/story`);
-  
+
   if (shouldRedirect) {
     redirect(`/campaigns/${act.campaignId}/story`);
   }
@@ -103,7 +121,13 @@ const createBeatSchema = z.object({
   sceneId: z.string().uuid(),
 });
 
-export async function createBeat(sceneId: string, formData: FormData, shouldRedirect: boolean = true) {
+const updateBeatSchema = createBeatSchema.omit({ sceneId: true }).partial();
+
+export async function createBeat(
+  sceneId: string,
+  formData: FormData,
+  shouldRedirect: boolean = true,
+) {
   const session = await getServerSession(authConfig);
   if (!session?.user?.id) {
     throw new Error("Unauthorized");
@@ -145,13 +169,17 @@ export async function createBeat(sceneId: string, formData: FormData, shouldRedi
   });
 
   revalidatePath(`/campaigns/${scene.act.campaignId}/story`);
-  
+
   if (shouldRedirect) {
     redirect(`/campaigns/${scene.act.campaignId}/story`);
   }
 }
 
-export async function updateAct(actId: string, formData: FormData, shouldRedirect: boolean = true) {
+export async function updateAct(
+  actId: string,
+  formData: FormData,
+  shouldRedirect: boolean = true,
+) {
   const session = await getServerSession(authConfig);
   if (!session?.user?.id) {
     throw new Error("Unauthorized");
@@ -167,7 +195,12 @@ export async function updateAct(actId: string, formData: FormData, shouldRedirec
   }
 
   const name = formData.get("name") as string;
-  const slug = formData.get("slug") as string || name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
+  const slug =
+    (formData.get("slug") as string) ||
+    name
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, "-")
+      .replace(/(^-|-$)/g, "");
   const content = formData.get("content") as string | null;
 
   const validated = createActSchema.partial().parse({
@@ -186,13 +219,17 @@ export async function updateAct(actId: string, formData: FormData, shouldRedirec
     .where(eq(acts.id, actId));
 
   revalidatePath(`/campaigns/${act.campaignId}/story`);
-  
+
   if (shouldRedirect) {
     redirect(`/campaigns/${act.campaignId}/story`);
   }
 }
 
-export async function updateScene(sceneId: string, formData: FormData, shouldRedirect: boolean = true) {
+export async function updateScene(
+  sceneId: string,
+  formData: FormData,
+  shouldRedirect: boolean = true,
+) {
   const session = await getServerSession(authConfig);
   if (!session?.user?.id) {
     throw new Error("Unauthorized");
@@ -213,7 +250,12 @@ export async function updateScene(sceneId: string, formData: FormData, shouldRed
   }
 
   const name = formData.get("name") as string;
-  const slug = formData.get("slug") as string || name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
+  const slug =
+    (formData.get("slug") as string) ||
+    name
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, "-")
+      .replace(/(^-|-$)/g, "");
   const content = formData.get("content") as string | null;
 
   const validated = createSceneSchema.partial().parse({
@@ -232,8 +274,71 @@ export async function updateScene(sceneId: string, formData: FormData, shouldRed
     .where(eq(scenes.id, sceneId));
 
   revalidatePath(`/campaigns/${scene.act.campaignId}/story`);
-  
+
   if (shouldRedirect) {
     redirect(`/campaigns/${scene.act.campaignId}/story`);
+  }
+}
+
+export async function updateBeat(
+  beatId: string,
+  formData: FormData,
+  shouldRedirect: boolean = true,
+) {
+  const session = await getServerSession(authConfig);
+  if (!session?.user?.id) {
+    throw new Error("Unauthorized");
+  }
+
+  const beat = await db.query.beats.findFirst({
+    where: eq(beats.id, beatId),
+    columns: { createdById: true },
+    with: {
+      scene: {
+        columns: { actId: true },
+        with: {
+          act: {
+            columns: { campaignId: true },
+          },
+        },
+      },
+    },
+  });
+
+  if (!beat || beat.createdById !== session.user.id) {
+    throw new Error("Forbidden");
+  }
+
+  const text = formData.get("text") as string | null;
+  const timestampStr = formData.get("timestamp") as string | null;
+
+  const validated = updateBeatSchema.parse({
+    text: text || undefined,
+    timestamp: timestampStr || undefined,
+  });
+
+  const updates: { text?: string; timestamp?: Date } = {};
+
+  if (validated.text) {
+    updates.text = validated.text;
+  }
+
+  if (validated.timestamp) {
+    updates.timestamp = new Date(validated.timestamp);
+  }
+
+  await db
+    .update(beats)
+    .set({
+      ...updates,
+      updatedAt: new Date(),
+      updatedById: session.user.id,
+    })
+    .where(eq(beats.id, beatId));
+
+  revalidatePath(`/campaigns/${beat.scene.act.campaignId}/story`);
+
+  if (shouldRedirect) {
+    redirect(`/campaigns/${beat.scene.act.campaignId}/story`);
   }
 }

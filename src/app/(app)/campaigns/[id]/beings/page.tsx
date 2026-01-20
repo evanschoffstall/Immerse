@@ -1,19 +1,26 @@
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Separator } from '@/components/ui/separator';
-import { db } from '@/db';
-import { beings } from '@/db/schema';
-import { extractTextFromLexical, truncateText } from '@/lib/utils/lexical';
-import { desc, eq } from 'drizzle-orm';
-import { Plus, User } from 'lucide-react';
-import Image from 'next/image';
-import Link from 'next/link';
+import { Button } from "@/components/ui/button";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Separator } from "@/components/ui/separator";
+import { db } from "@/db";
+import { beings } from "@/db/schema";
+import { extractTextFromLexical, truncateText } from "@/lib/utils/lexical";
+import { desc, eq } from "drizzle-orm";
+import { Plus, User } from "lucide-react";
+import Image from "next/image";
+import Link from "next/link";
 
-const PAGE_TITLE = 'Beings';
-const PAGE_DESCRIPTION = 'Manage the characters, NPCs, and creatures in your campaign';
-const CREATE_BUTTON_TEXT = 'Create Being';
-const EMPTY_STATE_TITLE = 'No beings yet';
-const EMPTY_STATE_DESCRIPTION = 'Create your first being to get started';
+const PAGE_TITLE = "Beings";
+const PAGE_DESCRIPTION =
+  "Manage the characters, NPCs, and creatures in your campaign";
+const CREATE_BUTTON_TEXT = "Create Being";
+const EMPTY_STATE_TITLE = "No beings yet";
+const EMPTY_STATE_DESCRIPTION = "Create your first being to get started";
 const DESCRIPTION_TRUNCATE_LENGTH = 150;
 
 export default async function Page({
@@ -21,7 +28,6 @@ export default async function Page({
 }: {
   params: Promise<{ id: string }>;
 }) {
-
   const { id: campaignId } = await params;
 
   const beingsList = await db.query.beings.findMany({
@@ -55,7 +61,9 @@ export default async function Page({
           <Card className="text-center py-12">
             <CardContent>
               <User className="mx-auto h-12 w-12 text-muted-foreground mb-4" />
-              <h3 className="text-xl font-semibold mb-2">{EMPTY_STATE_TITLE}</h3>
+              <h3 className="text-xl font-semibold mb-2">
+                {EMPTY_STATE_TITLE}
+              </h3>
               <p className="text-muted-foreground mb-6">
                 {EMPTY_STATE_DESCRIPTION}
               </p>
@@ -104,12 +112,12 @@ export default async function Page({
                   <CardContent>
                     {being.description && (
                       <p className="text-sm text-muted-foreground line-clamp-3">
-                        {typeof being.description === 'string'
+                        {typeof being.description === "string"
                           ? truncateText(
                             extractTextFromLexical(being.description),
-                            DESCRIPTION_TRUNCATE_LENGTH
+                            DESCRIPTION_TRUNCATE_LENGTH,
                           )
-                          : ''}
+                          : ""}
                       </p>
                     )}
                     <div className="mt-4 flex gap-2 flex-wrap text-xs text-muted-foreground">

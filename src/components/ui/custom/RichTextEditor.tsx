@@ -1,27 +1,27 @@
-"use client"
+"use client";
 
-import { Editor } from "@/components/blocks/editor-x/editor"
-import { SerializedEditorState } from "lexical"
-import { useState } from "react"
+import { Editor } from "@/components/ui/custom/editor/editor";
+import { SerializedEditorState } from "lexical";
+import { useState } from "react";
 
 interface RichTextEditorProps {
-  content: string
-  onChange: (content: string) => void
-  placeholder?: string
-  disabled?: boolean
-  className?: string
+  content: string;
+  onChange: (content: string) => void;
+  placeholder?: string;
+  disabled?: boolean;
+  className?: string;
 }
 
 /**
  * RichTextEditor - React Hook Form compatible wrapper for editor-x
- * 
+ *
  * This component adapts the Lexical-based editor to work with React Hook Form
  * by converting between string content (HTML/JSON) and Lexical EditorState.
- * 
+ *
  * Usage:
  * ```tsx
- * <RichTextEditor 
- *   content={field.value || ''} 
+ * <RichTextEditor
+ *   content={field.value || ''}
  *   onChange={field.onChange}
  *   placeholder="Enter description..."
  * />
@@ -31,29 +31,29 @@ export default function RichTextEditor({
   content,
   onChange,
   disabled,
-  className
+  className,
 }: RichTextEditorProps) {
   const [editorState, setEditorState] = useState<SerializedEditorState>(() => {
     // Initialize with content if provided
     if (content) {
       try {
         // Try to parse as JSON (serialized Lexical state)
-        return JSON.parse(content)
+        return JSON.parse(content);
       } catch {
         // If not JSON, create empty state - Lexical will handle text initialization
-        return createEmptyEditorState()
+        return createEmptyEditorState();
       }
     }
 
     // Empty state with placeholder-ready structure
-    return createEmptyEditorState()
-  })
+    return createEmptyEditorState();
+  });
 
   const handleChange = (newState: SerializedEditorState) => {
-    setEditorState(newState)
+    setEditorState(newState);
     // Convert to JSON string for storage
-    onChange(JSON.stringify(newState))
-  }
+    onChange(JSON.stringify(newState));
+  };
 
   return (
     <Editor
@@ -61,7 +61,7 @@ export default function RichTextEditor({
       onSerializedChange={handleChange}
       className={className}
     />
-  )
+  );
 }
 
 // Helper function to create empty editor state
@@ -85,5 +85,5 @@ function createEmptyEditorState(): SerializedEditorState {
       type: "root",
       version: 1,
     },
-  } as unknown as SerializedEditorState
+  } as unknown as SerializedEditorState;
 }

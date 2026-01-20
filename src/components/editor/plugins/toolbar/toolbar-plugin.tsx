@@ -1,39 +1,37 @@
 // @ts-nocheck - Lexical editor uses non-serializable props which is valid for client components
-"use client"
+"use client";
 
-import { useLexicalComposerContext } from "@lexical/react/LexicalComposerContext"
-import { COMMAND_PRIORITY_CRITICAL, SELECTION_CHANGE_COMMAND } from "lexical"
-import { useEffect, useState } from "react"
+import { useLexicalComposerContext } from "@lexical/react/LexicalComposerContext";
+import { COMMAND_PRIORITY_CRITICAL, SELECTION_CHANGE_COMMAND } from "lexical";
+import { useEffect, useState } from "react";
 
-import { ToolbarContext } from "@/components/editor/context/toolbar-context"
-import { useEditorModal } from "@/components/editor/editor-hooks/use-modal"
+import { ToolbarContext } from "@/components/editor/context/toolbar-context";
+import { useEditorModal } from "@/components/editor/editor-hooks/use-modal";
 
 type ToolbarPluginProps = {
-  children: any
-}
+  children: any;
+};
 
-export function ToolbarPlugin({
-  children,
-}: ToolbarPluginProps) {
-  const [editor] = useLexicalComposerContext()
+export function ToolbarPlugin({ children }: ToolbarPluginProps) {
+  const [editor] = useLexicalComposerContext();
 
-  const [activeEditor, setActiveEditor] = useState(editor)
-  const [blockType, setBlockType] = useState<string>("paragraph")
+  const [activeEditor, setActiveEditor] = useState(editor);
+  const [blockType, setBlockType] = useState<string>("paragraph");
 
-  const [modal, showModal] = useEditorModal()
+  const [modal, showModal] = useEditorModal();
 
-  const $updateToolbar = () => { }
+  const $updateToolbar = () => { };
 
   useEffect(() => {
     return activeEditor.registerCommand(
       SELECTION_CHANGE_COMMAND,
       (_payload, newEditor) => {
-        setActiveEditor(newEditor)
-        return false
+        setActiveEditor(newEditor);
+        return false;
       },
-      COMMAND_PRIORITY_CRITICAL
-    )
-  }, [editor])
+      COMMAND_PRIORITY_CRITICAL,
+    );
+  }, [editor]);
 
   return (
     <ToolbarContext
@@ -47,5 +45,5 @@ export function ToolbarPlugin({
 
       {children({ blockType })}
     </ToolbarContext>
-  )
+  );
 }

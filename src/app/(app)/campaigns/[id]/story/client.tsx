@@ -23,9 +23,100 @@ import {
   createBeat,
   createScene,
   updateAct,
+  updateBeat,
   updateScene,
 } from "./actions";
 
+// #region Constants & Helpers
+const DIALOG_LG = "max-w-2xl max-h-[90vh] overflow-y-auto";
+const DIALOG_MD = "max-w-lg";
+const INLINE_BUTTON_CLASS = "h-8 px-2 text-xs";
+const ICON_BUTTON_CLASS = "h-9 w-9";
+const ICON_BUTTON_SM_CLASS = "h-8 w-8";
+const ICON_BUTTON_XS_CLASS = "h-7 w-7";
+const INLINE_ICON_CLASS = "mr-1 h-3.5 w-3.5";
+
+const dialogCopy = {
+  act: {
+    createTitle: "New Act",
+    createDescription:
+      "Define the major narrative sections of your campaign. Acts help structure your story into major sections.",
+    editTitle: "Edit Act",
+    editDescription: "Update the act details and content.",
+  },
+  scene: {
+    createTitle: "New Scene",
+    createDescription:
+      "Create a scene within this act. Scenes represent specific events or moments in your story.",
+    editTitle: "Edit Scene",
+    editDescription: "Update the scene details and content.",
+  },
+  beat: {
+    createTitle: "New Beat",
+    createDescription: "Add a timestamped beat to track events in this scene.",
+    editTitle: "Edit Beat",
+    editDescription: "Update the timestamp or text for this beat.",
+  },
+};
+
+const toastCopy = {
+  actCreated: "Act created successfully!",
+  actUpdated: "Act updated successfully!",
+  sceneCreated: "Scene created successfully!",
+  sceneUpdated: "Scene updated successfully!",
+  beatCreated: "Beat created successfully!",
+  beatUpdated: "Beat updated successfully!",
+  actCreateError: "Failed to create act",
+  actUpdateError: "Failed to update act",
+  sceneCreateError: "Failed to create scene",
+  sceneUpdateError: "Failed to update scene",
+  beatCreateError: "Failed to create beat",
+  beatUpdateError: "Failed to update beat",
+};
+
+const toDateTimeLocalValue = (date: Date) => {
+  const localDate = new Date(date.getTime() - date.getTimezoneOffset() * 60000);
+  return localDate.toISOString().slice(0, 16);
+};
+
+const buildFormData = (values: Record<string, string | null | undefined>) => {
+  const formData = new FormData();
+  Object.entries(values).forEach(([key, value]) => {
+    if (value !== undefined && value !== null) {
+      formData.append(key, value);
+    }
+  });
+  return formData;
+};
+
+const DialogShell = ({
+  open,
+  onOpenChange,
+  title,
+  description,
+  className,
+  children,
+}: {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  title: string;
+  description: string;
+  className: string;
+  children: React.ReactNode;
+}) => (
+  <Dialog open={open} onOpenChange={onOpenChange}>
+    <DialogContent className={className}>
+      <DialogHeader>
+        <DialogTitle>{title}</DialogTitle>
+        <DialogDescription>{description}</DialogDescription>
+      </DialogHeader>
+      {children}
+    </DialogContent>
+  </Dialog>
+);
+// #endregion
+
+// #region Empty State
 export function EmptyState({ campaignId }: { campaignId: string }) {
   return (
     <CardContent className="p-12">
@@ -45,7 +136,9 @@ export function EmptyState({ campaignId }: { campaignId: string }) {
     </CardContent>
   );
 }
+// #endregion
 
+// #region Act Dialogs & Buttons
 function CreateActDialog({
   campaignId,
   open,
@@ -57,42 +150,41 @@ function CreateActDialog({
 }) {
   const [isPending, startTransition] = useTransition();
   const router = useRouter();
+  const closeAndRefresh = () =>
+    startTransition(() => {
+      router.refresh();
+      onOpenChange(false);
+    });
 
   const handleCreateAct = async (data: ActFormData) => {
     try {
-      const formData = new FormData();
-      formData.append("name", data.name);
-      if (data.content) formData.append("content", data.content);
-
-      await createAct(campaignId, formData, false);
-      toast.success("Act created successfully!");
-      startTransition(() => {
-        router.refresh();
-        onOpenChange(false);
+      const formData = buildFormData({
+        name: data.name,
+        content: data.content,
       });
+      await createAct(campaignId, formData, false);
+      toast.success(toastCopy.actCreated);
+      closeAndRefresh();
     } catch (error: any) {
       console.error("Error creating act:", error);
-      toast.error(error.message || "Failed to create act");
+      toast.error(error.message || toastCopy.actCreateError);
     }
   };
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
-        <DialogHeader>
-          <DialogTitle>New Act</DialogTitle>
-          <DialogDescription>
-            Define the major narrative sections of your campaign. Acts help
-            structure your story into major sections.
-          </DialogDescription>
-        </DialogHeader>
-        <ActForm
-          onSubmit={handleCreateAct}
-          isLoading={isPending}
-          submitText="Create Act"
-        />
-      </DialogContent>
-    </Dialog>
+    <DialogShell
+      open={open}
+      onOpenChange={onOpenChange}
+      title={dialogCopy.act.createTitle}
+      description={dialogCopy.act.createDescription}
+      className={DIALOG_LG}
+    >
+      <ActForm
+        onSubmit={handleCreateAct}
+        isLoading={isPending}
+        submitText="Create Act"
+      />
+    </DialogShell>
   );
 }
 
@@ -111,42 +203,42 @@ function EditActDialog({
 }) {
   const [isPending, startTransition] = useTransition();
   const router = useRouter();
+  const closeAndRefresh = () =>
+    startTransition(() => {
+      router.refresh();
+      onOpenChange(false);
+    });
 
   const handleUpdateAct = async (data: ActFormData) => {
     try {
-      const formData = new FormData();
-      formData.append("name", data.name);
-      if (data.content) formData.append("content", data.content);
-
-      await updateAct(actId, formData, false);
-      toast.success("Act updated successfully!");
-      startTransition(() => {
-        router.refresh();
-        onOpenChange(false);
+      const formData = buildFormData({
+        name: data.name,
+        content: data.content,
       });
+      await updateAct(actId, formData, false);
+      toast.success(toastCopy.actUpdated);
+      closeAndRefresh();
     } catch (error: any) {
       console.error("Error updating act:", error);
-      toast.error(error.message || "Failed to update act");
+      toast.error(error.message || toastCopy.actUpdateError);
     }
   };
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
-        <DialogHeader>
-          <DialogTitle>Edit Act</DialogTitle>
-          <DialogDescription>
-            Update the act details and content.
-          </DialogDescription>
-        </DialogHeader>
-        <ActForm
-          initialData={initialData}
-          onSubmit={handleUpdateAct}
-          isLoading={isPending}
-          submitText="Update Act"
-        />
-      </DialogContent>
-    </Dialog>
+    <DialogShell
+      open={open}
+      onOpenChange={onOpenChange}
+      title={dialogCopy.act.editTitle}
+      description={dialogCopy.act.editDescription}
+      className={DIALOG_LG}
+    >
+      <ActForm
+        initialData={initialData}
+        onSubmit={handleUpdateAct}
+        isLoading={isPending}
+        submitText="Update Act"
+      />
+    </DialogShell>
   );
 }
 
@@ -195,7 +287,7 @@ export function CreateActButton({ campaignId }: { campaignId: string }) {
     <>
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogTrigger asChild>
-          <Button size="icon" className="h-9 w-9">
+          <Button size="icon" className={ICON_BUTTON_CLASS}>
             <Plus className="h-4 w-4" />
             <span className="sr-only">New Act</span>
           </Button>
@@ -216,8 +308,8 @@ export function CreateActInlineButton({ campaignId }: { campaignId: string }) {
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button variant="ghost" size="sm" className="h-8 px-2 text-xs">
-          <Plus className="mr-1 h-3.5 w-3.5" />
+        <Button variant="ghost" size="sm" className={INLINE_BUTTON_CLASS}>
+          <Plus className={INLINE_ICON_CLASS} />
           New Act
         </Button>
       </DialogTrigger>
@@ -256,7 +348,7 @@ export function EditActButton({
       <Button
         variant="ghost"
         size="icon"
-        className="h-9 w-9"
+        className={ICON_BUTTON_CLASS}
         onClick={() => setOpen(true)}
       >
         <Edit2 className="h-4 w-4" />
@@ -265,7 +357,9 @@ export function EditActButton({
     </>
   );
 }
+// #endregion
 
+// #region Scene Dialogs & Buttons
 function CreateSceneDialog({
   actId,
   campaignId,
@@ -279,42 +373,41 @@ function CreateSceneDialog({
 }) {
   const [isPending, startTransition] = useTransition();
   const router = useRouter();
+  const closeAndRefresh = () =>
+    startTransition(() => {
+      router.refresh();
+      onOpenChange(false);
+    });
 
   const handleCreateScene = async (data: SceneFormData) => {
     try {
-      const formData = new FormData();
-      formData.append("name", data.name);
-      if (data.content) formData.append("content", data.content);
-
-      await createScene(actId, formData, false);
-      toast.success("Scene created successfully!");
-      startTransition(() => {
-        router.refresh();
-        onOpenChange(false);
+      const formData = buildFormData({
+        name: data.name,
+        content: data.content,
       });
+      await createScene(actId, formData, false);
+      toast.success(toastCopy.sceneCreated);
+      closeAndRefresh();
     } catch (error: any) {
       console.error("Error creating scene:", error);
-      toast.error(error.message || "Failed to create scene");
+      toast.error(error.message || toastCopy.sceneCreateError);
     }
   };
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
-        <DialogHeader>
-          <DialogTitle>New Scene</DialogTitle>
-          <DialogDescription>
-            Create a scene within this act. Scenes represent specific events or
-            moments in your story.
-          </DialogDescription>
-        </DialogHeader>
-        <SceneForm
-          onSubmit={handleCreateScene}
-          isLoading={isPending}
-          submitText="Create Scene"
-        />
-      </DialogContent>
-    </Dialog>
+    <DialogShell
+      open={open}
+      onOpenChange={onOpenChange}
+      title={dialogCopy.scene.createTitle}
+      description={dialogCopy.scene.createDescription}
+      className={DIALOG_LG}
+    >
+      <SceneForm
+        onSubmit={handleCreateScene}
+        isLoading={isPending}
+        submitText="Create Scene"
+      />
+    </DialogShell>
   );
 }
 
@@ -335,42 +428,97 @@ function EditSceneDialog({
 }) {
   const [isPending, startTransition] = useTransition();
   const router = useRouter();
+  const closeAndRefresh = () =>
+    startTransition(() => {
+      router.refresh();
+      onOpenChange(false);
+    });
 
   const handleUpdateScene = async (data: SceneFormData) => {
     try {
-      const formData = new FormData();
-      formData.append("name", data.name);
-      if (data.content) formData.append("content", data.content);
-
-      await updateScene(sceneId, formData, false);
-      toast.success("Scene updated successfully!");
-      startTransition(() => {
-        router.refresh();
-        onOpenChange(false);
+      const formData = buildFormData({
+        name: data.name,
+        content: data.content,
       });
+      await updateScene(sceneId, formData, false);
+      toast.success(toastCopy.sceneUpdated);
+      closeAndRefresh();
     } catch (error: any) {
       console.error("Error updating scene:", error);
-      toast.error(error.message || "Failed to update scene");
+      toast.error(error.message || toastCopy.sceneUpdateError);
     }
   };
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
-        <DialogHeader>
-          <DialogTitle>Edit Scene</DialogTitle>
-          <DialogDescription>
-            Update the scene details and content.
-          </DialogDescription>
-        </DialogHeader>
-        <SceneForm
-          initialData={initialData}
-          onSubmit={handleUpdateScene}
-          isLoading={isPending}
-          submitText="Update Scene"
-        />
-      </DialogContent>
-    </Dialog>
+    <DialogShell
+      open={open}
+      onOpenChange={onOpenChange}
+      title={dialogCopy.scene.editTitle}
+      description={dialogCopy.scene.editDescription}
+      className={DIALOG_LG}
+    >
+      <SceneForm
+        initialData={initialData}
+        onSubmit={handleUpdateScene}
+        isLoading={isPending}
+        submitText="Update Scene"
+      />
+    </DialogShell>
+  );
+}
+
+function EditBeatDialog({
+  beatId,
+  initialData,
+  open,
+  onOpenChange,
+}: {
+  beatId: string;
+  initialData: { text: string; timestamp: Date };
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+}) {
+  const [isPending, startTransition] = useTransition();
+  const router = useRouter();
+  const closeAndRefresh = () =>
+    startTransition(() => {
+      router.refresh();
+      onOpenChange(false);
+    });
+
+  const handleUpdateBeat = async (data: BeatFormData) => {
+    try {
+      const formData = buildFormData({
+        text: data.text,
+        timestamp: new Date(data.timestamp).toISOString(),
+      });
+      await updateBeat(beatId, formData, false);
+      toast.success(toastCopy.beatUpdated);
+      closeAndRefresh();
+    } catch (error: any) {
+      console.error("Error updating beat:", error);
+      toast.error(error.message || toastCopy.beatUpdateError);
+    }
+  };
+
+  return (
+    <DialogShell
+      open={open}
+      onOpenChange={onOpenChange}
+      title={dialogCopy.beat.editTitle}
+      description={dialogCopy.beat.editDescription}
+      className={DIALOG_MD}
+    >
+      <BeatForm
+        initialData={{
+          text: initialData.text,
+          timestamp: toDateTimeLocalValue(initialData.timestamp),
+        }}
+        onSubmit={handleUpdateBeat}
+        isLoading={isPending}
+        submitText="Update Beat"
+      />
+    </DialogShell>
   );
 }
 
@@ -431,8 +579,8 @@ export function CreateSceneInlineButton({
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button variant="ghost" size="sm" className="h-8 px-2 text-xs">
-          <Plus className="mr-1 h-3.5 w-3.5" />
+        <Button variant="ghost" size="sm" className={INLINE_BUTTON_CLASS}>
+          <Plus className={INLINE_ICON_CLASS} />
           New Scene
         </Button>
       </DialogTrigger>
@@ -445,7 +593,9 @@ export function CreateSceneInlineButton({
     </Dialog>
   );
 }
+// #endregion
 
+// #region Beat Dialogs & Buttons
 function CreateBeatDialog({
   sceneId,
   campaignId,
@@ -459,43 +609,41 @@ function CreateBeatDialog({
 }) {
   const [isPending, startTransition] = useTransition();
   const router = useRouter();
+  const closeAndRefresh = () =>
+    startTransition(() => {
+      router.refresh();
+      onOpenChange(false);
+    });
 
   const handleCreateBeat = async (data: BeatFormData) => {
     try {
-      // Convert datetime-local string to ISO string with timezone
-      const localDate = new Date(data.timestamp);
-      const isoTimestamp = localDate.toISOString();
-
-      const formData = new FormData();
-      formData.append("text", data.text);
-      formData.append("timestamp", isoTimestamp);
-
+      const formData = buildFormData({
+        text: data.text,
+        timestamp: new Date(data.timestamp).toISOString(),
+      });
       await createBeat(sceneId, formData, false);
-      onOpenChange(false);
-      toast.success("Beat created successfully!");
-      router.refresh();
+      toast.success(toastCopy.beatCreated);
+      closeAndRefresh();
     } catch (error: any) {
       console.error("Error creating beat:", error);
-      toast.error(error.message || "Failed to create beat");
+      toast.error(error.message || toastCopy.beatCreateError);
     }
   };
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-lg">
-        <DialogHeader>
-          <DialogTitle>New Beat</DialogTitle>
-          <DialogDescription>
-            Add a timestamped beat to track events in this scene.
-          </DialogDescription>
-        </DialogHeader>
-        <BeatForm
-          onSubmit={handleCreateBeat}
-          isLoading={isPending}
-          submitText="Create Beat"
-        />
-      </DialogContent>
-    </Dialog>
+    <DialogShell
+      open={open}
+      onOpenChange={onOpenChange}
+      title={dialogCopy.beat.createTitle}
+      description={dialogCopy.beat.createDescription}
+      className={DIALOG_MD}
+    >
+      <BeatForm
+        onSubmit={handleCreateBeat}
+        isLoading={isPending}
+        submitText="Create Beat"
+      />
+    </DialogShell>
   );
 }
 
@@ -551,8 +699,8 @@ export function CreateBeatInlineButton({
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button variant="ghost" size="sm" className="h-8 px-2 text-xs">
-          <Plus className="mr-1 h-3.5 w-3.5" />
+        <Button variant="ghost" size="sm" className={INLINE_BUTTON_CLASS}>
+          <Plus className={INLINE_ICON_CLASS} />
           New Beat
         </Button>
       </DialogTrigger>
@@ -565,7 +713,9 @@ export function CreateBeatInlineButton({
     </Dialog>
   );
 }
+// #endregion
 
+// #region Edit Buttons
 export function EditSceneButton({
   sceneId,
   actId,
@@ -584,7 +734,7 @@ export function EditSceneButton({
       <Button
         variant="ghost"
         size="icon"
-        className="h-8 w-8"
+        className={ICON_BUTTON_SM_CLASS}
         onClick={() => setOpen(true)}
       >
         <Edit2 className="h-4 w-4" />
@@ -605,6 +755,38 @@ export function EditSceneButton({
   );
 }
 
+export function EditBeatButton({
+  beatId,
+  initialData,
+}: {
+  beatId: string;
+  initialData: { text: string; timestamp: Date };
+}) {
+  const [open, setOpen] = useState(false);
+
+  return (
+    <>
+      <Button
+        variant="ghost"
+        size="icon"
+        className={ICON_BUTTON_XS_CLASS}
+        onClick={() => setOpen(true)}
+      >
+        <Edit2 className="h-3.5 w-3.5" />
+        <span className="sr-only">Edit beat</span>
+      </Button>
+      <EditBeatDialog
+        beatId={beatId}
+        initialData={initialData}
+        open={open}
+        onOpenChange={setOpen}
+      />
+    </>
+  );
+}
+// #endregion
+
+// #region Interactive Wrapper
 // Client-side wrapper for interactive hover behavior
 export function InteractiveContainer({
   children,
@@ -615,6 +797,7 @@ export function InteractiveContainer({
 }) {
   return (
     <div
+      className=""
       onMouseEnter={(e) => {
         if (stopPropagation) {
           e.stopPropagation();
@@ -625,3 +808,4 @@ export function InteractiveContainer({
     </div>
   );
 }
+// #endregion
