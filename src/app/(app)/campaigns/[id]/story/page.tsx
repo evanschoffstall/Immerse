@@ -1,20 +1,22 @@
+import RichTextViewer from '@/components/editor/RichTextViewer';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
 import { db } from '@/db';
-import { beings } from '@/db/schema';
+import { beings, campaigns } from '@/db/schema';
 import { extractTextFromLexical, truncateText } from '@/lib/utils/lexical';
 import { desc, eq } from 'drizzle-orm';
-import { Plus, User } from 'lucide-react';
+import { Plus, Scroll, User } from 'lucide-react';
 import Image from 'next/image';
 import Link from 'next/link';
 
-const PAGE_TITLE = 'Beings';
-const PAGE_DESCRIPTION = 'Manage the characters, NPCs, and creatures in your campaign';
-const CREATE_BUTTON_TEXT = 'Create Being';
-const EMPTY_STATE_TITLE = 'No beings yet';
-const EMPTY_STATE_DESCRIPTION = 'Create your first being to get started';
+const PAGE_TITLE = 'Story';
+const PAGE_DESCRIPTION = "Manage your campaign's story elements";
+const CREATE_BUTTON_TEXT = 'Create Story Element';
+const EMPTY_STATE_TITLE = 'No story elements yet';
+const EMPTY_STATE_DESCRIPTION = 'Create your first story element to get started';
 const DESCRIPTION_TRUNCATE_LENGTH = 150;
+const CAMPAIGN_CONTEXT_TITLE = 'Campaign Overview';
 
 export default async function Page({
   params,
@@ -23,6 +25,10 @@ export default async function Page({
 }) {
 
   const { id: campaignId } = await params;
+
+  const campaign = await db.query.campaigns.findFirst({
+    where: eq(campaigns.id, campaignId),
+  });
 
   const beingsList = await db.query.beings.findMany({
     where: eq(beings.campaignId, campaignId),
@@ -51,10 +57,23 @@ export default async function Page({
 
         <Separator />
 
+        {campaign?.description && (
+          <Card>
+            <CardHeader>
+              <CardTitle>{CAMPAIGN_CONTEXT_TITLE}</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="prose dark:prose-invert max-w-none">
+                <RichTextViewer content={campaign.description} />
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
         {beingsList.length === 0 ? (
           <Card className="text-center py-12">
             <CardContent>
-              <User className="mx-auto h-12 w-12 text-muted-foreground mb-4" />
+              <Scroll className="mx-auto h-12 w-12 text-muted-foreground mb-4" />
               <h3 className="text-xl font-semibold mb-2">{EMPTY_STATE_TITLE}</h3>
               <p className="text-muted-foreground mb-6">
                 {EMPTY_STATE_DESCRIPTION}

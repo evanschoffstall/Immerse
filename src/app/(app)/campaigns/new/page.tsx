@@ -1,64 +1,10 @@
-'use client';
-
-import CampaignForm, { type CampaignFormData } from '@/components/forms/CampaignForm';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Skeleton } from '@/components/ui/skeleton';
-import { useSession } from 'next-auth/react';
-import { useRouter } from 'next/navigation';
-import { useEffect, useState } from 'react';
-import { toast } from 'sonner';
+import { authConfig } from '@/lib/auth';
+import { getServerSession } from 'next-auth';
+import NewCampaignClient from './client';
 
-export default function NewCampaignPage() {
-  const { data: session, status } = useSession();
-  const router = useRouter();
-  const [isLoading, setIsLoading] = useState(false);
-
-  useEffect(() => {
-    if (status === 'unauthenticated') {
-      router.push('/login');
-    }
-  }, [status, router]);
-
-  if (status === 'loading') {
-    return (
-      <div className="container mx-auto px-4 py-8">
-        <Skeleton className="h-8 w-64 mb-8" />
-        <Skeleton className="h-96" />
-      </div>
-    );
-  }
-
-  if (!session) {
-    return null;
-  }
-
-  const handleSubmit = async (data: CampaignFormData) => {
-    setIsLoading(true);
-
-    try {
-      const response = await fetch('/api/campaigns', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(data),
-      });
-
-      if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.error || 'Failed to create campaign');
-      }
-
-      const result = await response.json();
-      toast.success('Campaign created successfully!');
-      router.push(`/campaigns/${result.campaign.id}`);
-    } catch (error) {
-      console.error('Error creating campaign:', error);
-      toast.error(error instanceof Error ? error.message : 'Failed to create campaign');
-    } finally {
-      setIsLoading(false);
-    }
-  };
+export default async function NewCampaignPage() {
+  const session = await getServerSession(authConfig);
 
   return (
     <div className="container mx-auto px-4 py-8 max-w-7xl">
@@ -70,11 +16,7 @@ export default function NewCampaignPage() {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <CampaignForm
-            onSubmit={handleSubmit}
-            isLoading={isLoading}
-            submitText="Create Campaign"
-          />
+          <NewCampaignClient />
         </CardContent>
       </Card>
     </div>

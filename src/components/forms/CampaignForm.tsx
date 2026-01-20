@@ -12,12 +12,18 @@ import {
 } from '@/components/ui/form';
 import ImageUpload from '@/components/ui/ImageUpload';
 import { Input } from '@/components/ui/input';
-import { CampaignSchemas, type CreateCampaignInput } from '@/features/campaigns/schemas';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
+import { z } from 'zod';
 
-// Use business logic layer schema
-export type CampaignFormData = CreateCampaignInput;
+const campaignSchema = z.object({
+  name: z.string().min(3, 'Name must be at least 3 characters'),
+  description: z.string().optional(),
+  image: z.string().optional(),
+  backgroundImage: z.string().optional(),
+})
+
+export type CampaignFormData = z.infer<typeof campaignSchema>;
 
 export interface CampaignFormProps {
   initialData?: Partial<CampaignFormData>;
@@ -37,7 +43,7 @@ export default function CampaignForm({
   onBackgroundImageChange,
 }: CampaignFormProps) {
   const form = useForm<CampaignFormData>({
-    resolver: zodResolver(CampaignSchemas.create),
+    resolver: zodResolver(campaignSchema),
     defaultValues: {
       name: initialData?.name || '',
       description: initialData?.description || undefined,

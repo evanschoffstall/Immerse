@@ -1,97 +1,46 @@
-'use client';
+import { Button } from "@/components/ui/button";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { db } from "@/db";
+import { campaigns } from "@/db/schema";
+import { authConfig } from "@/lib/auth";
+import { extractTextFromLexical, truncateText } from "@/lib/utils/lexical";
+import { desc, eq } from "drizzle-orm";
+import { Mountain } from "lucide-react";
+import { getServerSession } from "next-auth";
+import Image from "next/image";
+import Link from "next/link";
+import { redirect } from "next/navigation";
 
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Skeleton } from '@/components/ui/skeleton';
-import type { Campaign } from '@/lib/data/types';
-import { extractTextFromLexical, truncateText } from '@/lib/utils/lexical';
-import { Mountain } from 'lucide-react';
-import { useSession } from 'next-auth/react';
-import Image from 'next/image';
-import Link from 'next/link';
-import { useRouter } from 'next/navigation';
-import { useEffect, useState } from 'react';
-import { toast } from 'sonner';
+export default async function CampaignsPage() {
+  const session = await getServerSession(authConfig);
 
-export default function CampaignsPage() {
-  const { data: session, status } = useSession();
-  const router = useRouter();
-  const [campaigns, setCampaigns] = useState<Campaign[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-
-  useEffect(() => {
-    if (status === 'unauthenticated') {
-      router.push('/login');
-    }
-  }, [status, router]);
-
-  useEffect(() => {
-    const fetchCampaigns = async () => {
-      try {
-        const response = await fetch('/api/campaigns');
-
-        if (!response.ok) {
-          throw new Error('Failed to fetch campaigns');
-        }
-
-        const data = await response.json();
-        setCampaigns(data.campaigns);
-      } catch (error) {
-        console.error('Error fetching campaigns:', error);
-        toast.error('Failed to load campaigns');
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    if (session) {
-      fetchCampaigns();
-    }
-  }, [session]);
-
-  if (status === 'loading') {
-    return (
-      <div className="container mx-auto px-4 py-8">
-        <Skeleton className="h-8 w-48 mb-8" />
-        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-          <Skeleton className="h-64" />
-          <Skeleton className="h-64" />
-          <Skeleton className="h-64" />
-        </div>
-      </div>
-    );
+  if (!session?.user) {
+    redirect("/login");
   }
 
-  if (!session) {
-    return null;
-  }
+  const campaignsList = await db.query.campaigns.findMany({
+    where: eq(campaigns.ownerId, session.user.id!),
+    orderBy: [desc(campaigns.updatedAt)],
+  });
 
   return (
     <div className="container mx-auto px-4 py-8 mt-16">
       <div className="flex items-center justify-between mb-8">
         <h1 className="text-4xl font-bold">Campaigns</h1>
-        {!isLoading && campaigns.length > 0 && (
+        {campaignsList.length > 0 && (
           <Link href="/campaigns/new">
             <Button>Create New Campaign</Button>
           </Link>
         )}
       </div>
 
-      {isLoading ? (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {[1, 2, 3].map((i) => (
-            <Card key={i}>
-              <CardHeader>
-                <Skeleton className="h-6 w-3/4" />
-              </CardHeader>
-              <CardContent>
-                <Skeleton className="h-4 w-full mb-2" />
-                <Skeleton className="h-4 w-2/3" />
-              </CardContent>
-            </Card>
-          ))}
-        </div>
-      ) : campaigns.length === 0 ? (
+      {campaignsList.length === 0 ? (
         <Card className="text-center">
           <CardHeader>
             <Mountain className="mx-auto mb-4 h-12 w-12 text-muted-foreground" />
@@ -107,9 +56,16 @@ export default function CampaignsPage() {
           </CardContent>
         </Card>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6" data-testid="campaigns-list">
-          {campaigns.map((campaign) => (
-            <Link key={campaign.id} href={`/campaigns/${campaign.id}`} data-testid="campaign-card">
+        <div
+          className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
+          data-testid="campaigns-list"
+        >
+          {campaignsList.map((campaign) => (
+            <Link
+              key={campaign.id}
+              href={`/campaigns/${campaign.id}`}
+              data-testid="campaign-card"
+            >
               <Card className="group overflow-hidden border bg-card transition-all hover:shadow-lg h-full">
                 {campaign.image && (
                   <div className="relative h-40 w-full overflow-hidden bg-muted">
@@ -123,10 +79,14 @@ export default function CampaignsPage() {
                   </div>
                 )}
                 <CardHeader className="pb-3">
-                  <CardTitle className="line-clamp-1 text-lg">{campaign.name}</CardTitle>
+                  <CardTitle className="line-clamp-1 text-lg">
+                    {campaign.name}
+                  </CardTitle>
                   {campaign.description && (
                     <CardDescription className="line-clamp-2 mt-1">
-                      {truncateText(extractTextFromLexical(campaign.description))}
+                      {truncateText(
+                        extractTextFromLexical(campaign.description),
+                      )}
                     </CardDescription>
                   )}
                 </CardHeader>
@@ -143,4 +103,3 @@ export default function CampaignsPage() {
     </div>
   );
 }
-

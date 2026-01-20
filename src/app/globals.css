@@ -34,6 +34,11 @@
   --color-sidebar-border: hsl(var(--sidebar-border));
   --color-sidebar-ring: hsl(var(--sidebar-ring));
 
+  /* Semantic color utilities */
+  --color-success: 142 76% 36%;
+  --color-warning: 38 92% 50%;
+  --color-info: 199 89% 48%;
+
   /* Border radius */
   --radius-lg: 0.5rem;
   --radius-md: calc(0.5rem - 2px);
@@ -75,6 +80,13 @@
     --sidebar-accent-foreground: 240 5.9% 10%;
     --sidebar-border: 220 13% 91%;
     --sidebar-ring: 217.2 91.2% 59.8%;
+
+    /* Campaign theme support */
+    --campaign-primary: var(--primary);
+    --campaign-primary-foreground: var(--primary-foreground);
+    --campaign-accent: var(--accent);
+    --campaign-accent-foreground: var(--accent-foreground);
+    --campaign-background: var(--background);
   }
 
   .dark {
@@ -110,6 +122,13 @@
     --sidebar-accent-foreground: 240 4.8% 95.9%;
     --sidebar-border: 240 3.7% 15.9%;
     --sidebar-ring: 217.2 91.2% 59.8%;
+
+    /* Campaign theme support */
+    --campaign-primary: var(--primary);
+    --campaign-primary-foreground: var(--primary-foreground);
+    --campaign-accent: var(--accent);
+    --campaign-accent-foreground: var(--accent-foreground);
+    --campaign-background: var(--background);
   }
 
   * {

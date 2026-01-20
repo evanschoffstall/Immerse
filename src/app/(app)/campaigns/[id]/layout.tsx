@@ -1,9 +1,10 @@
-import { campaignService } from '@/features/campaigns/campaigns';
-import { campaignSettingsService } from '@/features/campaigns/settings';
+import { db } from '@/db';
+import { campaigns } from '@/db/schema';
 import { authConfig } from '@/lib/auth';
+import { eq } from 'drizzle-orm';
 import { getServerSession } from 'next-auth/next';
 import { redirect } from 'next/navigation';
-import CampaignLayoutClient from './CampaignLayoutClient';
+import CampaignLayoutClient from './client';
 
 export default async function CampaignLayout({
   children,
@@ -19,20 +20,21 @@ export default async function CampaignLayout({
     redirect('/login');
   }
 
-  // Fetch campaign and settings data server-side via services
-  const [campaignResult, settingsResult] = await Promise.all([
-    campaignService.get(id, session.user.id).catch(() => null),
-    campaignSettingsService.get(id).catch(() => ({ settings: null })),
-  ]);
+  const campaign = await db.query.campaigns.findFirst({
+    where: eq(campaigns.id, id),
+    with: {
+      settings: true,
+    },
+  });
 
-  if (!campaignResult) {
+  if (!campaign || campaign.ownerId !== session.user.id) {
     redirect('/campaigns');
   }
 
   return (
     <CampaignLayoutClient
-      campaign={campaignResult.campaign}
-      campaignSettings={settingsResult.settings}
+      campaign={campaign}
+      campaignSettings={campaign.settings}
     >
       {children}
     </CampaignLayoutClient>

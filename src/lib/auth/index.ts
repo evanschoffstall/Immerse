@@ -1,5 +1,7 @@
-import { prisma } from "@/lib/data/prisma";
+import { db } from "@/db";
+import { users } from "@/db/schema";
 import bcrypt from "bcryptjs";
+import { eq } from "drizzle-orm";
 import type { AuthOptions, Session } from "next-auth";
 import NextAuth from "next-auth";
 import type { JWT } from "next-auth/jwt";
@@ -35,9 +37,9 @@ export const authConfig: AuthOptions = {
           return null;
         }
 
-        // Query Prisma database
-        const user = await prisma.users.findUnique({
-          where: { email: credentials.email as string },
+        // Query database directly
+        const user = await db.query.users.findFirst({
+          where: eq(users.email, credentials.email as string),
         });
 
         if (!user || !user.password) {

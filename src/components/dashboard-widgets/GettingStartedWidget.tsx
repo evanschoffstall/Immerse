@@ -1,10 +1,9 @@
-'use client';
-
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Checkbox } from '@/components/ui/checkbox';
-import { Skeleton } from '@/components/ui/skeleton';
+import { db } from '@/db';
+import { beings } from '@/db/schema';
+import { count, eq } from 'drizzle-orm';
 import Link from 'next/link';
-import { useEffect, useState } from 'react';
 
 interface Task {
   id: string;
@@ -17,86 +16,54 @@ interface GettingStartedWidgetProps {
   campaignId: string;
 }
 
-export function GettingStartedWidget({ campaignId }: GettingStartedWidgetProps) {
-  const [tasks, setTasks] = useState<Task[]>([]);
-  const [loading, setLoading] = useState(true);
+export async function GettingStartedWidget({ campaignId }: GettingStartedWidgetProps) {
+  // Fetch stats for this campaign
+  const [beingsCountResult] = await Promise.all([
+    db.select({ count: count() }).from(beings).where(eq(beings.campaignId, campaignId)),
+  ]);
 
-  useEffect(() => {
-    const fetchProgress = async () => {
-      try {
-        const response = await fetch(
-          `/api/campaigns/${campaignId}/stats`
-        );
-        const stats = await response.json();
+  const beingsCount = beingsCountResult[0]?.count ?? 0;
+  const locationsCount = 0; // Placeholder until locations table exists
 
-        const hasBeings = stats.hasBeings || false;
-        const hasLocations = stats.hasLocations || false;
+  const hasBeings = beingsCount > 0;
+  const hasLocations = locationsCount > 0;
 
-        setTasks([
-          {
-            id: '1',
-            label: 'Your first world is ready.',
-            completed: true,
-          },
-          {
-            id: '2',
-            label: 'Name your campaign.',
-            completed: true,
-          },
-          {
-            id: '3',
-            label: 'Create your first being.',
-            completed: hasBeings,
-            link: hasBeings ? undefined : `/beings/new?campaignId=${campaignId}`,
-          },
-          {
-            id: '4',
-            label: 'Create your first location.',
-            completed: hasLocations,
-            link: hasLocations ? undefined : `/locations/new?campaignId=${campaignId}`,
-          },
-          {
-            id: '5',
-            label: 'Invite a friend or co-author.',
-            completed: false,
-          },
-          {
-            id: '6',
-            label: 'Customise your dashboard.',
-            completed: true,
-          },
-        ]);
-      } catch (error) {
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchProgress();
-  }, [campaignId]);
+  const tasks: Task[] = [
+    {
+      id: '1',
+      label: 'Your first world is ready.',
+      completed: true,
+    },
+    {
+      id: '2',
+      label: 'Name your campaign.',
+      completed: true,
+    },
+    {
+      id: '3',
+      label: 'Create your first being.',
+      completed: hasBeings,
+      link: hasBeings ? undefined : `/campaigns/${campaignId}/beings/new`,
+    },
+    {
+      id: '4',
+      label: 'Create your first location.',
+      completed: hasLocations,
+      link: hasLocations ? undefined : `/campaigns/${campaignId}/locations/new`,
+    },
+    {
+      id: '5',
+      label: 'Invite a friend or co-author.',
+      completed: false,
+    },
+    {
+      id: '6',
+      label: 'Customise your dashboard.',
+      completed: true,
+    },
+  ];
 
   const completedCount = tasks.filter((t) => t.completed).length;
-
-  if (loading) {
-    return (
-      <Card className="lg:col-span-2">
-        <CardHeader>
-          <CardTitle>Getting Started</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-2">
-            {[1, 2, 3, 4, 5, 6].map((i) => (
-              <div key={i} className="flex items-center gap-2">
-                <Skeleton className="h-4 w-4 rounded" />
-                <Skeleton className="h-4 flex-1" />
-              </div>
-            ))}
-          </div>
-        </CardContent>
-      </Card>
-    );
-  }
-
   const progress = (completedCount / tasks.length) * 100;
 
   return (
