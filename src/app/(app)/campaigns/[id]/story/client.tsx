@@ -26,6 +26,35 @@ import {
   updateScene,
 } from "./actions";
 
+// Client wrapper components for hover state management
+export function HoverCard({
+  children,
+  className,
+  onHoverChange,
+}: {
+  children: React.ReactNode;
+  className?: string;
+  onHoverChange?: (isHovered: boolean) => void;
+}) {
+  const [isHovered, setIsHovered] = useState(false);
+
+  const handleMouseEnter = () => {
+    setIsHovered(true);
+    onHoverChange?.(true);
+  };
+
+  const handleMouseLeave = () => {
+    setIsHovered(false);
+    onHoverChange?.(false);
+  };
+
+  return (
+    <div onMouseEnter={handleMouseEnter} onMouseLeave={handleMouseLeave} className={className}>
+      {typeof children === 'function' ? children(isHovered) : children}
+    </div>
+  );
+}
+
 export function EmptyState({ campaignId }: { campaignId: string }) {
   return (
     <CardContent className="p-12">
@@ -528,5 +557,26 @@ export function EditSceneButton({
         onOpenChange={setOpen}
       />
     </>
+  );
+}
+
+// Client-side wrapper for interactive hover behavior
+export function InteractiveContainer({
+  children,
+  stopPropagation = false,
+}: {
+  children: React.ReactNode;
+  stopPropagation?: boolean;
+}) {
+  return (
+    <div
+      onMouseEnter={(e) => {
+        if (stopPropagation) {
+          e.stopPropagation();
+        }
+      }}
+    >
+      {children}
+    </div>
   );
 }

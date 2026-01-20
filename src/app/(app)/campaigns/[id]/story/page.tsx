@@ -15,6 +15,7 @@ import {
   EditActButton,
   EditSceneButton,
   EmptyState,
+  InteractiveContainer
 } from "./client";
 
 type ActWithScenesAndBeats = typeof acts.$inferSelect & {
@@ -120,19 +121,21 @@ function formatTimestamp(timestamp: Date): string {
 
 export function BeatItem({ beat }: { beat: typeof beats.$inferSelect }) {
   return (
-    <div className="group/beat flex gap-3 rounded-md bg-muted/50 p-3 transition-colors hover:bg-muted">
-      <div className="flex-shrink-0">
-        <div className="flex h-6 w-6 items-center justify-center">
-          <Clock className="h-3 w-3 text-muted-foreground" />
+    <InteractiveContainer stopPropagation>
+      <div className="group/beat flex gap-3 rounded-md bg-muted/50 p-3 transition-colors hover:bg-muted">
+        <div className="shrink-0">
+          <div className="flex h-6 w-6 items-center justify-center">
+            <Clock className="h-3 w-3 text-muted-foreground" />
+          </div>
+        </div>
+        <div className="flex-1 min-w-0 space-y-1">
+          <span className="text-xs font-mono text-muted-foreground">
+            {formatTimestamp(beat.timestamp)}
+          </span>
+          <p className="text-sm">{beat.text}</p>
         </div>
       </div>
-      <div className="flex-1 min-w-0 space-y-1">
-        <span className="text-xs font-mono text-muted-foreground">
-          {formatTimestamp(beat.timestamp)}
-        </span>
-        <p className="text-sm">{beat.text}</p>
-      </div>
-    </div>
+    </InteractiveContainer>
   );
 }
 
@@ -152,8 +155,8 @@ export function SceneCard({
   const hasBeats = sortedBeats.length > 0;
 
   return (
-    <Card className="group/scene ml-8 transition-shadow hover:shadow-md">
-      <CardHeader className="pb-3">
+    <Card className="group/scene scene-card ml-8 transition-shadow hover:shadow-md">
+      <CardHeader className="pb-3 group/scene-header">
         <div className="flex items-center justify-between gap-4">
           <div className="flex items-center gap-3 flex-1 min-w-0">
             <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-primary/10">
@@ -165,7 +168,7 @@ export function SceneCard({
               </CardTitle>
             </div>
           </div>
-          <div className="opacity-0 group-hover/scene:opacity-100 transition-opacity">
+          <div className="scene-edit-control opacity-0 pointer-events-none transition-opacity group-hover/scene-header:opacity-100 group-hover/scene-header:pointer-events-auto">
             <EditSceneButton
               sceneId={scene.id}
               actId={scene.actId}
@@ -178,21 +181,25 @@ export function SceneCard({
           </div>
         </div>
       </CardHeader>
-      <CardContent className="space-y-4">
-        {hasContent && scene.content && (
-          <div className="prose prose-sm dark:prose-invert max-w-none">
-            <RichTextViewer content={scene.content} />
+      <InteractiveContainer stopPropagation>
+        <CardContent className="space-y-4">
+          {hasContent && scene.content && (
+            <div className="prose prose-sm dark:prose-invert max-w-none">
+              <RichTextViewer content={scene.content} />
+            </div>
+          )}
+          {hasBeats && (
+            <div className="space-y-2">
+              {sortedBeats.map((beat) => (
+                <BeatItem key={beat.id} beat={beat} />
+              ))}
+            </div>
+          )}
+          <div className="scene-create-control max-h-0 overflow-hidden opacity-0 translate-y-2 pointer-events-none transition-all duration-200 group-hover/scene:opacity-100 group-hover/scene:translate-y-0 group-hover/scene:max-h-50 group-hover/scene:pointer-events-auto">
+            <CreateBeatCard sceneId={scene.id} campaignId={campaignId} />
           </div>
-        )}
-        {hasBeats && (
-          <div className="space-y-2">
-            {sortedBeats.map((beat) => (
-              <BeatItem key={beat.id} beat={beat} />
-            ))}
-          </div>
-        )}
-        <CreateBeatCard sceneId={scene.id} campaignId={campaignId} />
-      </CardContent>
+        </CardContent>
+      </InteractiveContainer>
     </Card>
   );
 }
@@ -211,8 +218,8 @@ export function ActCard({
   const hasScenes = sortedScenes.length > 0;
 
   return (
-    <Card className="group/act overflow-hidden transition-shadow hover:shadow-lg">
-      <CardHeader className="pb-4">
+    <Card className="group/act act-card overflow-hidden transition-shadow hover:shadow-lg">
+      <CardHeader className="pb-4 group/act-header">
         <div className="flex items-center justify-between gap-4">
           <div className="flex items-center gap-4 flex-1 min-w-0">
             <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-primary/10">
@@ -224,7 +231,7 @@ export function ActCard({
               </CardTitle>
             </div>
           </div>
-          <div className="opacity-0 group-hover/act:opacity-100 transition-opacity">
+          <div className="act-edit-control opacity-0 pointer-events-none transition-opacity group-hover/act-header:opacity-100 group-hover/act-header:pointer-events-auto">
             <EditActButton
               actId={act.id}
               campaignId={campaignId}
@@ -236,28 +243,34 @@ export function ActCard({
           </div>
         </div>
       </CardHeader>
-      <CardContent className="space-y-6">
-        {hasContent && act.content && (
-          <div className="prose dark:prose-invert max-w-none">
-            <RichTextViewer content={act.content} />
-          </div>
-        )}
-        {hasScenes && (
-          <div className="space-y-3">
-            {sortedScenes.map((scene) => (
-              <SceneCard key={scene.id} scene={scene} campaignId={campaignId} />
-            ))}
-            <div className="ml-8">
+      <InteractiveContainer stopPropagation>
+        <CardContent className="space-y-6">
+          {hasContent && act.content && (
+            <div className="prose dark:prose-invert max-w-none">
+              <RichTextViewer content={act.content} />
+            </div>
+          )}
+          {hasScenes && (
+            <div className="space-y-3">
+              {sortedScenes.map((scene) => (
+                <SceneCard
+                  key={scene.id}
+                  scene={scene}
+                  campaignId={campaignId}
+                />
+              ))}
+              <div className="act-create-control ml-8 max-h-0 overflow-hidden opacity-0 translate-y-2 pointer-events-none transition-all duration-200 group-hover/act:opacity-100 group-hover/act:translate-y-0 group-hover/act:max-h-65 group-hover/act:pointer-events-auto">
+                <CreateSceneCard actId={act.id} campaignId={campaignId} />
+              </div>
+            </div>
+          )}
+          {!hasScenes && (
+            <div className="act-create-control ml-8 max-h-0 overflow-hidden opacity-0 translate-y-2 pointer-events-none transition-all duration-200 group-hover/act:opacity-100 group-hover/act:translate-y-0 group-hover/act:max-h-65 group-hover/act:pointer-events-auto">
               <CreateSceneCard actId={act.id} campaignId={campaignId} />
             </div>
-          </div>
-        )}
-        {!hasScenes && (
-          <div className="ml-8">
-            <CreateSceneCard actId={act.id} campaignId={campaignId} />
-          </div>
-        )}
-      </CardContent>
+          )}
+        </CardContent>
+      </InteractiveContainer>
     </Card>
   );
 }
@@ -270,7 +283,7 @@ export function ActsList({
   campaignId: string;
 }) {
   return (
-    <Card>
+    <Card className="group/acts-list acts-list-card">
       <CardHeader className="pb-4">
         <div className="flex items-center gap-4">
           <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-primary/10">
@@ -280,10 +293,16 @@ export function ActsList({
         </div>
       </CardHeader>
       <CardContent className="space-y-6">
-        {acts.map((act) => (
-          <ActCard key={act.id} act={act} campaignId={campaignId} />
-        ))}
-        <CreateActCard campaignId={campaignId} />
+        <InteractiveContainer stopPropagation>
+          <div className="space-y-6">
+            {acts.map((act) => (
+              <ActCard key={act.id} act={act} campaignId={campaignId} />
+            ))}
+          </div>
+        </InteractiveContainer>
+        <div className="acts-list-create-control max-h-0 overflow-hidden opacity-0 translate-y-2 pointer-events-none transition-all duration-200 group-hover/acts-list:opacity-100 group-hover/acts-list:translate-y-0 group-hover/acts-list:max-h-80 group-hover/acts-list:pointer-events-auto">
+          <CreateActCard campaignId={campaignId} />
+        </div>
       </CardContent>
     </Card>
   );

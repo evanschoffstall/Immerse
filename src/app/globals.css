@@ -136,7 +136,11 @@
   }
 
   body {
-    font-family: 'Roboto Variable', system-ui, -apple-system, sans-serif;
+    font-family:
+      "Roboto Variable",
+      system-ui,
+      -apple-system,
+      sans-serif;
     background-color: hsl(var(--background));
     color: hsl(var(--foreground));
   }
@@ -199,4 +203,19 @@
 
 .dark [data-sonner-toast][data-rich-colors="true"][data-type="warning"] {
   background-color: rgba(0, 0, 0, 0.5) !important;
+}
+
+.act-card:has(.scene-card:hover) .act-edit-control,
+.act-card:has(.scene-card:hover) .act-create-control {
+  opacity: 0;
+  transform: translateY(0.5rem);
+  max-height: 0;
+  pointer-events: none;
+}
+
+.acts-list-card:has(.act-card:hover) .acts-list-create-control {
+  opacity: 0;
+  transform: translateY(0.5rem);
+  max-height: 0;
+  pointer-events: none;
 }

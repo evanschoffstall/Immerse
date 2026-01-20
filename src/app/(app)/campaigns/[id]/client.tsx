@@ -30,6 +30,7 @@ import {
   Mountain,
   Notebook,
   Scroll,
+  Settings,
   Shield,
   Sparkles,
   Tags,
@@ -40,8 +41,8 @@ import {
 } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { useEffect, useMemo } from 'react';
-import { SettingsButton } from './SettingsButton';
+import { useEffect, useMemo, useState } from 'react';
+import { EditCampaignDialog } from './story/EditCampaignDialog';
 
 interface CampaignLayoutClientProps {
   campaign: Campaign;
@@ -53,6 +54,47 @@ interface NavItem {
   icon: LucideIcon;
   label: string;
   href: string;
+}
+
+interface SettingsButtonProps {
+  campaignId: string;
+  campaignName: string;
+  campaignDescription: string | null;
+  campaignImage: string | null;
+  campaignBackgroundImage: string | null;
+  campaignSettings: any;
+}
+
+export function SettingsButton({
+  campaignId,
+  campaignName,
+  campaignDescription,
+  campaignImage,
+  campaignBackgroundImage,
+  campaignSettings,
+}: SettingsButtonProps) {
+  const [open, setOpen] = useState(false);
+
+  return (
+    <>
+      <SidebarMenuButton onClick={() => setOpen(true)}>
+        <Settings className="w-4 h-4" />
+        <span>Settings</span>
+      </SidebarMenuButton>
+      <EditCampaignDialog
+        campaignId={campaignId}
+        initialData={{
+          name: campaignName,
+          description: campaignDescription || "",
+          image: campaignImage || "",
+          backgroundImage: campaignBackgroundImage || "",
+        }}
+        initialSettings={campaignSettings}
+        open={open}
+        onOpenChange={setOpen}
+      />
+    </>
+  );
 }
 
 interface NavGroup {
