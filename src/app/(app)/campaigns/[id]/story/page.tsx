@@ -140,11 +140,10 @@ export function SceneCard({
   );
   const hasContent = hasLexicalContent(scene.content);
   const hasBeats = sortedBeats.length > 0;
-  const showCardContent = hasContent || hasBeats;
 
   return (
     <Card className="group/scene ml-8 transition-shadow hover:shadow-md">
-      <CardHeader className={showCardContent ? "pb-3" : ""}>
+      <CardHeader className="pb-3">
         <div className="flex items-center justify-between gap-4">
           <div className="flex items-center gap-3 flex-1 min-w-0">
             <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-primary/10">
@@ -169,23 +168,21 @@ export function SceneCard({
           </div>
         </div>
       </CardHeader>
-      {showCardContent && (
-        <CardContent className="space-y-4">
-          {hasContent && scene.content && (
-            <div className="prose prose-sm dark:prose-invert max-w-none">
-              <RichTextViewer content={scene.content} />
-            </div>
-          )}
-          {hasBeats && (
-            <div className="space-y-2">
-              {sortedBeats.map((beat) => (
-                <BeatItem key={beat.id} beat={beat} />
-              ))}
-            </div>
-          )}
-          <CreateBeatCard sceneId={scene.id} campaignId={campaignId} />
-        </CardContent>
-      )}
+      <CardContent className="space-y-4">
+        {hasContent && scene.content && (
+          <div className="prose prose-sm dark:prose-invert max-w-none">
+            <RichTextViewer content={scene.content} />
+          </div>
+        )}
+        {hasBeats && (
+          <div className="space-y-2">
+            {sortedBeats.map((beat) => (
+              <BeatItem key={beat.id} beat={beat} />
+            ))}
+          </div>
+        )}
+        <CreateBeatCard sceneId={scene.id} campaignId={campaignId} />
+      </CardContent>
     </Card>
   );
 }
@@ -202,11 +199,10 @@ export function ActCard({
   );
   const hasContent = hasLexicalContent(act.content);
   const hasScenes = sortedScenes.length > 0;
-  const showCardContent = hasContent || hasScenes;
 
   return (
     <Card className="group/act overflow-hidden transition-shadow hover:shadow-lg">
-      <CardHeader className={showCardContent ? "pb-4" : ""}>
+      <CardHeader className="pb-4">
         <div className="flex items-center justify-between gap-4">
           <div className="flex items-center gap-4 flex-1 min-w-0">
             <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-primary/10">
@@ -230,34 +226,28 @@ export function ActCard({
           </div>
         </div>
       </CardHeader>
-      {showCardContent && (
-        <CardContent className="space-y-6">
-          {hasContent && act.content && (
-            <div className="prose dark:prose-invert max-w-none">
-              <RichTextViewer content={act.content} />
-            </div>
-          )}
-          {hasScenes && (
-            <div className="space-y-3">
-              {sortedScenes.map((scene) => (
-                <SceneCard
-                  key={scene.id}
-                  scene={scene}
-                  campaignId={campaignId}
-                />
-              ))}
-              <div className="ml-8">
-                <CreateSceneCard actId={act.id} campaignId={campaignId} />
-              </div>
-            </div>
-          )}
-          {!hasScenes && hasContent && (
+      <CardContent className="space-y-6">
+        {hasContent && act.content && (
+          <div className="prose dark:prose-invert max-w-none">
+            <RichTextViewer content={act.content} />
+          </div>
+        )}
+        {hasScenes && (
+          <div className="space-y-3">
+            {sortedScenes.map((scene) => (
+              <SceneCard key={scene.id} scene={scene} campaignId={campaignId} />
+            ))}
             <div className="ml-8">
               <CreateSceneCard actId={act.id} campaignId={campaignId} />
             </div>
-          )}
-        </CardContent>
-      )}
+          </div>
+        )}
+        {!hasScenes && (
+          <div className="ml-8">
+            <CreateSceneCard actId={act.id} campaignId={campaignId} />
+          </div>
+        )}
+      </CardContent>
     </Card>
   );
 }
