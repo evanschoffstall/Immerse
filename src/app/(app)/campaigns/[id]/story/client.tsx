@@ -105,7 +105,7 @@ function EditActDialog({
 }: {
   actId: string;
   campaignId: string;
-  initialData: { name: string; content?: string | null };
+  initialData: { name: string; content?: string };
   open: boolean;
   onOpenChange: (open: boolean) => void;
 }) {
@@ -119,9 +119,11 @@ function EditActDialog({
       if (data.content) formData.append("content", data.content);
 
       await updateAct(actId, formData, false);
-      onOpenChange(false);
       toast.success("Act updated successfully!");
-      router.refresh();
+      startTransition(() => {
+        router.refresh();
+        onOpenChange(false);
+      });
     } catch (error: any) {
       console.error("Error updating act:", error);
       toast.error(error.message || "Failed to update act");
@@ -224,7 +226,10 @@ export function EditActButton({
       <EditActDialog
         actId={actId}
         campaignId={campaignId}
-        initialData={initialData}
+        initialData={{
+          name: initialData.name,
+          content: initialData.content ?? undefined,
+        }}
         open={open}
         onOpenChange={setOpen}
       />
@@ -304,7 +309,7 @@ function EditSceneDialog({
   sceneId: string;
   actId: string;
   campaignId: string;
-  initialData: { name: string; content?: string | null };
+  initialData: { name: string; content?: string };
   open: boolean;
   onOpenChange: (open: boolean) => void;
 }) {
@@ -515,7 +520,10 @@ export function EditSceneButton({
         sceneId={sceneId}
         actId={actId}
         campaignId={campaignId}
-        initialData={initialData}
+        initialData={{
+          name: initialData.name,
+          content: initialData.content ?? undefined,
+        }}
         open={open}
         onOpenChange={setOpen}
       />

@@ -3,6 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { db } from "@/db";
 import { acts, beats, campaigns, scenes } from "@/db/schema";
+import { hasLexicalContent } from "@/lib/utils/lexical";
 import { and, desc, eq, isNull } from "drizzle-orm";
 import { BookOpen, Clock, ScrollText, Theater } from "lucide-react";
 import {
@@ -64,9 +65,11 @@ export function CampaignDescriptionCard({
   campaignBackgroundImage: string | null;
   campaignSettings: any;
 }) {
+  const hasContent = hasLexicalContent(description);
+
   return (
     <Card className="group/overview">
-      <CardHeader className={description ? "pb-4" : ""}>
+      <CardHeader className={hasContent ? "pb-4" : ""}>
         <div className="flex items-center justify-between gap-4">
           <div className="flex items-center gap-4 flex-1 min-w-0">
             <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-primary/10">
@@ -83,7 +86,7 @@ export function CampaignDescriptionCard({
           />
         </div>
       </CardHeader>
-      {description && (
+      {hasContent && description && (
         <CardContent>
           <div className="prose dark:prose-invert max-w-none">
             <RichTextViewer content={description} />
@@ -135,12 +138,13 @@ export function SceneCard({
   const sortedBeats = [...scene.beats].sort(
     (a, b) => a.timestamp.getTime() - b.timestamp.getTime(),
   );
+  const hasContent = hasLexicalContent(scene.content);
+  const hasBeats = sortedBeats.length > 0;
+  const showCardContent = hasContent || hasBeats;
 
   return (
     <Card className="group/scene ml-8 transition-shadow hover:shadow-md">
-      <CardHeader
-        className={scene.content || sortedBeats.length > 0 ? "pb-3" : ""}
-      >
+      <CardHeader className={showCardContent ? "pb-3" : ""}>
         <div className="flex items-center justify-between gap-4">
           <div className="flex items-center gap-3 flex-1 min-w-0">
             <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-primary/10">
@@ -165,14 +169,14 @@ export function SceneCard({
           </div>
         </div>
       </CardHeader>
-      {scene.content || sortedBeats.length > 0 ? (
+      {showCardContent && (
         <CardContent className="space-y-4">
-          {scene.content && (
+          {hasContent && scene.content && (
             <div className="prose prose-sm dark:prose-invert max-w-none">
               <RichTextViewer content={scene.content} />
             </div>
           )}
-          {sortedBeats.length > 0 && (
+          {hasBeats && (
             <div className="space-y-2">
               {sortedBeats.map((beat) => (
                 <BeatItem key={beat.id} beat={beat} />
@@ -181,7 +185,7 @@ export function SceneCard({
           )}
           <CreateBeatCard sceneId={scene.id} campaignId={campaignId} />
         </CardContent>
-      ) : null}
+      )}
     </Card>
   );
 }
@@ -196,12 +200,13 @@ export function ActCard({
   const sortedScenes = [...act.scenes].sort(
     (a, b) => a.createdAt.getTime() - b.createdAt.getTime(),
   );
+  const hasContent = hasLexicalContent(act.content);
+  const hasScenes = sortedScenes.length > 0;
+  const showCardContent = hasContent || hasScenes;
 
   return (
     <Card className="group/act overflow-hidden transition-shadow hover:shadow-lg">
-      <CardHeader
-        className={act.content || sortedScenes.length > 0 ? "pb-4" : ""}
-      >
+      <CardHeader className={showCardContent ? "pb-4" : ""}>
         <div className="flex items-center justify-between gap-4">
           <div className="flex items-center gap-4 flex-1 min-w-0">
             <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-primary/10">
@@ -225,14 +230,14 @@ export function ActCard({
           </div>
         </div>
       </CardHeader>
-      {act.content || sortedScenes.length > 0 ? (
+      {showCardContent && (
         <CardContent className="space-y-6">
-          {act.content && (
+          {hasContent && act.content && (
             <div className="prose dark:prose-invert max-w-none">
               <RichTextViewer content={act.content} />
             </div>
           )}
-          {sortedScenes.length > 0 && (
+          {hasScenes && (
             <div className="space-y-3">
               {sortedScenes.map((scene) => (
                 <SceneCard
@@ -246,13 +251,13 @@ export function ActCard({
               </div>
             </div>
           )}
-          {sortedScenes.length === 0 && act.content && (
+          {!hasScenes && hasContent && (
             <div className="ml-8">
               <CreateSceneCard actId={act.id} campaignId={campaignId} />
             </div>
           )}
         </CardContent>
-      ) : null}
+      )}
     </Card>
   );
 }
