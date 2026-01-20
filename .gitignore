@@ -1,5 +1,4 @@
 # Dev
-run
 
 # Github
 .github/
@@ -38,11 +37,6 @@ package-lock.json
 /playwright-report/
 /playwright/.cache/
 /.playwright-mcp/
-
-# Prisma
-generated/
-generated/prisma
-migration_lock.toml
 
 # Storybook
 *storybook.log

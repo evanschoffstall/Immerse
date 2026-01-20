@@ -1,155 +1,301 @@
-import RichTextViewer from '@/components/editor/RichTextViewer';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Separator } from '@/components/ui/separator';
-import { db } from '@/db';
-import { beings, campaigns } from '@/db/schema';
-import { extractTextFromLexical, truncateText } from '@/lib/utils/lexical';
-import { desc, eq } from 'drizzle-orm';
-import { Plus, Scroll, User } from 'lucide-react';
-import Image from 'next/image';
-import Link from 'next/link';
+import RichTextViewer from "@/components/editor/RichTextViewer";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { db } from "@/db";
+import { acts, beats, campaigns, scenes } from "@/db/schema";
+import { and, desc, eq, isNull } from "drizzle-orm";
+import { BookOpen, Clock, Edit2, ScrollText, Theater } from "lucide-react";
+import Link from "next/link";
+import {
+  CreateActCard,
+  CreateBeatCard,
+  CreateSceneCard,
+  EditActButton,
+  EditSceneButton,
+  EmptyState,
+} from "./client";
 
-const PAGE_TITLE = 'Story';
-const PAGE_DESCRIPTION = "Manage your campaign's story elements";
-const CREATE_BUTTON_TEXT = 'Create Story Element';
-const EMPTY_STATE_TITLE = 'No story elements yet';
-const EMPTY_STATE_DESCRIPTION = 'Create your first story element to get started';
-const DESCRIPTION_TRUNCATE_LENGTH = 150;
-const CAMPAIGN_CONTEXT_TITLE = 'Campaign Overview';
+type ActWithScenesAndBeats = typeof acts.$inferSelect & {
+  scenes: (typeof scenes.$inferSelect & {
+    beats: (typeof beats.$inferSelect)[];
+  })[];
+};
+
+export function CampaignDescriptionCard({
+  description,
+  campaignId,
+}: {
+  description: string | null;
+  campaignId: string;
+}) {
+  if (!description) return null;
+
+  return (
+    <Card>
+      <CardHeader className="pb-4">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-primary/10">
+              <ScrollText className="h-5 w-5 text-primary" />
+            </div>
+            <CardTitle className="text-xl">Campaign Overview</CardTitle>
+          </div>
+          <Button variant="ghost" size="icon" className="h-9 w-9" asChild>
+            <Link href={`/campaigns/${campaignId}/edit`}>
+              <Edit2 className="h-4 w-4" />
+              <span className="sr-only">Edit campaign</span>
+            </Link>
+          </Button>
+        </div>
+      </CardHeader>
+      <CardContent>
+        <div className="prose dark:prose-invert max-w-none">
+          <RichTextViewer content={description} />
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
+
+function formatTimestamp(timestamp: Date): string {
+  return timestamp.toLocaleString("en-US", {
+    month: "short",
+    day: "numeric",
+    year: "numeric",
+    hour: "numeric",
+    minute: "2-digit",
+  });
+}
+
+export function BeatItem({ beat }: { beat: typeof beats.$inferSelect }) {
+  return (
+    <div className="group relative flex gap-3 rounded-lg border-l-2 border-border bg-muted/30 p-3 transition-colors hover:bg-muted/50">
+      <div className="flex-shrink-0">
+        <div className="flex h-8 w-8 items-center justify-center rounded-md bg-background">
+          <Clock className="h-3.5 w-3.5 text-muted-foreground" />
+        </div>
+      </div>
+      <div className="flex-1 min-w-0 space-y-1">
+        <div className="flex items-center gap-2">
+          <span className="text-xs font-mono text-muted-foreground">
+            {formatTimestamp(beat.timestamp)}
+          </span>
+        </div>
+        <p className="text-sm leading-relaxed">{beat.text}</p>
+      </div>
+    </div>
+  );
+}
+
+export function SceneCard({
+  scene,
+  campaignId,
+}: {
+  scene: typeof scenes.$inferSelect & {
+    beats: (typeof beats.$inferSelect)[];
+  };
+  campaignId: string;
+}) {
+  const sortedBeats = [...scene.beats].sort(
+    (a, b) => a.timestamp.getTime() - b.timestamp.getTime(),
+  );
+
+  return (
+    <Card className="border-l-4 border-l-primary/20 transition-shadow hover:shadow-md">
+      <CardHeader className="pb-3">
+        <div className="flex items-start justify-between">
+          <div className="flex items-center gap-3">
+            <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-primary/10">
+              <BookOpen className="h-4 w-4 text-primary" />
+            </div>
+            <div className="space-y-1">
+              <CardTitle className="text-base leading-tight">
+                {scene.name}
+              </CardTitle>
+              {sortedBeats.length > 0 && (
+                <div className="flex items-center gap-2">
+                  <Badge variant="secondary" className="text-xs">
+                    {sortedBeats.length}{" "}
+                    {sortedBeats.length === 1 ? "beat" : "beats"}
+                  </Badge>
+                </div>
+              )}
+            </div>
+          </div>
+          <EditSceneButton
+            sceneId={scene.id}
+            actId={scene.actId}
+            campaignId={campaignId}
+            initialData={{
+              name: scene.name,
+              content: scene.content,
+            }}
+          />
+        </div>
+      </CardHeader>
+      <CardContent className="space-y-4">
+        {scene.content && (
+          <div className="prose prose-sm dark:prose-invert max-w-none">
+            <RichTextViewer content={scene.content} />
+          </div>
+        )}
+        <div className="space-y-2">
+          {sortedBeats.length > 0 && (
+            <>
+              <h4 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                Timeline
+              </h4>
+              <div className="space-y-2">
+                {sortedBeats.map((beat) => (
+                  <BeatItem key={beat.id} beat={beat} />
+                ))}
+              </div>
+            </>
+          )}
+          <CreateBeatCard sceneId={scene.id} campaignId={campaignId} />
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
+
+export function ActCard({
+  act,
+  campaignId,
+}: {
+  act: ActWithScenesAndBeats;
+  campaignId: string;
+}) {
+  const sortedScenes = [...act.scenes].sort(
+    (a, b) => a.createdAt.getTime() - b.createdAt.getTime(),
+  );
+
+  return (
+    <Card className="overflow-hidden transition-shadow hover:shadow-lg">
+      <CardHeader className="pb-4">
+        <div className="flex items-start justify-between">
+          <div className="flex items-center gap-4">
+            <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-primary/10">
+              <Theater className="h-6 w-6 text-primary" />
+            </div>
+            <div className="space-y-2">
+              <div className="flex items-center gap-3">
+                <CardTitle className="text-2xl leading-tight">
+                  {act.name}
+                </CardTitle>
+                {sortedScenes.length > 0 && (
+                  <Badge variant="outline" className="text-xs">
+                    {sortedScenes.length}{" "}
+                    {sortedScenes.length === 1 ? "scene" : "scenes"}
+                  </Badge>
+                )}
+              </div>
+            </div>
+          </div>
+          <EditActButton
+            actId={act.id}
+            campaignId={campaignId}
+            initialData={{
+              name: act.name,
+              content: act.content,
+            }}
+          />
+        </div>
+      </CardHeader>
+      <CardContent className="space-y-6">
+        {act.content && (
+          <div className="prose dark:prose-invert max-w-none">
+            <RichTextViewer content={act.content} />
+          </div>
+        )}
+        <div className="space-y-4">
+          {sortedScenes.length > 0 && (
+            <div className="flex items-center justify-between">
+              <h3 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">
+                Scenes
+              </h3>
+            </div>
+          )}
+          <div className="space-y-3">
+            {sortedScenes.map((scene) => (
+              <SceneCard
+                key={scene.id}
+                scene={scene}
+                campaignId={campaignId}
+              />
+            ))}
+            <CreateSceneCard actId={act.id} campaignId={campaignId} />
+          </div>
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
+
+export function ActsList({
+  acts,
+  campaignId,
+}: {
+  acts: ActWithScenesAndBeats[];
+  campaignId: string;
+}) {
+  return (
+    <div className="space-y-8">
+      {acts.map((act) => (
+        <ActCard key={act.id} act={act} campaignId={campaignId} />
+      ))}
+      <CreateActCard campaignId={campaignId} />
+    </div>
+  );
+}
 
 export default async function Page({
   params,
 }: {
   params: Promise<{ id: string }>;
 }) {
-
   const { id: campaignId } = await params;
 
   const campaign = await db.query.campaigns.findFirst({
     where: eq(campaigns.id, campaignId),
+    columns: {
+      description: true,
+    },
   });
 
-  const beingsList = await db.query.beings.findMany({
-    where: eq(beings.campaignId, campaignId),
-    orderBy: [desc(beings.createdAt)],
+  const actsList = await db.query.acts.findMany({
+    where: and(eq(acts.campaignId, campaignId), isNull(acts.deletedAt)),
+    orderBy: [desc(acts.createdAt)],
+    with: {
+      scenes: {
+        where: isNull(scenes.deletedAt),
+        orderBy: [desc(scenes.createdAt)],
+        with: {
+          beats: {
+            where: isNull(beats.deletedAt),
+            orderBy: [desc(beats.timestamp)],
+          },
+        },
+      },
+    },
   });
 
   return (
-    <div className="container mx-auto px-4 py-8">
-      <div className="space-y-6">
-        <div className="flex items-center justify-between">
-          <div className="space-y-1">
-            <h1 className="text-4xl font-bold tracking-tight">{PAGE_TITLE}</h1>
-            <p className="text-base text-muted-foreground">
-              {PAGE_DESCRIPTION}
-            </p>
-          </div>
-          {beingsList.length > 0 && (
-            <Button asChild>
-              <Link href={`/campaigns/${campaignId}/beings/new`}>
-                <Plus className="mr-2 h-4 w-4" />
-                {CREATE_BUTTON_TEXT}
-              </Link>
-            </Button>
-          )}
-        </div>
-
-        <Separator />
-
-        {campaign?.description && (
-          <Card>
-            <CardHeader>
-              <CardTitle>{CAMPAIGN_CONTEXT_TITLE}</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="prose dark:prose-invert max-w-none">
-                <RichTextViewer content={campaign.description} />
-              </div>
-            </CardContent>
-          </Card>
-        )}
-
-        {beingsList.length === 0 ? (
-          <Card className="text-center py-12">
-            <CardContent>
-              <Scroll className="mx-auto h-12 w-12 text-muted-foreground mb-4" />
-              <h3 className="text-xl font-semibold mb-2">{EMPTY_STATE_TITLE}</h3>
-              <p className="text-muted-foreground mb-6">
-                {EMPTY_STATE_DESCRIPTION}
-              </p>
-              <Button asChild>
-                <Link href={`/campaigns/${campaignId}/beings/new`}>
-                  <Plus className="mr-2 h-4 w-4" />
-                  {CREATE_BUTTON_TEXT}
-                </Link>
-              </Button>
-            </CardContent>
-          </Card>
-        ) : (
-          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-            {beingsList.map((being) => (
-              <Link
-                key={being.id}
-                href={`/campaigns/${campaignId}/beings/${being.id}`}
-              >
-                <Card className="h-full hover:shadow-lg transition-shadow cursor-pointer">
-                  <CardHeader>
-                    <div className="flex items-start gap-4">
-                      {being.imageId ? (
-                        <div className="relative w-16 h-16 rounded-md overflow-hidden shrink-0">
-                          <Image
-                            src={being.imageId}
-                            alt={being.name}
-                            fill
-                            className="object-cover"
-                          />
-                        </div>
-                      ) : (
-                        <div className="w-16 h-16 rounded-md bg-muted flex items-center justify-center shrink-0">
-                          <User className="h-8 w-8 text-muted-foreground" />
-                        </div>
-                      )}
-                      <div className="flex-1 min-w-0">
-                        <CardTitle className="truncate">{being.name}</CardTitle>
-                        {being.title && (
-                          <CardDescription className="truncate">
-                            {being.title}
-                          </CardDescription>
-                        )}
-                      </div>
-                    </div>
-                  </CardHeader>
-                  <CardContent>
-                    {being.description && (
-                      <p className="text-sm text-muted-foreground line-clamp-3">
-                        {typeof being.description === 'string'
-                          ? truncateText(
-                            extractTextFromLexical(being.description),
-                            DESCRIPTION_TRUNCATE_LENGTH
-                          )
-                          : ''}
-                      </p>
-                    )}
-                    <div className="mt-4 flex gap-2 flex-wrap text-xs text-muted-foreground">
-                      {being.type && (
-                        <span className="px-2 py-1 bg-muted rounded">
-                          {being.type}
-                        </span>
-                      )}
-                      {being.location && (
-                        <span className="px-2 py-1 bg-muted rounded">
-                          {being.location}
-                        </span>
-                      )}
-                    </div>
-                  </CardContent>
-                </Card>
-              </Link>
-            ))}
-          </div>
-        )}
-      </div>
+    <div className="container mx-auto max-w-5xl px-4 py-8 space-y-8">
+      {actsList.length > 0 && (
+        <CampaignDescriptionCard
+          description={campaign?.description ?? null}
+          campaignId={campaignId}
+        />
+      )}
+      {actsList.length === 0 ? (
+        <Card>
+          <EmptyState campaignId={campaignId} />
+        </Card>
+      ) : (
+        <ActsList acts={actsList} campaignId={campaignId} />
+      )}
     </div>
   );
 }
