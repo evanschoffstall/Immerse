@@ -1,3 +1,4 @@
+import { EditCampaignField } from "@/components/campaigns";
 import RichTextViewer from "@/components/editor/RichTextViewer";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
@@ -6,6 +7,7 @@ import { acts, beats, campaigns, scenes } from "@/db/schema";
 import { hasLexicalContent } from "@/lib/utils/lexical";
 import { and, desc, eq, isNull } from "drizzle-orm";
 import { BookOpen, Clock, ScrollText, Theater } from "lucide-react";
+import { updateCampaign } from "../edit/actions";
 import {
   CreateActCard,
   CreateBeatCard,
@@ -14,8 +16,6 @@ import {
   EditSceneButton,
   EmptyState,
 } from "./client";
-import { EditCampaignDescription } from "./EditCampaignDescription";
-import { EditCampaignName } from "./EditCampaignName";
 
 type ActWithScenesAndBeats = typeof acts.$inferSelect & {
   scenes: (typeof scenes.$inferSelect & {
@@ -39,12 +39,17 @@ export function PageHeader({
   return (
     <div className="group flex items-center gap-2">
       <h1 className="text-4xl font-bold tracking-tight">{campaignName}</h1>
-      <EditCampaignName
+      <EditCampaignField
         campaignId={campaignId}
-        currentName={campaignName}
-        currentDescription={campaignDescription}
-        currentImage={campaignImage}
-        currentBackgroundImage={campaignBackgroundImage}
+        currentData={{
+          name: campaignName,
+          description: campaignDescription,
+          image: campaignImage,
+          backgroundImage: campaignBackgroundImage,
+        }}
+        field="name"
+        onUpdate={updateCampaign}
+        buttonClassName="h-8 w-8 opacity-0 group-hover:opacity-100 transition-opacity"
       />
     </div>
   );
@@ -77,12 +82,17 @@ export function CampaignDescriptionCard({
             </div>
             <CardTitle className="text-2xl leading-tight">Overview</CardTitle>
           </div>
-          <EditCampaignDescription
+          <EditCampaignField
             campaignId={campaignId}
-            currentName={campaignName}
-            currentDescription={description}
-            currentImage={campaignImage}
-            currentBackgroundImage={campaignBackgroundImage}
+            currentData={{
+              name: campaignName,
+              description: description,
+              image: campaignImage,
+              backgroundImage: campaignBackgroundImage,
+            }}
+            field="description"
+            onUpdate={updateCampaign}
+            buttonClassName="h-8 w-8 opacity-0 group-hover/overview:opacity-100 transition-opacity"
           />
         </div>
       </CardHeader>
