@@ -30,7 +30,6 @@ import {
   Mountain,
   Notebook,
   Scroll,
-  Settings,
   Shield,
   Sparkles,
   Tags,
@@ -42,6 +41,7 @@ import {
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useEffect, useMemo } from 'react';
+import { SettingsButton } from './SettingsButton';
 
 interface CampaignLayoutClientProps {
   campaign: Campaign;
@@ -174,11 +174,7 @@ export default function CampaignLayoutClient({
       { icon: History, label: 'Recent changes', href: campaignRoute('/recent-changes') },
     ];
 
-    const settingsNav: NavItem[] = [
-      { icon: Settings, label: 'Settings', href: campaignRoute('/edit') },
-    ];
-
-    return { mainNav, groupedNav, standaloneNav, settingsNav };
+    return { mainNav, groupedNav, standaloneNav };
   }, [campaignId]);
 
   const isActive = (href: string) => {
@@ -340,16 +336,16 @@ export default function CampaignLayoutClient({
               <SidebarGroup>
                 <SidebarGroupContent>
                   <SidebarMenu>
-                    {navigation.settingsNav.map((item) => (
-                      <SidebarMenuItem key={item.href}>
-                        <SidebarMenuButton asChild>
-                          <Link href={item.href}>
-                            <item.icon className="w-4 h-4" />
-                            <span>{item.label}</span>
-                          </Link>
-                        </SidebarMenuButton>
-                      </SidebarMenuItem>
-                    ))}
+                    <SidebarMenuItem>
+                      <SettingsButton
+                        campaignId={campaign.id}
+                        campaignName={campaign.name}
+                        campaignDescription={campaign.description}
+                        campaignImage={campaign.image}
+                        campaignBackgroundImage={campaign.backgroundImage}
+                        campaignSettings={campaignSettings}
+                      />
+                    </SidebarMenuItem>
                   </SidebarMenu>
                 </SidebarGroupContent>
               </SidebarGroup>

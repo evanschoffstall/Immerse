@@ -16,9 +16,15 @@ import {
 import { cn } from "@/lib/utils";
 import { BookOpen, Clock, Edit2, Plus, Theater } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useState, useTransition } from "react";
 import { toast } from "sonner";
-import { createAct, createBeat, createScene, updateAct, updateScene } from "./actions";
+import {
+  createAct,
+  createBeat,
+  createScene,
+  updateAct,
+  updateScene,
+} from "./actions";
 
 export function EmptyState({ campaignId }: { campaignId: string }) {
   return (
@@ -49,11 +55,10 @@ function CreateActDialog({
   open: boolean;
   onOpenChange: (open: boolean) => void;
 }) {
-  const [isCreating, setIsCreating] = useState(false);
+  const [isPending, startTransition] = useTransition();
   const router = useRouter();
 
   const handleCreateAct = async (data: ActFormData) => {
-    setIsCreating(true);
     try {
       const formData = new FormData();
       formData.append("name", data.name);
@@ -61,12 +66,13 @@ function CreateActDialog({
 
       await createAct(campaignId, formData, false);
       toast.success("Act created successfully!");
-      onOpenChange(false);
-      router.refresh();
+      startTransition(() => {
+        router.refresh();
+        onOpenChange(false);
+      });
     } catch (error: any) {
       console.error("Error creating act:", error);
       toast.error(error.message || "Failed to create act");
-      setIsCreating(false);
     }
   };
 
@@ -82,7 +88,7 @@ function CreateActDialog({
         </DialogHeader>
         <ActForm
           onSubmit={handleCreateAct}
-          isLoading={isCreating}
+          isLoading={isPending}
           submitText="Create Act"
         />
       </DialogContent>
@@ -103,24 +109,22 @@ function EditActDialog({
   open: boolean;
   onOpenChange: (open: boolean) => void;
 }) {
-  const [isUpdating, setIsUpdating] = useState(false);
+  const [isPending, startTransition] = useTransition();
   const router = useRouter();
 
   const handleUpdateAct = async (data: ActFormData) => {
-    setIsUpdating(true);
     try {
       const formData = new FormData();
       formData.append("name", data.name);
       if (data.content) formData.append("content", data.content);
 
       await updateAct(actId, formData, false);
-      toast.success("Act updated successfully!");
       onOpenChange(false);
+      toast.success("Act updated successfully!");
       router.refresh();
     } catch (error: any) {
       console.error("Error updating act:", error);
       toast.error(error.message || "Failed to update act");
-      setIsUpdating(false);
     }
   };
 
@@ -136,7 +140,7 @@ function EditActDialog({
         <ActForm
           initialData={initialData}
           onSubmit={handleUpdateAct}
-          isLoading={isUpdating}
+          isLoading={isPending}
           submitText="Update Act"
         />
       </DialogContent>
@@ -151,19 +155,19 @@ export function CreateActCard({ campaignId }: { campaignId: string }) {
     <>
       <Card
         className={cn(
-          "overflow-hidden transition-all cursor-pointer",
-          "hover:shadow-lg hover:border-primary/50",
+          "border-0 border-l-4 border-l-primary/20 transition-all cursor-pointer bg-muted/20",
+          "hover:shadow-lg hover:bg-muted/40 hover:border-l-primary/50",
           "border-dashed",
         )}
         onClick={() => setOpen(true)}
       >
-        <CardHeader className="pb-4">
+        <CardHeader className="py-3">
           <div className="flex items-center gap-4">
             <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-primary/10">
               <Theater className="h-6 w-6 text-primary" />
             </div>
             <div className="space-y-1">
-              <CardTitle className="text-2xl leading-tight text-muted-foreground">
+              <CardTitle className="text-xl leading-tight text-muted-foreground">
                 New Act
               </CardTitle>
               <p className="text-sm text-muted-foreground">
@@ -248,11 +252,10 @@ function CreateSceneDialog({
   open: boolean;
   onOpenChange: (open: boolean) => void;
 }) {
-  const [isCreating, setIsCreating] = useState(false);
+  const [isPending, startTransition] = useTransition();
   const router = useRouter();
 
   const handleCreateScene = async (data: SceneFormData) => {
-    setIsCreating(true);
     try {
       const formData = new FormData();
       formData.append("name", data.name);
@@ -260,12 +263,13 @@ function CreateSceneDialog({
 
       await createScene(actId, formData, false);
       toast.success("Scene created successfully!");
-      onOpenChange(false);
-      router.refresh();
+      startTransition(() => {
+        router.refresh();
+        onOpenChange(false);
+      });
     } catch (error: any) {
       console.error("Error creating scene:", error);
       toast.error(error.message || "Failed to create scene");
-      setIsCreating(false);
     }
   };
 
@@ -281,7 +285,7 @@ function CreateSceneDialog({
         </DialogHeader>
         <SceneForm
           onSubmit={handleCreateScene}
-          isLoading={isCreating}
+          isLoading={isPending}
           submitText="Create Scene"
         />
       </DialogContent>
@@ -304,11 +308,10 @@ function EditSceneDialog({
   open: boolean;
   onOpenChange: (open: boolean) => void;
 }) {
-  const [isUpdating, setIsUpdating] = useState(false);
+  const [isPending, startTransition] = useTransition();
   const router = useRouter();
 
   const handleUpdateScene = async (data: SceneFormData) => {
-    setIsUpdating(true);
     try {
       const formData = new FormData();
       formData.append("name", data.name);
@@ -316,12 +319,13 @@ function EditSceneDialog({
 
       await updateScene(sceneId, formData, false);
       toast.success("Scene updated successfully!");
-      onOpenChange(false);
-      router.refresh();
+      startTransition(() => {
+        router.refresh();
+        onOpenChange(false);
+      });
     } catch (error: any) {
       console.error("Error updating scene:", error);
       toast.error(error.message || "Failed to update scene");
-      setIsUpdating(false);
     }
   };
 
@@ -337,7 +341,7 @@ function EditSceneDialog({
         <SceneForm
           initialData={initialData}
           onSubmit={handleUpdateScene}
-          isLoading={isUpdating}
+          isLoading={isPending}
           submitText="Update Scene"
         />
       </DialogContent>
@@ -358,13 +362,13 @@ export function CreateSceneCard({
     <>
       <Card
         className={cn(
-          "border-l-4 border-l-primary/20 transition-all cursor-pointer",
-          "hover:shadow-md hover:border-primary/40",
+          "border-0 border-l-3 border-l-primary/20 transition-all cursor-pointer bg-muted/20",
+          "hover:shadow-md hover:bg-muted/40 hover:border-l-primary/50",
           "border-dashed",
         )}
         onClick={() => setOpen(true)}
       >
-        <CardHeader className="pb-3">
+        <CardHeader className="py-3">
           <div className="flex items-center gap-3">
             <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-primary/10">
               <BookOpen className="h-4 w-4 text-primary" />
@@ -401,24 +405,26 @@ function CreateBeatDialog({
   open: boolean;
   onOpenChange: (open: boolean) => void;
 }) {
-  const [isCreating, setIsCreating] = useState(false);
+  const [isPending, startTransition] = useTransition();
   const router = useRouter();
 
   const handleCreateBeat = async (data: BeatFormData) => {
-    setIsCreating(true);
     try {
+      // Convert datetime-local string to ISO string with timezone
+      const localDate = new Date(data.timestamp);
+      const isoTimestamp = localDate.toISOString();
+
       const formData = new FormData();
       formData.append("text", data.text);
-      formData.append("timestamp", data.timestamp);
+      formData.append("timestamp", isoTimestamp);
 
       await createBeat(sceneId, formData, false);
-      toast.success("Beat created successfully!");
       onOpenChange(false);
+      toast.success("Beat created successfully!");
       router.refresh();
     } catch (error: any) {
       console.error("Error creating beat:", error);
       toast.error(error.message || "Failed to create beat");
-      setIsCreating(false);
     }
   };
 
@@ -433,7 +439,7 @@ function CreateBeatDialog({
         </DialogHeader>
         <BeatForm
           onSubmit={handleCreateBeat}
-          isLoading={isCreating}
+          isLoading={isPending}
           submitText="Create Beat"
         />
       </DialogContent>
@@ -454,14 +460,14 @@ export function CreateBeatCard({
     <>
       <div
         className={cn(
-          "group relative flex gap-3 rounded-lg border-l-2 border-dashed border-border bg-muted/20 p-3 transition-colors cursor-pointer",
-          "hover:bg-muted/40 hover:border-primary/50",
+          "group relative flex gap-3 rounded-lg border-l-2 border-dashed border-l-primary/20 bg-muted/20 p-3 transition-colors cursor-pointer",
+          "hover:bg-muted/40 hover:border-l-primary/50",
         )}
         onClick={() => setOpen(true)}
       >
         <div className="flex-shrink-0">
-          <div className="flex h-8 w-8 items-center justify-center rounded-md bg-background">
-            <Clock className="h-3.5 w-3.5 text-muted-foreground" />
+          <div className="flex h-8 w-8 items-center justify-center rounded-md bg-primary/10">
+            <Clock className="h-3.5 w-3.5 text-primary" />
           </div>
         </div>
         <div className="flex-1 min-w-0 space-y-1">

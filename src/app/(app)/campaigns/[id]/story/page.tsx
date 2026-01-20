@@ -1,12 +1,10 @@
 import RichTextViewer from "@/components/editor/RichTextViewer";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Separator } from "@/components/ui/separator";
 import { db } from "@/db";
 import { acts, beats, campaigns, scenes } from "@/db/schema";
 import { and, desc, eq, isNull } from "drizzle-orm";
-import { BookOpen, Clock, Edit2, ScrollText, Theater } from "lucide-react";
-import Link from "next/link";
+import { BookOpen, Clock, ScrollText, Theater } from "lucide-react";
 import {
   CreateActCard,
   CreateBeatCard,
@@ -15,6 +13,8 @@ import {
   EditSceneButton,
   EmptyState,
 } from "./client";
+import { EditCampaignDescription } from "./EditCampaignDescription";
+import { EditCampaignName } from "./EditCampaignName";
 
 type ActWithScenesAndBeats = typeof acts.$inferSelect & {
   scenes: (typeof scenes.$inferSelect & {
@@ -22,67 +22,102 @@ type ActWithScenesAndBeats = typeof acts.$inferSelect & {
   })[];
 };
 
+export function PageHeader({
+  campaignName,
+  campaignId,
+  campaignDescription,
+  campaignImage,
+  campaignBackgroundImage,
+}: {
+  campaignName: string;
+  campaignId: string;
+  campaignDescription: string | null;
+  campaignImage: string | null;
+  campaignBackgroundImage: string | null;
+}) {
+  return (
+    <div className="group flex items-center gap-2">
+      <h1 className="text-4xl font-bold tracking-tight">{campaignName}</h1>
+      <EditCampaignName
+        campaignId={campaignId}
+        currentName={campaignName}
+        currentDescription={campaignDescription}
+        currentImage={campaignImage}
+        currentBackgroundImage={campaignBackgroundImage}
+      />
+    </div>
+  );
+}
+
 export function CampaignDescriptionCard({
   description,
   campaignId,
+  campaignName,
+  campaignImage,
+  campaignBackgroundImage,
+  campaignSettings,
 }: {
   description: string | null;
   campaignId: string;
+  campaignName: string;
+  campaignImage: string | null;
+  campaignBackgroundImage: string | null;
+  campaignSettings: any;
 }) {
-  if (!description) return null;
-
   return (
-    <Card>
-      <CardHeader className="pb-4">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-primary/10">
-              <ScrollText className="h-5 w-5 text-primary" />
+    <Card className="group/overview">
+      <CardHeader className={description ? "pb-4" : ""}>
+        <div className="flex items-center justify-between gap-4">
+          <div className="flex items-center gap-4 flex-1 min-w-0">
+            <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-primary/10">
+              <ScrollText className="h-6 w-6 text-primary" />
             </div>
-            <CardTitle className="text-xl">Campaign Overview</CardTitle>
+            <CardTitle className="text-2xl leading-tight">Overview</CardTitle>
           </div>
-          <Button variant="ghost" size="icon" className="h-9 w-9" asChild>
-            <Link href={`/campaigns/${campaignId}/edit`}>
-              <Edit2 className="h-4 w-4" />
-              <span className="sr-only">Edit campaign</span>
-            </Link>
-          </Button>
+          <EditCampaignDescription
+            campaignId={campaignId}
+            currentName={campaignName}
+            currentDescription={description}
+            currentImage={campaignImage}
+            currentBackgroundImage={campaignBackgroundImage}
+          />
         </div>
       </CardHeader>
-      <CardContent>
-        <div className="prose dark:prose-invert max-w-none">
-          <RichTextViewer content={description} />
-        </div>
-      </CardContent>
+      {description && (
+        <CardContent>
+          <div className="prose dark:prose-invert max-w-none">
+            <RichTextViewer content={description} />
+          </div>
+        </CardContent>
+      )}
     </Card>
   );
 }
 
 function formatTimestamp(timestamp: Date): string {
-  return timestamp.toLocaleString("en-US", {
+  return timestamp.toLocaleString(undefined, {
     month: "short",
     day: "numeric",
     year: "numeric",
     hour: "numeric",
     minute: "2-digit",
+    hour12: true,
   });
 }
 
 export function BeatItem({ beat }: { beat: typeof beats.$inferSelect }) {
   return (
-    <div className="group relative flex gap-3 rounded-lg border-l-2 border-border bg-muted/30 p-3 transition-colors hover:bg-muted/50">
+    <div className="group/beat flex gap-3 rounded-md bg-muted/50 p-3 transition-colors hover:bg-muted">
       <div className="flex-shrink-0">
-        <div className="flex h-8 w-8 items-center justify-center rounded-md bg-background">
-          <Clock className="h-3.5 w-3.5 text-muted-foreground" />
+        <div className="flex h-6 w-6 items-center justify-center">
+          <Clock className="h-3 w-3 text-muted-foreground" />
         </div>
       </div>
       <div className="flex-1 min-w-0 space-y-1">
-        <div className="flex items-center gap-2">
-          <span className="text-xs font-mono text-muted-foreground">
-            {formatTimestamp(beat.timestamp)}
-          </span>
-        </div>
-        <p className="text-sm leading-relaxed">{beat.text}</p>
+        <span className="text-xs font-mono text-muted-foreground">
+          {formatTimestamp(beat.timestamp)}
+        </span>
+        <p className="text-sm">{beat.text}</p>
       </div>
     </div>
   );
@@ -102,60 +137,51 @@ export function SceneCard({
   );
 
   return (
-    <Card className="border-l-4 border-l-primary/20 transition-shadow hover:shadow-md">
-      <CardHeader className="pb-3">
-        <div className="flex items-start justify-between">
-          <div className="flex items-center gap-3">
-            <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-primary/10">
+    <Card className="group/scene ml-8 transition-shadow hover:shadow-md">
+      <CardHeader
+        className={scene.content || sortedBeats.length > 0 ? "pb-3" : ""}
+      >
+        <div className="flex items-center justify-between gap-4">
+          <div className="flex items-center gap-3 flex-1 min-w-0">
+            <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-primary/10">
               <BookOpen className="h-4 w-4 text-primary" />
             </div>
-            <div className="space-y-1">
-              <CardTitle className="text-base leading-tight">
+            <div className="flex-1 min-w-0">
+              <CardTitle className="text-lg leading-tight">
                 {scene.name}
               </CardTitle>
-              {sortedBeats.length > 0 && (
-                <div className="flex items-center gap-2">
-                  <Badge variant="secondary" className="text-xs">
-                    {sortedBeats.length}{" "}
-                    {sortedBeats.length === 1 ? "beat" : "beats"}
-                  </Badge>
-                </div>
-              )}
             </div>
           </div>
-          <EditSceneButton
-            sceneId={scene.id}
-            actId={scene.actId}
-            campaignId={campaignId}
-            initialData={{
-              name: scene.name,
-              content: scene.content,
-            }}
-          />
+          <div className="opacity-0 group-hover/scene:opacity-100 transition-opacity">
+            <EditSceneButton
+              sceneId={scene.id}
+              actId={scene.actId}
+              campaignId={campaignId}
+              initialData={{
+                name: scene.name,
+                content: scene.content,
+              }}
+            />
+          </div>
         </div>
       </CardHeader>
-      <CardContent className="space-y-4">
-        {scene.content && (
-          <div className="prose prose-sm dark:prose-invert max-w-none">
-            <RichTextViewer content={scene.content} />
-          </div>
-        )}
-        <div className="space-y-2">
+      {scene.content || sortedBeats.length > 0 ? (
+        <CardContent className="space-y-4">
+          {scene.content && (
+            <div className="prose prose-sm dark:prose-invert max-w-none">
+              <RichTextViewer content={scene.content} />
+            </div>
+          )}
           {sortedBeats.length > 0 && (
-            <>
-              <h4 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                Timeline
-              </h4>
-              <div className="space-y-2">
-                {sortedBeats.map((beat) => (
-                  <BeatItem key={beat.id} beat={beat} />
-                ))}
-              </div>
-            </>
+            <div className="space-y-2">
+              {sortedBeats.map((beat) => (
+                <BeatItem key={beat.id} beat={beat} />
+              ))}
+            </div>
           )}
           <CreateBeatCard sceneId={scene.id} campaignId={campaignId} />
-        </div>
-      </CardContent>
+        </CardContent>
+      ) : null}
     </Card>
   );
 }
@@ -172,63 +198,61 @@ export function ActCard({
   );
 
   return (
-    <Card className="overflow-hidden transition-shadow hover:shadow-lg">
-      <CardHeader className="pb-4">
-        <div className="flex items-start justify-between">
-          <div className="flex items-center gap-4">
+    <Card className="group/act overflow-hidden transition-shadow hover:shadow-lg">
+      <CardHeader
+        className={act.content || sortedScenes.length > 0 ? "pb-4" : ""}
+      >
+        <div className="flex items-center justify-between gap-4">
+          <div className="flex items-center gap-4 flex-1 min-w-0">
             <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-primary/10">
               <Theater className="h-6 w-6 text-primary" />
             </div>
-            <div className="space-y-2">
-              <div className="flex items-center gap-3">
-                <CardTitle className="text-2xl leading-tight">
-                  {act.name}
-                </CardTitle>
-                {sortedScenes.length > 0 && (
-                  <Badge variant="outline" className="text-xs">
-                    {sortedScenes.length}{" "}
-                    {sortedScenes.length === 1 ? "scene" : "scenes"}
-                  </Badge>
-                )}
-              </div>
+            <div className="flex-1 min-w-0">
+              <CardTitle className="text-xl leading-tight">
+                {act.name}
+              </CardTitle>
             </div>
           </div>
-          <EditActButton
-            actId={act.id}
-            campaignId={campaignId}
-            initialData={{
-              name: act.name,
-              content: act.content,
-            }}
-          />
+          <div className="opacity-0 group-hover/act:opacity-100 transition-opacity">
+            <EditActButton
+              actId={act.id}
+              campaignId={campaignId}
+              initialData={{
+                name: act.name,
+                content: act.content,
+              }}
+            />
+          </div>
         </div>
       </CardHeader>
-      <CardContent className="space-y-6">
-        {act.content && (
-          <div className="prose dark:prose-invert max-w-none">
-            <RichTextViewer content={act.content} />
-          </div>
-        )}
-        <div className="space-y-4">
-          {sortedScenes.length > 0 && (
-            <div className="flex items-center justify-between">
-              <h3 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">
-                Scenes
-              </h3>
+      {act.content || sortedScenes.length > 0 ? (
+        <CardContent className="space-y-6">
+          {act.content && (
+            <div className="prose dark:prose-invert max-w-none">
+              <RichTextViewer content={act.content} />
             </div>
           )}
-          <div className="space-y-3">
-            {sortedScenes.map((scene) => (
-              <SceneCard
-                key={scene.id}
-                scene={scene}
-                campaignId={campaignId}
-              />
-            ))}
-            <CreateSceneCard actId={act.id} campaignId={campaignId} />
-          </div>
-        </div>
-      </CardContent>
+          {sortedScenes.length > 0 && (
+            <div className="space-y-3">
+              {sortedScenes.map((scene) => (
+                <SceneCard
+                  key={scene.id}
+                  scene={scene}
+                  campaignId={campaignId}
+                />
+              ))}
+              <div className="ml-8">
+                <CreateSceneCard actId={act.id} campaignId={campaignId} />
+              </div>
+            </div>
+          )}
+          {sortedScenes.length === 0 && act.content && (
+            <div className="ml-8">
+              <CreateSceneCard actId={act.id} campaignId={campaignId} />
+            </div>
+          )}
+        </CardContent>
+      ) : null}
     </Card>
   );
 }
@@ -241,12 +265,22 @@ export function ActsList({
   campaignId: string;
 }) {
   return (
-    <div className="space-y-8">
-      {acts.map((act) => (
-        <ActCard key={act.id} act={act} campaignId={campaignId} />
-      ))}
-      <CreateActCard campaignId={campaignId} />
-    </div>
+    <Card>
+      <CardHeader className="pb-4">
+        <div className="flex items-center gap-4">
+          <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-primary/10">
+            <Theater className="h-6 w-6 text-primary" />
+          </div>
+          <CardTitle className="text-2xl leading-tight">Acts</CardTitle>
+        </div>
+      </CardHeader>
+      <CardContent className="space-y-6">
+        {acts.map((act) => (
+          <ActCard key={act.id} act={act} campaignId={campaignId} />
+        ))}
+        <CreateActCard campaignId={campaignId} />
+      </CardContent>
+    </Card>
   );
 }
 
@@ -260,7 +294,13 @@ export default async function Page({
   const campaign = await db.query.campaigns.findFirst({
     where: eq(campaigns.id, campaignId),
     columns: {
+      name: true,
       description: true,
+      image: true,
+      backgroundImage: true,
+    },
+    with: {
+      settings: true,
     },
   });
 
@@ -283,10 +323,22 @@ export default async function Page({
 
   return (
     <div className="container mx-auto max-w-5xl px-4 py-8 space-y-8">
+      <PageHeader
+        campaignName={campaign?.name ?? "Campaign"}
+        campaignId={campaignId}
+        campaignDescription={campaign?.description ?? null}
+        campaignImage={campaign?.image ?? null}
+        campaignBackgroundImage={campaign?.backgroundImage ?? null}
+      />
+      <Separator />
       {actsList.length > 0 && (
         <CampaignDescriptionCard
           description={campaign?.description ?? null}
           campaignId={campaignId}
+          campaignName={campaign?.name ?? "Campaign"}
+          campaignImage={campaign?.image ?? null}
+          campaignBackgroundImage={campaign?.backgroundImage ?? null}
+          campaignSettings={campaign?.settings ?? null}
         />
       )}
       {actsList.length === 0 ? (
