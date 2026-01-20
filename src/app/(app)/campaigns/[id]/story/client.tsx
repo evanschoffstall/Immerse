@@ -26,35 +26,6 @@ import {
   updateScene,
 } from "./actions";
 
-// Client wrapper components for hover state management
-export function HoverCard({
-  children,
-  className,
-  onHoverChange,
-}: {
-  children: React.ReactNode;
-  className?: string;
-  onHoverChange?: (isHovered: boolean) => void;
-}) {
-  const [isHovered, setIsHovered] = useState(false);
-
-  const handleMouseEnter = () => {
-    setIsHovered(true);
-    onHoverChange?.(true);
-  };
-
-  const handleMouseLeave = () => {
-    setIsHovered(false);
-    onHoverChange?.(false);
-  };
-
-  return (
-    <div onMouseEnter={handleMouseEnter} onMouseLeave={handleMouseLeave} className={className}>
-      {typeof children === 'function' ? children(isHovered) : children}
-    </div>
-  );
-}
-
 export function EmptyState({ campaignId }: { campaignId: string }) {
   return (
     <CardContent className="p-12">
@@ -236,6 +207,26 @@ export function CreateActButton({ campaignId }: { campaignId: string }) {
         />
       </Dialog>
     </>
+  );
+}
+
+export function CreateActInlineButton({ campaignId }: { campaignId: string }) {
+  const [open, setOpen] = useState(false);
+
+  return (
+    <Dialog open={open} onOpenChange={setOpen}>
+      <DialogTrigger asChild>
+        <Button variant="ghost" size="sm" className="h-8 px-2 text-xs">
+          <Plus className="mr-1 h-3.5 w-3.5" />
+          New Act
+        </Button>
+      </DialogTrigger>
+      <CreateActDialog
+        campaignId={campaignId}
+        open={open}
+        onOpenChange={setOpen}
+      />
+    </Dialog>
   );
 }
 
@@ -428,6 +419,33 @@ export function CreateSceneCard({
   );
 }
 
+export function CreateSceneInlineButton({
+  actId,
+  campaignId,
+}: {
+  actId: string;
+  campaignId: string;
+}) {
+  const [open, setOpen] = useState(false);
+
+  return (
+    <Dialog open={open} onOpenChange={setOpen}>
+      <DialogTrigger asChild>
+        <Button variant="ghost" size="sm" className="h-8 px-2 text-xs">
+          <Plus className="mr-1 h-3.5 w-3.5" />
+          New Scene
+        </Button>
+      </DialogTrigger>
+      <CreateSceneDialog
+        actId={actId}
+        campaignId={campaignId}
+        open={open}
+        onOpenChange={setOpen}
+      />
+    </Dialog>
+  );
+}
+
 function CreateBeatDialog({
   sceneId,
   campaignId,
@@ -499,7 +517,7 @@ export function CreateBeatCard({
         )}
         onClick={() => setOpen(true)}
       >
-        <div className="flex-shrink-0">
+        <div className="shrink-0">
           <div className="flex h-8 w-8 items-center justify-center rounded-md bg-primary/10">
             <Clock className="h-3.5 w-3.5 text-primary" />
           </div>
@@ -518,6 +536,33 @@ export function CreateBeatCard({
         onOpenChange={setOpen}
       />
     </>
+  );
+}
+
+export function CreateBeatInlineButton({
+  sceneId,
+  campaignId,
+}: {
+  sceneId: string;
+  campaignId: string;
+}) {
+  const [open, setOpen] = useState(false);
+
+  return (
+    <Dialog open={open} onOpenChange={setOpen}>
+      <DialogTrigger asChild>
+        <Button variant="ghost" size="sm" className="h-8 px-2 text-xs">
+          <Plus className="mr-1 h-3.5 w-3.5" />
+          New Beat
+        </Button>
+      </DialogTrigger>
+      <CreateBeatDialog
+        sceneId={sceneId}
+        campaignId={campaignId}
+        open={open}
+        onOpenChange={setOpen}
+      />
+    </Dialog>
   );
 }
 

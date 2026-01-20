@@ -205,17 +205,14 @@
   background-color: rgba(0, 0, 0, 0.5) !important;
 }
 
-.act-card:has(.scene-card:hover) .act-edit-control,
-.act-card:has(.scene-card:hover) .act-create-control {
+.act-card:has(.scene-card:hover) .act-header-actions {
   opacity: 0;
   transform: translateY(0.5rem);
-  max-height: 0;
   pointer-events: none;
 }
 
-.acts-list-card:has(.act-card:hover) .acts-list-create-control {
+.acts-list-card:has(.act-card:hover) .acts-list-header-actions {
   opacity: 0;
   transform: translateY(0.5rem);
-  max-height: 0;
   pointer-events: none;
 }

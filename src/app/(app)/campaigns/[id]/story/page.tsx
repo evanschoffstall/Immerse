@@ -9,13 +9,13 @@ import { and, desc, eq, isNull } from "drizzle-orm";
 import { BookOpen, Clock, ScrollText, Theater } from "lucide-react";
 import { updateCampaign } from "../edit/actions";
 import {
-  CreateActCard,
-  CreateBeatCard,
-  CreateSceneCard,
+  CreateActInlineButton,
+  CreateBeatInlineButton,
+  CreateSceneInlineButton,
   EditActButton,
   EditSceneButton,
   EmptyState,
-  InteractiveContainer
+  InteractiveContainer,
 } from "./client";
 
 type ActWithScenesAndBeats = typeof acts.$inferSelect & {
@@ -168,7 +168,7 @@ export function SceneCard({
               </CardTitle>
             </div>
           </div>
-          <div className="scene-edit-control opacity-0 pointer-events-none transition-opacity group-hover/scene-header:opacity-100 group-hover/scene-header:pointer-events-auto">
+          <div className="scene-header-actions opacity-0 pointer-events-none transition-opacity group-hover/scene-header:opacity-100 group-hover/scene-header:pointer-events-auto flex items-center gap-2">
             <EditSceneButton
               sceneId={scene.id}
               actId={scene.actId}
@@ -177,6 +177,10 @@ export function SceneCard({
                 name: scene.name,
                 content: scene.content,
               }}
+            />
+            <CreateBeatInlineButton
+              sceneId={scene.id}
+              campaignId={campaignId}
             />
           </div>
         </div>
@@ -195,9 +199,6 @@ export function SceneCard({
               ))}
             </div>
           )}
-          <div className="scene-create-control max-h-0 overflow-hidden opacity-0 translate-y-2 pointer-events-none transition-all duration-200 group-hover/scene:opacity-100 group-hover/scene:translate-y-0 group-hover/scene:max-h-50 group-hover/scene:pointer-events-auto">
-            <CreateBeatCard sceneId={scene.id} campaignId={campaignId} />
-          </div>
         </CardContent>
       </InteractiveContainer>
     </Card>
@@ -231,7 +232,7 @@ export function ActCard({
               </CardTitle>
             </div>
           </div>
-          <div className="act-edit-control opacity-0 pointer-events-none transition-opacity group-hover/act-header:opacity-100 group-hover/act-header:pointer-events-auto">
+          <div className="act-header-actions opacity-0 pointer-events-none transition-opacity group-hover/act-header:opacity-100 group-hover/act-header:pointer-events-auto flex items-center gap-2">
             <EditActButton
               actId={act.id}
               campaignId={campaignId}
@@ -240,6 +241,7 @@ export function ActCard({
                 content: act.content,
               }}
             />
+            <CreateSceneInlineButton actId={act.id} campaignId={campaignId} />
           </div>
         </div>
       </CardHeader>
@@ -259,14 +261,6 @@ export function ActCard({
                   campaignId={campaignId}
                 />
               ))}
-              <div className="act-create-control ml-8 max-h-0 overflow-hidden opacity-0 translate-y-2 pointer-events-none transition-all duration-200 group-hover/act:opacity-100 group-hover/act:translate-y-0 group-hover/act:max-h-65 group-hover/act:pointer-events-auto">
-                <CreateSceneCard actId={act.id} campaignId={campaignId} />
-              </div>
-            </div>
-          )}
-          {!hasScenes && (
-            <div className="act-create-control ml-8 max-h-0 overflow-hidden opacity-0 translate-y-2 pointer-events-none transition-all duration-200 group-hover/act:opacity-100 group-hover/act:translate-y-0 group-hover/act:max-h-65 group-hover/act:pointer-events-auto">
-              <CreateSceneCard actId={act.id} campaignId={campaignId} />
             </div>
           )}
         </CardContent>
@@ -284,12 +278,17 @@ export function ActsList({
 }) {
   return (
     <Card className="group/acts-list acts-list-card">
-      <CardHeader className="pb-4">
-        <div className="flex items-center gap-4">
-          <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-primary/10">
-            <Theater className="h-6 w-6 text-primary" />
+      <CardHeader className="pb-4 group/acts-list-header">
+        <div className="flex items-center justify-between gap-4">
+          <div className="flex items-center gap-4">
+            <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-primary/10">
+              <Theater className="h-6 w-6 text-primary" />
+            </div>
+            <CardTitle className="text-2xl leading-tight">Acts</CardTitle>
           </div>
-          <CardTitle className="text-2xl leading-tight">Acts</CardTitle>
+          <div className="acts-list-header-actions opacity-0 pointer-events-none transition-opacity group-hover/acts-list-header:opacity-100 group-hover/acts-list-header:pointer-events-auto">
+            <CreateActInlineButton campaignId={campaignId} />
+          </div>
         </div>
       </CardHeader>
       <CardContent className="space-y-6">
@@ -300,9 +299,6 @@ export function ActsList({
             ))}
           </div>
         </InteractiveContainer>
-        <div className="acts-list-create-control max-h-0 overflow-hidden opacity-0 translate-y-2 pointer-events-none transition-all duration-200 group-hover/acts-list:opacity-100 group-hover/acts-list:translate-y-0 group-hover/acts-list:max-h-80 group-hover/acts-list:pointer-events-auto">
-          <CreateActCard campaignId={campaignId} />
-        </div>
       </CardContent>
     </Card>
   );
