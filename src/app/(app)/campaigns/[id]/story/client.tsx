@@ -1,5 +1,15 @@
 "use client";
 
+import { Button } from "@/components/ui/button";
+import { CardContent } from "@/components/ui/card";
+import { EditIconButton } from "@/components/ui/custom/button/EditIconButton";
+import { InlineCreateButton } from "@/components/ui/custom/button/InlineCreateButton";
+import { CreateCard } from "@/components/ui/custom/card/CreateCard";
+import {
+  FormDialog,
+  useFormDialog,
+  useFormDialogSubmit,
+} from "@/components/ui/custom/dialog/FormDialog";
 import ActForm, {
   type ActFormData,
 } from "@/components/ui/custom/forms/ActForm";
@@ -9,18 +19,10 @@ import BeatForm, {
 import SceneForm, {
   type SceneFormData,
 } from "@/components/ui/custom/forms/SceneForm";
-import { Button } from "@/components/ui/button";
-import { CardContent } from "@/components/ui/card";
-import { CreateCard } from "@/components/ui/custom/card/CreateCard";
-import { EditIconButton } from "@/components/ui/custom/button/EditIconButton";
-import {
-  FormDialog,
-  useFormDialog,
-  useFormDialogSubmit,
-} from "@/components/ui/custom/dialog/FormDialog";
-import { InlineCreateButton } from "@/components/ui/custom/button/InlineCreateButton";
+import { Dialog, DialogTrigger } from "@/components/ui/dialog";
 import { cn } from "@/lib/utils";
 import { Clock, Plus, Theater } from "lucide-react";
+import type { ReactNode } from "react";
 import { toast } from "sonner";
 import {
   createAct,
@@ -30,8 +32,6 @@ import {
   updateBeat,
   updateScene,
 } from "./actions";
-import { Dialog, DialogTrigger } from "@/components/ui/dialog";
-import type { ReactNode } from "react";
 
 // ============================================================================
 // Helpers
