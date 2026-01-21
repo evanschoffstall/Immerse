@@ -29,6 +29,9 @@ import {
   createAct,
   createBeat,
   createScene,
+  deleteAct,
+  deleteBeat,
+  deleteScene,
   reorderActs,
   reorderBeats,
   reorderScenes,
@@ -256,6 +259,7 @@ function ActDialogContent({
   onOpenChange: (o: boolean) => void;
 }) {
   const { isPending, done } = useFormDialogSubmit(onOpenChange);
+  const [isDeleting, setIsDeleting] = useState(false);
   const isCreate = mode === "create";
 
   const onSubmit = async (d: ActFormData) => {
@@ -271,6 +275,19 @@ function ActDialogContent({
     }
   };
 
+  const onDelete = async () => {
+    if (!actId) return;
+    setIsDeleting(true);
+    try {
+      await deleteAct(actId);
+      toast.success("Act deleted!");
+      done();
+    } catch (err: any) {
+      toast.error(err.message || "Failed to delete act");
+      setIsDeleting(false);
+    }
+  };
+
   return (
     <FormDialog
       open={open}
@@ -283,12 +300,27 @@ function ActDialogContent({
       }
       size="lg"
     >
-      <ActForm
-        initialData={initial}
-        onSubmit={onSubmit}
-        isLoading={isPending}
-        submitText={submitText(mode, "Act")}
-      />
+      <div className="space-y-6">
+        <ActForm
+          initialData={initial}
+          onSubmit={onSubmit}
+          isLoading={isPending || isDeleting}
+          submitText={submitText(mode, "Act")}
+        />
+        {mode === "edit" && (
+          <div className="flex justify-end">
+            <Button
+              type="button"
+              variant="destructive"
+              size="sm"
+              onClick={onDelete}
+              disabled={isPending || isDeleting}
+            >
+              {isDeleting ? "Deleting..." : "Delete Act"}
+            </Button>
+          </div>
+        )}
+      </div>
     </FormDialog>
   );
 }
@@ -355,8 +387,9 @@ function CreateActButton({ campaignId }: { campaignId: string }) {
 
 export function CreateActInlineButton({ campaignId }: { campaignId: string }) {
   return (
-    <InlineCreateButton label="New Act">
-      {(open, setOpen) => (
+    <InlineCreateButton
+      label="New Act"
+      childrenAction={(open: boolean, setOpen: (o: boolean) => void) => (
         <ActDialogContent
           mode="create"
           campaignId={campaignId}
@@ -364,7 +397,7 @@ export function CreateActInlineButton({ campaignId }: { campaignId: string }) {
           onOpenChange={setOpen}
         />
       )}
-    </InlineCreateButton>
+    />
   );
 }
 
@@ -413,6 +446,7 @@ function SceneDialogContent({
   onOpenChange: (o: boolean) => void;
 }) {
   const { isPending, done } = useFormDialogSubmit(onOpenChange);
+  const [isDeleting, setIsDeleting] = useState(false);
   const isCreate = mode === "create";
 
   const onSubmit = async (d: SceneFormData) => {
@@ -428,6 +462,19 @@ function SceneDialogContent({
     }
   };
 
+  const onDelete = async () => {
+    if (!sceneId) return;
+    setIsDeleting(true);
+    try {
+      await deleteScene(sceneId);
+      toast.success("Scene deleted!");
+      done();
+    } catch (err: any) {
+      toast.error(err.message || "Failed to delete scene");
+      setIsDeleting(false);
+    }
+  };
+
   return (
     <FormDialog
       open={open}
@@ -440,12 +487,27 @@ function SceneDialogContent({
       }
       size="lg"
     >
-      <SceneForm
-        initialData={initial}
-        onSubmit={onSubmit}
-        isLoading={isPending}
-        submitText={submitText(mode, "Scene")}
-      />
+      <div className="space-y-6">
+        <SceneForm
+          initialData={initial}
+          onSubmit={onSubmit}
+          isLoading={isPending || isDeleting}
+          submitText={submitText(mode, "Scene")}
+        />
+        {mode === "edit" && (
+          <div className="flex justify-end">
+            <Button
+              type="button"
+              variant="destructive"
+              size="sm"
+              onClick={onDelete}
+              disabled={isPending || isDeleting}
+            >
+              {isDeleting ? "Deleting..." : "Delete Scene"}
+            </Button>
+          </div>
+        )}
+      </div>
     </FormDialog>
   );
 }
@@ -473,8 +535,9 @@ function CreateSceneCard({ actId }: { actId: string }) {
 
 export function CreateSceneInlineButton({ actId }: { actId: string }) {
   return (
-    <InlineCreateButton label="New Scene">
-      {(open, setOpen) => (
+    <InlineCreateButton
+      label="New Scene"
+      childrenAction={(open: boolean, setOpen: (o: boolean) => void) => (
         <SceneDialogContent
           mode="create"
           actId={actId}
@@ -482,7 +545,7 @@ export function CreateSceneInlineButton({ actId }: { actId: string }) {
           onOpenChange={setOpen}
         />
       )}
-    </InlineCreateButton>
+    />
   );
 }
 
@@ -531,6 +594,7 @@ function BeatDialogContent({
   onOpenChange: (o: boolean) => void;
 }) {
   const { isPending, done } = useFormDialogSubmit(onOpenChange);
+  const [isDeleting, setIsDeleting] = useState(false);
   const isCreate = mode === "create";
 
   const onSubmit = async (d: BeatFormData) => {
@@ -549,6 +613,19 @@ function BeatDialogContent({
     }
   };
 
+  const onDelete = async () => {
+    if (!beatId) return;
+    setIsDeleting(true);
+    try {
+      await deleteBeat(beatId);
+      toast.success("Beat deleted!");
+      done();
+    } catch (err: any) {
+      toast.error(err.message || "Failed to delete beat");
+      setIsDeleting(false);
+    }
+  };
+
   return (
     <FormDialog
       open={open}
@@ -561,12 +638,27 @@ function BeatDialogContent({
       }
       size="md"
     >
-      <BeatForm
-        initialData={initial}
-        onSubmit={onSubmit}
-        isLoading={isPending}
-        submitText={submitText(mode, "Beat")}
-      />
+      <div className="space-y-6">
+        <BeatForm
+          initialData={initial}
+          onSubmit={onSubmit}
+          isLoading={isPending || isDeleting}
+          submitText={submitText(mode, "Beat")}
+        />
+        {mode === "edit" && (
+          <div className="flex justify-end">
+            <Button
+              type="button"
+              variant="destructive"
+              size="sm"
+              onClick={onDelete}
+              disabled={isPending || isDeleting}
+            >
+              {isDeleting ? "Deleting..." : "Delete Beat"}
+            </Button>
+          </div>
+        )}
+      </div>
     </FormDialog>
   );
 }
@@ -606,8 +698,9 @@ function CreateBeatCard({ sceneId }: { sceneId: string }) {
 
 export function CreateBeatInlineButton({ sceneId }: { sceneId: string }) {
   return (
-    <InlineCreateButton label="New Beat">
-      {(open, setOpen) => (
+    <InlineCreateButton
+      label="New Beat"
+      childrenAction={(open: boolean, setOpen: (o: boolean) => void) => (
         <BeatDialogContent
           mode="create"
           sceneId={sceneId}
@@ -615,7 +708,7 @@ export function CreateBeatInlineButton({ sceneId }: { sceneId: string }) {
           onOpenChange={setOpen}
         />
       )}
-    </InlineCreateButton>
+    />
   );
 }
 

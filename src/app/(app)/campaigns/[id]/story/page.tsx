@@ -132,17 +132,19 @@ const CampaignDescriptionCard = ({
 const BeatItem = ({ beat }: { beat: typeof beats.$inferSelect }) => (
   <InteractiveContainer
     stopPropagation
-    className="group/beat flex items-start gap-3 rounded-md bg-muted/50 p-3 transition-colors hover:bg-muted"
+    className="group/beat flex items-center gap-2 rounded-md border border-border/60 bg-card p-2 transition-colors hover:bg-card/80"
     dataSortId={beat.id}
   >
     <div className="flex h-6 w-6 shrink-0 items-center justify-center">
       <Clock className="h-3 w-3 text-muted-foreground" />
     </div>
-    <div className="flex-1 min-w-0 space-y-1">
-      <span className="text-xs font-mono text-muted-foreground">
-        {formatTimestamp(beat.timestamp)}
-      </span>
-      <p className="text-sm">{beat.text}</p>
+    <div className="flex-1 min-w-0">
+      <div className="flex flex-wrap items-center gap-2">
+        <span className="text-[11px] font-mono text-muted-foreground">
+          {formatTimestamp(beat.timestamp)}
+        </span>
+        <p className="text-sm leading-tight">{beat.text}</p>
+      </div>
     </div>
     <HoverActions showOnHover="group-hover/beat:opacity-100 group-hover/beat:pointer-events-auto">
       <EditBeatButton
@@ -267,7 +269,7 @@ const ActCard = ({
             <button
               type="button"
               data-drag-handle="act"
-              className="flex h-8 w-8 items-center justify-center rounded-md text-muted-foreground hover:bg-muted cursor-grab active:cursor-grabbing"
+              className="flex h-7 w-7 items-center justify-center rounded-md text-muted-foreground hover:bg-muted cursor-grab active:cursor-grabbing"
               aria-label="Reorder act"
             >
               <GripVertical className="h-4 w-4" />

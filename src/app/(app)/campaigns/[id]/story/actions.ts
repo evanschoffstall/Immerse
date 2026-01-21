@@ -364,6 +364,102 @@ export async function updateBeat(
   }
 }
 
+export async function deleteAct(actId: string) {
+  const session = await getServerSession(authConfig);
+  if (!session?.user?.id) {
+    throw new Error("Unauthorized");
+  }
+
+  const act = await db.query.acts.findFirst({
+    where: eq(acts.id, actId),
+    columns: { campaignId: true, createdById: true },
+  });
+
+  if (!act || act.createdById !== session.user.id) {
+    throw new Error("Forbidden");
+  }
+
+  await db
+    .update(acts)
+    .set({
+      deletedAt: new Date(),
+      updatedAt: new Date(),
+      updatedById: session.user.id,
+    })
+    .where(eq(acts.id, actId));
+
+  revalidatePath(`/campaigns/${act.campaignId}/story`);
+}
+
+export async function deleteScene(sceneId: string) {
+  const session = await getServerSession(authConfig);
+  if (!session?.user?.id) {
+    throw new Error("Unauthorized");
+  }
+
+  const scene = await db.query.scenes.findFirst({
+    where: eq(scenes.id, sceneId),
+    columns: { createdById: true },
+    with: {
+      act: {
+        columns: { campaignId: true },
+      },
+    },
+  });
+
+  if (!scene || scene.createdById !== session.user.id) {
+    throw new Error("Forbidden");
+  }
+
+  await db
+    .update(scenes)
+    .set({
+      deletedAt: new Date(),
+      updatedAt: new Date(),
+      updatedById: session.user.id,
+    })
+    .where(eq(scenes.id, sceneId));
+
+  revalidatePath(`/campaigns/${scene.act.campaignId}/story`);
+}
+
+export async function deleteBeat(beatId: string) {
+  const session = await getServerSession(authConfig);
+  if (!session?.user?.id) {
+    throw new Error("Unauthorized");
+  }
+
+  const beat = await db.query.beats.findFirst({
+    where: eq(beats.id, beatId),
+    columns: { createdById: true },
+    with: {
+      scene: {
+        columns: { actId: true },
+        with: {
+          act: {
+            columns: { campaignId: true },
+          },
+        },
+      },
+    },
+  });
+
+  if (!beat || beat.createdById !== session.user.id) {
+    throw new Error("Forbidden");
+  }
+
+  await db
+    .update(beats)
+    .set({
+      deletedAt: new Date(),
+      updatedAt: new Date(),
+      updatedById: session.user.id,
+    })
+    .where(eq(beats.id, beatId));
+
+  revalidatePath(`/campaigns/${beat.scene.act.campaignId}/story`);
+}
+
 const reorderIdsSchema = z.array(z.string().uuid()).min(1);
 
 export async function reorderActs(campaignId: string, actIds: string[]) {
