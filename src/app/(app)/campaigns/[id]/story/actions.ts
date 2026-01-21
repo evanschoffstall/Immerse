@@ -3,7 +3,7 @@
 import { db } from "@/db";
 import { acts, beats, scenes } from "@/db/schema";
 import { authConfig } from "@/lib/auth";
-import { eq } from "drizzle-orm";
+import { and, eq, inArray, isNull, sql } from "drizzle-orm";
 import { getServerSession } from "next-auth";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
@@ -49,10 +49,17 @@ export async function createAct(
     campaignId,
   });
 
+  const [{ maxSortOrder }] = await db
+    .select({ maxSortOrder: sql<number | null>`max(${acts.sortOrder})` })
+    .from(acts)
+    .where(and(eq(acts.campaignId, campaignId), isNull(acts.deletedAt)));
+  const sortOrder = (maxSortOrder ?? -1) + 1;
+
   const actId = crypto.randomUUID();
   await db.insert(acts).values({
     id: actId,
     ...validated,
+    sortOrder,
     createdById: session.user.id,
     updatedAt: new Date(),
   });
@@ -100,10 +107,17 @@ export async function createScene(
     actId,
   });
 
+  const [{ maxSortOrder }] = await db
+    .select({ maxSortOrder: sql<number | null>`max(${scenes.sortOrder})` })
+    .from(scenes)
+    .where(and(eq(scenes.actId, actId), isNull(scenes.deletedAt)));
+  const sortOrder = (maxSortOrder ?? -1) + 1;
+
   const sceneId = crypto.randomUUID();
   await db.insert(scenes).values({
     id: sceneId,
     ...validated,
+    sortOrder,
     createdById: session.user.id,
     updatedAt: new Date(),
   });
@@ -158,12 +172,19 @@ export async function createBeat(
     sceneId,
   });
 
+  const [{ maxSortOrder }] = await db
+    .select({ maxSortOrder: sql<number | null>`max(${beats.sortOrder})` })
+    .from(beats)
+    .where(and(eq(beats.sceneId, sceneId), isNull(beats.deletedAt)));
+  const sortOrder = (maxSortOrder ?? -1) + 1;
+
   const beatId = crypto.randomUUID();
   await db.insert(beats).values({
     id: beatId,
     text: validated.text,
     timestamp,
     sceneId: validated.sceneId,
+    sortOrder,
     createdById: session.user.id,
     updatedAt: new Date(),
   });
@@ -341,4 +362,149 @@ export async function updateBeat(
   if (shouldRedirect) {
     redirect(`/campaigns/${beat.scene.act.campaignId}/story`);
   }
+}
+
+const reorderIdsSchema = z.array(z.string().uuid()).min(1);
+
+export async function reorderActs(campaignId: string, actIds: string[]) {
+  const session = await getServerSession(authConfig);
+  if (!session?.user?.id) {
+    throw new Error("Unauthorized");
+  }
+
+  const ids = reorderIdsSchema.parse(actIds);
+  const rows = await db.query.acts.findMany({
+    where: and(
+      inArray(acts.id, ids),
+      eq(acts.campaignId, campaignId),
+      isNull(acts.deletedAt),
+    ),
+    columns: { id: true, createdById: true },
+  });
+
+  if (rows.length !== ids.length) {
+    throw new Error("Invalid acts");
+  }
+
+  if (rows.some((row) => row.createdById !== session.user.id)) {
+    throw new Error("Forbidden");
+  }
+
+  await db.transaction(async (tx) => {
+    for (const [index, id] of ids.entries()) {
+      await tx
+        .update(acts)
+        .set({
+          sortOrder: index,
+          updatedAt: new Date(),
+          updatedById: session.user.id,
+        })
+        .where(eq(acts.id, id));
+    }
+  });
+
+  revalidatePath(`/campaigns/${campaignId}/story`);
+}
+
+export async function reorderScenes(actId: string, sceneIds: string[]) {
+  const session = await getServerSession(authConfig);
+  if (!session?.user?.id) {
+    throw new Error("Unauthorized");
+  }
+
+  const act = await db.query.acts.findFirst({
+    where: eq(acts.id, actId),
+    columns: { campaignId: true },
+  });
+
+  if (!act) {
+    throw new Error("Act not found");
+  }
+
+  const ids = reorderIdsSchema.parse(sceneIds);
+  const rows = await db.query.scenes.findMany({
+    where: and(
+      inArray(scenes.id, ids),
+      eq(scenes.actId, actId),
+      isNull(scenes.deletedAt),
+    ),
+    columns: { id: true, createdById: true },
+  });
+
+  if (rows.length !== ids.length) {
+    throw new Error("Invalid scenes");
+  }
+
+  if (rows.some((row) => row.createdById !== session.user.id)) {
+    throw new Error("Forbidden");
+  }
+
+  await db.transaction(async (tx) => {
+    for (const [index, id] of ids.entries()) {
+      await tx
+        .update(scenes)
+        .set({
+          sortOrder: index,
+          updatedAt: new Date(),
+          updatedById: session.user.id,
+        })
+        .where(eq(scenes.id, id));
+    }
+  });
+
+  revalidatePath(`/campaigns/${act.campaignId}/story`);
+}
+
+export async function reorderBeats(sceneId: string, beatIds: string[]) {
+  const session = await getServerSession(authConfig);
+  if (!session?.user?.id) {
+    throw new Error("Unauthorized");
+  }
+
+  const scene = await db.query.scenes.findFirst({
+    where: eq(scenes.id, sceneId),
+    columns: { actId: true },
+    with: {
+      act: {
+        columns: { campaignId: true },
+      },
+    },
+  });
+
+  if (!scene) {
+    throw new Error("Scene not found");
+  }
+
+  const ids = reorderIdsSchema.parse(beatIds);
+  const rows = await db.query.beats.findMany({
+    where: and(
+      inArray(beats.id, ids),
+      eq(beats.sceneId, sceneId),
+      isNull(beats.deletedAt),
+    ),
+    columns: { id: true, createdById: true },
+  });
+
+  if (rows.length !== ids.length) {
+    throw new Error("Invalid beats");
+  }
+
+  if (rows.some((row) => row.createdById !== session.user.id)) {
+    throw new Error("Forbidden");
+  }
+
+  await db.transaction(async (tx) => {
+    for (const [index, id] of ids.entries()) {
+      await tx
+        .update(beats)
+        .set({
+          sortOrder: index,
+          updatedAt: new Date(),
+          updatedById: session.user.id,
+        })
+        .where(eq(beats.id, id));
+    }
+  });
+
+  revalidatePath(`/campaigns/${scene.act.campaignId}/story`);
 }

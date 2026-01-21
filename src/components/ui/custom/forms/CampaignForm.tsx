@@ -25,7 +25,7 @@ const campaignSchema = z.object({
 
 export type CampaignFormData = z.infer<typeof campaignSchema>;
 
-export interface CampaignFormProps {
+interface CampaignFormProps {
   initialData?: Partial<CampaignFormData>;
   onSubmit: (data: CampaignFormData) => Promise<void>;
   isLoading?: boolean;

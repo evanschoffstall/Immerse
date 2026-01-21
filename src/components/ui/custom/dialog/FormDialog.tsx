@@ -17,7 +17,7 @@ const DIALOG_SIZE = {
   sm: "max-w-md",
 } as const;
 
-export type DialogSize = keyof typeof DIALOG_SIZE;
+type DialogSize = keyof typeof DIALOG_SIZE;
 
 export type FormDialogProps = {
   open: boolean;
@@ -67,7 +67,7 @@ export function useFormDialogSubmit(onClose: (open: boolean) => void) {
   };
 }
 
-export type FormDialogWithTriggerProps = {
+type FormDialogWithTriggerProps = {
   trigger: ReactNode;
   title: string;
   description: string;
@@ -78,7 +78,7 @@ export type FormDialogWithTriggerProps = {
   }) => ReactNode;
 };
 
-export function FormDialogWithTrigger({
+function FormDialogWithTrigger({
   trigger,
   title,
   description,

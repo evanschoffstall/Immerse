@@ -1,5 +1,5 @@
 @import "tailwindcss";
-@import "../components/editor/themes/editor-theme.css";
+@import "../components/ui/editor/themes/editor-theme.css";
 
 /* Tailwind v4 Theme Configuration - Generates utility classes from CSS variables */
 @theme {

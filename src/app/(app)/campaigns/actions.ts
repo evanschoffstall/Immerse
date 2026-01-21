@@ -49,7 +49,7 @@ export async function createCampaign(formData: FormData) {
   redirect(`/campaigns/${campaignId}`);
 }
 
-export async function updateCampaign(id: string, formData: FormData) {
+async function updateCampaign(id: string, formData: FormData) {
   const session = await getServerSession(authConfig);
   if (!session?.user?.id) {
     throw new Error("Unauthorized");
@@ -88,7 +88,7 @@ export async function updateCampaign(id: string, formData: FormData) {
   revalidatePath("/campaigns");
 }
 
-export async function deleteCampaign(id: string) {
+async function deleteCampaign(id: string) {
   const session = await getServerSession(authConfig);
   if (!session?.user?.id) {
     throw new Error("Unauthorized");

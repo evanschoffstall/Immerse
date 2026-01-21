@@ -36,7 +36,10 @@ if [ "$DID_CREATE_DB" = true ]; then
   psql -h /tmp -d $DB_NAME -f scripts/seed-test-user.sql 2>/dev/null || true
 fi
 
-# Apply Drizzle migrations (idempotent - only applies new ones)
+# Generate Drizzle types
+npx drizzle-kit generate
+
+# Apply Drizzle migrations
 npx drizzle-kit migrate
 
 # Start Next.js dev server

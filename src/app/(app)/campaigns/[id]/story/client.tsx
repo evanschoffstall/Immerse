@@ -22,12 +22,16 @@ import SceneForm, {
 import { Dialog, DialogTrigger } from "@/components/ui/dialog";
 import { cn } from "@/lib/utils";
 import { Clock, Plus, Theater } from "lucide-react";
-import type { ReactNode } from "react";
+import { type ReactNode, useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
+import Sortable, { type SortableEvent } from "sortablejs";
 import {
   createAct,
   createBeat,
   createScene,
+  reorderActs,
+  reorderBeats,
+  reorderScenes,
   updateAct,
   updateBeat,
   updateScene,
@@ -66,6 +70,170 @@ function toOptionalText(
 ): { name: string; content?: string } | undefined {
   if (!initial) return undefined;
   return { name: initial.name, content: initial.content ?? undefined };
+}
+
+const getSortIds = (el: HTMLElement) =>
+  Array.from(el.children)
+    .map((node) => (node as HTMLElement).dataset.sortId)
+    .filter((id): id is string => Boolean(id));
+
+export function SortableActs({
+  campaignId,
+  children,
+  className,
+}: {
+  campaignId: string;
+  children: ReactNode;
+  className?: string;
+}) {
+  const containerRef = useRef<HTMLDivElement | null>(null);
+  const [isSaving, setIsSaving] = useState(false);
+
+  useEffect(() => {
+    if (!containerRef.current) return;
+    const el = containerRef.current;
+    const sortable = Sortable.create(el, {
+      animation: 150,
+      handle: "[data-drag-handle='act']",
+      draggable: "[data-sort-id]",
+      ghostClass: "opacity-50",
+      onEnd: async (evt: SortableEvent) => {
+        if (evt.oldIndex === evt.newIndex) return;
+        const ids = getSortIds(el);
+        if (ids.length === 0) return;
+        setIsSaving(true);
+        try {
+          await reorderActs(campaignId, ids);
+          toast.success("Acts reordered");
+        } catch (err: any) {
+          toast.error(err.message || "Failed to reorder acts");
+        } finally {
+          setIsSaving(false);
+        }
+      },
+    });
+
+    return () => sortable.destroy();
+  }, [campaignId]);
+
+  return (
+    <div
+      ref={containerRef}
+      className={cn(
+        "space-y-3",
+        isSaving && "pointer-events-none opacity-70",
+        className,
+      )}
+    >
+      {children}
+    </div>
+  );
+}
+
+export function SortableScenes({
+  actId,
+  children,
+  className,
+}: {
+  actId: string;
+  children: ReactNode;
+  className?: string;
+}) {
+  const containerRef = useRef<HTMLDivElement | null>(null);
+  const [isSaving, setIsSaving] = useState(false);
+
+  useEffect(() => {
+    if (!containerRef.current) return;
+    const el = containerRef.current;
+    const sortable = Sortable.create(el, {
+      animation: 150,
+      handle: "[data-drag-handle='scene']",
+      draggable: "[data-sort-id]",
+      ghostClass: "opacity-50",
+      onEnd: async (evt: SortableEvent) => {
+        if (evt.oldIndex === evt.newIndex) return;
+        const ids = getSortIds(el);
+        if (ids.length === 0) return;
+        setIsSaving(true);
+        try {
+          await reorderScenes(actId, ids);
+          toast.success("Scenes reordered");
+        } catch (err: any) {
+          toast.error(err.message || "Failed to reorder scenes");
+        } finally {
+          setIsSaving(false);
+        }
+      },
+    });
+
+    return () => sortable.destroy();
+  }, [actId]);
+
+  return (
+    <div
+      ref={containerRef}
+      className={cn(
+        "space-y-3",
+        isSaving && "pointer-events-none opacity-70",
+        className,
+      )}
+    >
+      {children}
+    </div>
+  );
+}
+
+export function SortableBeats({
+  sceneId,
+  children,
+  className,
+}: {
+  sceneId: string;
+  children: ReactNode;
+  className?: string;
+}) {
+  const containerRef = useRef<HTMLDivElement | null>(null);
+  const [isSaving, setIsSaving] = useState(false);
+
+  useEffect(() => {
+    if (!containerRef.current) return;
+    const el = containerRef.current;
+    const sortable = Sortable.create(el, {
+      animation: 150,
+      handle: "[data-drag-handle='beat']",
+      draggable: "[data-sort-id]",
+      ghostClass: "opacity-50",
+      onEnd: async (evt: SortableEvent) => {
+        if (evt.oldIndex === evt.newIndex) return;
+        const ids = getSortIds(el);
+        if (ids.length === 0) return;
+        setIsSaving(true);
+        try {
+          await reorderBeats(sceneId, ids);
+          toast.success("Beats reordered");
+        } catch (err: any) {
+          toast.error(err.message || "Failed to reorder beats");
+        } finally {
+          setIsSaving(false);
+        }
+      },
+    });
+
+    return () => sortable.destroy();
+  }, [sceneId]);
+
+  return (
+    <div
+      ref={containerRef}
+      className={cn(
+        "space-y-3",
+        isSaving && "pointer-events-none opacity-70",
+        className,
+      )}
+    >
+      {children}
+    </div>
+  );
 }
 
 // ============================================================================
@@ -144,7 +312,7 @@ export function EmptyState({ campaignId }: { campaignId: string }) {
   );
 }
 
-export function CreateActCard({ campaignId }: { campaignId: string }) {
+function CreateActCard({ campaignId }: { campaignId: string }) {
   const { open, setOpen } = useFormDialog();
   return (
     <>
@@ -165,7 +333,7 @@ export function CreateActCard({ campaignId }: { campaignId: string }) {
   );
 }
 
-export function CreateActButton({ campaignId }: { campaignId: string }) {
+function CreateActButton({ campaignId }: { campaignId: string }) {
   const { open, setOpen } = useFormDialog();
   return (
     <Dialog open={open} onOpenChange={setOpen}>
@@ -282,7 +450,7 @@ function SceneDialogContent({
   );
 }
 
-export function CreateSceneCard({ actId }: { actId: string }) {
+function CreateSceneCard({ actId }: { actId: string }) {
   const { open, setOpen } = useFormDialog();
   return (
     <>
@@ -403,7 +571,7 @@ function BeatDialogContent({
   );
 }
 
-export function CreateBeatCard({ sceneId }: { sceneId: string }) {
+function CreateBeatCard({ sceneId }: { sceneId: string }) {
   const { open, setOpen } = useFormDialog();
   return (
     <>

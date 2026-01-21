@@ -1,9 +1,4 @@
-import {
-  index,
-  pgTable,
-  text,
-  timestamp,
-} from "drizzle-orm/pg-core";
+import { index, integer, pgTable, text, timestamp } from "drizzle-orm/pg-core";
 import { scenes } from "./scenes";
 
 export const beats = pgTable(
@@ -12,6 +7,7 @@ export const beats = pgTable(
     id: text("id").primaryKey(),
     text: text("text").notNull(), // Simple text field
     timestamp: timestamp("timestamp").notNull(), // Timestamp for the beat
+    sortOrder: integer("sortOrder").notNull().default(0),
     createdAt: timestamp("createdAt").notNull().defaultNow(),
     updatedAt: timestamp("updatedAt").notNull(),
     deletedAt: timestamp("deletedAt"),
@@ -26,7 +22,7 @@ export const beats = pgTable(
     index("beats_timestamp_idx").on(table.timestamp),
     index("beats_created_by_id_idx").on(table.createdById),
     index("beats_deleted_at_idx").on(table.deletedAt),
-  ]
+  ],
 );
 
 export type Beat = typeof beats.$inferSelect;

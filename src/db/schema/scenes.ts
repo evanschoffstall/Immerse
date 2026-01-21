@@ -1,9 +1,10 @@
 import {
-    index,
-    pgTable,
-    text,
-    timestamp,
-    unique,
+  index,
+  integer,
+  pgTable,
+  text,
+  timestamp,
+  unique,
 } from "drizzle-orm/pg-core";
 import { acts } from "./acts";
 
@@ -14,6 +15,7 @@ export const scenes = pgTable(
     name: text("name").notNull(),
     slug: text("slug").notNull(),
     content: text("content"), // Rich text content (Lexical JSON)
+    sortOrder: integer("sortOrder").notNull().default(0),
     createdAt: timestamp("createdAt").notNull().defaultNow(),
     updatedAt: timestamp("updatedAt").notNull(),
     deletedAt: timestamp("deletedAt"),
@@ -28,7 +30,7 @@ export const scenes = pgTable(
     index("scenes_act_id_idx").on(table.actId),
     index("scenes_created_by_id_idx").on(table.createdById),
     index("scenes_deleted_at_idx").on(table.deletedAt),
-  ]
+  ],
 );
 
 export type Scene = typeof scenes.$inferSelect;

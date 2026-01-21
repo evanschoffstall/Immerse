@@ -7,8 +7,14 @@ import { Separator } from "@/components/ui/separator";
 import { db } from "@/db";
 import { acts, beats, campaigns, scenes } from "@/db/schema";
 import { hasLexicalContent } from "@/lib/utils/lexical";
-import { and, desc, eq, isNull } from "drizzle-orm";
-import { BookOpen, Clock, ScrollText, Theater } from "lucide-react";
+import { and, asc, eq, isNull } from "drizzle-orm";
+import {
+  BookOpen,
+  Clock,
+  GripVertical,
+  ScrollText,
+  Theater,
+} from "lucide-react";
 import { updateCampaign } from "../edit/actions";
 import {
   CreateActInlineButton,
@@ -19,6 +25,9 @@ import {
   EditSceneButton,
   EmptyState,
   InteractiveContainer,
+  SortableActs,
+  SortableBeats,
+  SortableScenes,
 } from "./client";
 
 // #region Types & Helpers
@@ -122,7 +131,10 @@ const CampaignDescriptionCard = ({
 // #region Beat
 const BeatItem = ({ beat }: { beat: typeof beats.$inferSelect }) => (
   <InteractiveContainer stopPropagation>
-    <div className="group/beat flex items-start gap-3 rounded-md bg-muted/50 p-3 transition-colors hover:bg-muted">
+    <div
+      className="group/beat flex items-start gap-3 rounded-md bg-muted/50 p-3 transition-colors hover:bg-muted"
+      data-sort-id={beat.id}
+    >
       <div className="flex h-6 w-6 shrink-0 items-center justify-center">
         <Clock className="h-3 w-3 text-muted-foreground" />
       </div>
@@ -137,6 +149,14 @@ const BeatItem = ({ beat }: { beat: typeof beats.$inferSelect }) => (
           beatId={beat.id}
           initialData={{ text: beat.text, timestamp: beat.timestamp }}
         />
+        <button
+          type="button"
+          data-drag-handle="beat"
+          className="flex h-7 w-7 items-center justify-center rounded-md text-muted-foreground hover:bg-muted cursor-grab active:cursor-grabbing"
+          aria-label="Reorder beat"
+        >
+          <GripVertical className="h-4 w-4" />
+        </button>
       </HoverActions>
     </div>
   </InteractiveContainer>
@@ -152,11 +172,16 @@ const SceneCard = ({
   campaignId: string;
 }) => {
   const sortedBeats = [...scene.beats].sort(
-    (a, b) => a.timestamp.getTime() - b.timestamp.getTime(),
+    (a, b) =>
+      a.sortOrder - b.sortOrder ||
+      a.timestamp.getTime() - b.timestamp.getTime(),
   );
   const hasContent = hasLexicalContent(scene.content);
   return (
-    <Card className="group/scene scene-card ml-8 transition-shadow hover:shadow-md">
+    <Card
+      className="group/scene scene-card ml-8 transition-shadow hover:shadow-md"
+      data-sort-id={scene.id}
+    >
       <CardHeader
         className={"group/scene-header " + (hasContent ? "pb-4" : "pb-0")}
       >
@@ -174,6 +199,14 @@ const SceneCard = ({
               initialData={{ name: scene.name, content: scene.content }}
             />
             <CreateBeatInlineButton sceneId={scene.id} />
+            <button
+              type="button"
+              data-drag-handle="scene"
+              className="flex h-7 w-7 items-center justify-center rounded-md text-muted-foreground hover:bg-muted cursor-grab active:cursor-grabbing"
+              aria-label="Reorder scene"
+            >
+              <GripVertical className="h-4 w-4" />
+            </button>
           </HoverActions>
         </div>
       </CardHeader>
@@ -183,11 +216,11 @@ const SceneCard = ({
             <LexicalContent content={scene.content} />
           )}
           {sortedBeats.length > 0 && (
-            <div className="space-y-3">
+            <SortableBeats sceneId={scene.id} className="space-y-3">
               {sortedBeats.map((beat) => (
                 <BeatItem key={beat.id} beat={beat} />
               ))}
-            </div>
+            </SortableBeats>
           )}
         </CardContent>
       </InteractiveContainer>
@@ -205,11 +238,16 @@ const ActCard = ({
   campaignId: string;
 }) => {
   const sortedScenes = [...act.scenes].sort(
-    (a, b) => a.createdAt.getTime() - b.createdAt.getTime(),
+    (a, b) =>
+      a.sortOrder - b.sortOrder ||
+      a.createdAt.getTime() - b.createdAt.getTime(),
   );
   const hasContent = hasLexicalContent(act.content);
   return (
-    <Card className="group/act act-card overflow-hidden transition-shadow hover:shadow-lg">
+    <Card
+      className="group/act act-card overflow-hidden transition-shadow hover:shadow-lg"
+      data-sort-id={act.id}
+    >
       <CardHeader
         className={"group/act-header " + (hasContent ? "pb-4" : "pb-0")}
       >
@@ -227,6 +265,14 @@ const ActCard = ({
               initialData={{ name: act.name, content: act.content }}
             />
             <CreateSceneInlineButton actId={act.id} />
+            <button
+              type="button"
+              data-drag-handle="act"
+              className="flex h-8 w-8 items-center justify-center rounded-md text-muted-foreground hover:bg-muted cursor-grab active:cursor-grabbing"
+              aria-label="Reorder act"
+            >
+              <GripVertical className="h-4 w-4" />
+            </button>
           </HoverActions>
         </div>
       </CardHeader>
@@ -236,7 +282,7 @@ const ActCard = ({
             <LexicalContent content={act.content} />
           )}
           {sortedScenes.length > 0 && (
-            <div className="space-y-3">
+            <SortableScenes actId={act.id} className="space-y-3">
               {sortedScenes.map((scene) => (
                 <SceneCard
                   key={scene.id}
@@ -244,7 +290,7 @@ const ActCard = ({
                   campaignId={campaignId}
                 />
               ))}
-            </div>
+            </SortableScenes>
           )}
         </CardContent>
       </InteractiveContainer>
@@ -279,11 +325,11 @@ const ActsList = ({
       </CardHeader>
       <CardContent className="space-y-3">
         <InteractiveContainer stopPropagation>
-          <div className="space-y-3">
+          <SortableActs campaignId={campaignId} className="space-y-3">
             {acts.map((act) => (
               <ActCard key={act.id} act={act} campaignId={campaignId} />
             ))}
-          </div>
+          </SortableActs>
         </InteractiveContainer>
       </CardContent>
     </Card>
@@ -311,15 +357,15 @@ export default async function Page({
     }),
     db.query.acts.findMany({
       where: and(eq(acts.campaignId, campaignId), isNull(acts.deletedAt)),
-      orderBy: [desc(acts.createdAt)],
+      orderBy: [asc(acts.sortOrder), asc(acts.createdAt)],
       with: {
         scenes: {
           where: isNull(scenes.deletedAt),
-          orderBy: [desc(scenes.createdAt)],
+          orderBy: [asc(scenes.sortOrder), asc(scenes.createdAt)],
           with: {
             beats: {
               where: isNull(beats.deletedAt),
-              orderBy: [desc(beats.timestamp)],
+              orderBy: [asc(beats.sortOrder), asc(beats.timestamp)],
             },
           },
         },

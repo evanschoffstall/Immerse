@@ -2,7 +2,7 @@ import { Card, CardHeader, CardTitle } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
 import type { LucideIcon } from "lucide-react";
 
-export type CreateCardVariant = "lg" | "md" | "sm";
+type CreateCardVariant = "lg" | "md" | "sm";
 
 const VARIANT_STYLES: Record<
   CreateCardVariant,

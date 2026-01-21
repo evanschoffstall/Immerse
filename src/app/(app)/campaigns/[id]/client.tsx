@@ -65,7 +65,7 @@ interface SettingsButtonProps {
   campaignSettings: any;
 }
 
-export function SettingsButton({
+function SettingsButton({
   campaignId,
   campaignName,
   campaignDescription,

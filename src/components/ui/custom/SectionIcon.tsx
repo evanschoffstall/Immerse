@@ -1,7 +1,7 @@
 import { cn } from "@/lib/utils";
 import type { LucideIcon } from "lucide-react";
 
-export type SectionIconSize = "sm" | "md" | "lg";
+type SectionIconSize = "sm" | "md" | "lg";
 
 const SIZE_STYLES: Record<
   SectionIconSize,
