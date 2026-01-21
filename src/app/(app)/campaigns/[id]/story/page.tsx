@@ -130,35 +130,34 @@ const CampaignDescriptionCard = ({
 
 // #region Beat
 const BeatItem = ({ beat }: { beat: typeof beats.$inferSelect }) => (
-  <InteractiveContainer stopPropagation>
-    <div
-      className="group/beat flex items-start gap-3 rounded-md bg-muted/50 p-3 transition-colors hover:bg-muted"
-      data-sort-id={beat.id}
-    >
-      <div className="flex h-6 w-6 shrink-0 items-center justify-center">
-        <Clock className="h-3 w-3 text-muted-foreground" />
-      </div>
-      <div className="flex-1 min-w-0 space-y-1">
-        <span className="text-xs font-mono text-muted-foreground">
-          {formatTimestamp(beat.timestamp)}
-        </span>
-        <p className="text-sm">{beat.text}</p>
-      </div>
-      <HoverActions showOnHover="group-hover/beat:opacity-100 group-hover/beat:pointer-events-auto">
-        <EditBeatButton
-          beatId={beat.id}
-          initialData={{ text: beat.text, timestamp: beat.timestamp }}
-        />
-        <button
-          type="button"
-          data-drag-handle="beat"
-          className="flex h-7 w-7 items-center justify-center rounded-md text-muted-foreground hover:bg-muted cursor-grab active:cursor-grabbing"
-          aria-label="Reorder beat"
-        >
-          <GripVertical className="h-4 w-4" />
-        </button>
-      </HoverActions>
+  <InteractiveContainer
+    stopPropagation
+    className="group/beat flex items-start gap-3 rounded-md bg-muted/50 p-3 transition-colors hover:bg-muted"
+    dataSortId={beat.id}
+  >
+    <div className="flex h-6 w-6 shrink-0 items-center justify-center">
+      <Clock className="h-3 w-3 text-muted-foreground" />
     </div>
+    <div className="flex-1 min-w-0 space-y-1">
+      <span className="text-xs font-mono text-muted-foreground">
+        {formatTimestamp(beat.timestamp)}
+      </span>
+      <p className="text-sm">{beat.text}</p>
+    </div>
+    <HoverActions showOnHover="group-hover/beat:opacity-100 group-hover/beat:pointer-events-auto">
+      <EditBeatButton
+        beatId={beat.id}
+        initialData={{ text: beat.text, timestamp: beat.timestamp }}
+      />
+      <button
+        type="button"
+        data-drag-handle="beat"
+        className="flex h-7 w-7 items-center justify-center rounded-md text-muted-foreground hover:bg-muted cursor-grab active:cursor-grabbing"
+        aria-label="Reorder beat"
+      >
+        <GripVertical className="h-4 w-4" />
+      </button>
+    </HoverActions>
   </InteractiveContainer>
 );
 // #endregion

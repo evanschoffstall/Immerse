@@ -651,12 +651,20 @@ export function EditBeatButton({
 export function InteractiveContainer({
   children,
   stopPropagation = false,
+  className,
+  dataSortId,
 }: {
   children: ReactNode;
   stopPropagation?: boolean;
+  className?: string;
+  dataSortId?: string;
 }) {
   return (
-    <div onMouseEnter={(e) => stopPropagation && e.stopPropagation()}>
+    <div
+      onMouseEnter={(e) => stopPropagation && e.stopPropagation()}
+      className={className}
+      data-sort-id={dataSortId}
+    >
       {children}
     </div>
   );
