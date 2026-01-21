@@ -1,6 +1,6 @@
-import { ActiveQuestsWidget } from "@/components/dashboard-widgets/ActiveQuestsWidget";
-import { GettingStartedWidget } from "@/components/dashboard-widgets/GettingStartedWidget";
-import { RecentActivityWidget } from "@/components/dashboard-widgets/RecentActivityWidget";
+import { ActiveQuestsWidget } from "@/components/ui/custom/widgets/ActiveQuestsWidget";
+import { GettingStartedWidget } from "@/components/ui/custom/widgets/GettingStartedWidget";
+import { RecentActivityWidget } from "@/components/ui/custom/widgets/RecentActivityWidget";
 import { Separator } from "@/components/ui/separator";
 
 export default async function CampaignDashboardPage({

@@ -1,6 +1,6 @@
 "use client";
 
-import SceneForm, { type SceneFormData } from "@/components/forms/SceneForm";
+import SceneForm, { type SceneFormData } from "@/components/ui/custom/forms/SceneForm";
 import { useState } from "react";
 import { toast } from "sonner";
 import { createScene } from "../../../../actions";

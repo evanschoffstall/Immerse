@@ -1,6 +1,8 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { EditCampaignField } from "@/components/ui/custom/EditCampaignField";
-import RichTextViewer from "@/components/ui/custom/RichTextViewer";
+import { HoverActions } from "@/components/ui/custom/HoverActions";
+import RichTextViewer from "@/components/ui/custom/rich-text/RichTextViewer";
+import { SectionIcon } from "@/components/ui/custom/SectionIcon";
 import { Separator } from "@/components/ui/separator";
 import { db } from "@/db";
 import { acts, beats, campaigns, scenes } from "@/db/schema";
@@ -19,7 +21,7 @@ import {
   InteractiveContainer,
 } from "./client";
 
-// #region Types & Constants
+// #region Types & Helpers
 type ActWithScenesAndBeats = typeof acts.$inferSelect & {
   scenes: (typeof scenes.$inferSelect & {
     beats: (typeof beats.$inferSelect)[];
@@ -33,8 +35,6 @@ type CampaignData = {
   backgroundImage: string | null;
 };
 
-const HIDDEN_ACTIONS =
-  "opacity-0 pointer-events-none transition-opacity flex items-center gap-2";
 const formatTimestamp = (ts: Date) =>
   ts.toLocaleString(undefined, {
     month: "short",
@@ -44,9 +44,7 @@ const formatTimestamp = (ts: Date) =>
     minute: "2-digit",
     hour12: true,
   });
-// #endregion
 
-// #region Shared Components
 const LexicalContent = ({
   content,
   size = "sm",
@@ -62,31 +60,6 @@ const LexicalContent = ({
     </div>
   </div>
 );
-
-const SectionIcon = ({
-  icon: Icon,
-  size = "lg",
-}: {
-  icon: typeof Theater;
-  size?: "sm" | "lg";
-}) =>
-  size === "lg" ? (
-    <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-primary/10">
-      <Icon className="h-6 w-6 text-primary" />
-    </div>
-  ) : (
-    <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-primary/10">
-      <Icon className="h-4 w-4 text-primary" />
-    </div>
-  );
-
-const HeaderActions = ({
-  className,
-  children,
-}: {
-  className: string;
-  children: React.ReactNode;
-}) => <div className={`${className} ${HIDDEN_ACTIONS}`}>{children}</div>;
 // #endregion
 
 // #region Page Header
@@ -121,10 +94,10 @@ const CampaignDescriptionCard = ({
   const hasContent = hasLexicalContent(campaign.description);
   return (
     <Card className="group/overview">
-      <CardHeader className={hasContent ? "pb-4" : ""}>
+      <CardHeader className={hasContent ? "pb-4" : "pb-0"}>
         <div className="flex items-center justify-between gap-4">
           <div className="flex items-center gap-4 flex-1 min-w-0">
-            <SectionIcon icon={ScrollText} />
+            <SectionIcon icon={ScrollText} size="lg" />
             <CardTitle className="text-xl leading-tight">Overview</CardTitle>
           </div>
           <EditCampaignField
@@ -159,12 +132,12 @@ const BeatItem = ({ beat }: { beat: typeof beats.$inferSelect }) => (
         </span>
         <p className="text-sm">{beat.text}</p>
       </div>
-      <HeaderActions className="beat-actions group-hover/beat:opacity-100 group-hover/beat:pointer-events-auto">
+      <HoverActions showOnHover="group-hover/beat:opacity-100 group-hover/beat:pointer-events-auto">
         <EditBeatButton
           beatId={beat.id}
           initialData={{ text: beat.text, timestamp: beat.timestamp }}
         />
-      </HeaderActions>
+      </HoverActions>
     </div>
   </InteractiveContainer>
 );
@@ -184,26 +157,24 @@ const SceneCard = ({
   const hasContent = hasLexicalContent(scene.content);
   return (
     <Card className="group/scene scene-card ml-8 transition-shadow hover:shadow-md">
-      <CardHeader className="pb-3 group/scene-header">
+      <CardHeader
+        className={"group/scene-header " + (hasContent ? "pb-4" : "pb-0")}
+      >
         <div className="flex items-center justify-between gap-4">
           <div className="flex items-center gap-3 flex-1 min-w-0">
-            <SectionIcon icon={BookOpen} size="sm" />
+            <SectionIcon icon={BookOpen} size="md" />
             <CardTitle className="text-base leading-tight flex-1 min-w-0">
               {scene.name}
             </CardTitle>
           </div>
-          <HeaderActions className="scene-header-actions group-hover/scene-header:opacity-100 group-hover/scene-header:pointer-events-auto">
+          <HoverActions showOnHover="group-hover/scene-header:opacity-100 group-hover/scene-header:pointer-events-auto">
             <EditSceneButton
               sceneId={scene.id}
               actId={scene.actId}
-              campaignId={campaignId}
               initialData={{ name: scene.name, content: scene.content }}
             />
-            <CreateBeatInlineButton
-              sceneId={scene.id}
-              campaignId={campaignId}
-            />
-          </HeaderActions>
+            <CreateBeatInlineButton sceneId={scene.id} />
+          </HoverActions>
         </div>
       </CardHeader>
       <InteractiveContainer stopPropagation>
@@ -239,22 +210,24 @@ const ActCard = ({
   const hasContent = hasLexicalContent(act.content);
   return (
     <Card className="group/act act-card overflow-hidden transition-shadow hover:shadow-lg">
-      <CardHeader className="pb-4 group/act-header">
+      <CardHeader
+        className={"group/act-header " + (hasContent ? "pb-4" : "pb-0")}
+      >
         <div className="flex items-center justify-between gap-4">
           <div className="flex items-center gap-4 flex-1 min-w-0">
-            <SectionIcon icon={Theater} />
+            <SectionIcon icon={Theater} size="lg" />
             <CardTitle className="text-lg leading-tight flex-1 min-w-0">
               {act.name}
             </CardTitle>
           </div>
-          <HeaderActions className="act-header-actions group-hover/act-header:opacity-100 group-hover/act-header:pointer-events-auto">
+          <HoverActions showOnHover="group-hover/act-header:opacity-100 group-hover/act-header:pointer-events-auto">
             <EditActButton
               actId={act.id}
               campaignId={campaignId}
               initialData={{ name: act.name, content: act.content }}
             />
-            <CreateSceneInlineButton actId={act.id} campaignId={campaignId} />
-          </HeaderActions>
+            <CreateSceneInlineButton actId={act.id} />
+          </HoverActions>
         </div>
       </CardHeader>
       <InteractiveContainer stopPropagation>
@@ -287,30 +260,36 @@ const ActsList = ({
 }: {
   acts: ActWithScenesAndBeats[];
   campaignId: string;
-}) => (
-  <Card className="group/acts-list acts-list-card">
-    <CardHeader className="pb-4 group/acts-list-header">
-      <div className="flex items-center justify-between gap-4">
-        <div className="flex items-center gap-4">
-          <SectionIcon icon={Theater} />
-          <CardTitle className="text-xl leading-tight">Acts</CardTitle>
+}) => {
+  const hasContent = acts.length > 0;
+  return (
+    <Card className="group/acts-list acts-list-card">
+      <CardHeader
+        className={"group/acts-list-header " + (hasContent ? "pb-4" : "pb-0")}
+      >
+        <div className="flex items-center justify-between gap-4">
+          <div className="flex items-center gap-4">
+            <SectionIcon icon={Theater} size="lg" />
+            <CardTitle className="text-xl leading-tight">Acts</CardTitle>
+          </div>
+          <HoverActions showOnHover="group-hover/acts-list-header:opacity-100 group-hover/acts-list-header:pointer-events-auto">
+            <CreateActInlineButton campaignId={campaignId} />
+          </HoverActions>
         </div>
-        <HeaderActions className="acts-list-header-actions group-hover/acts-list-header:opacity-100 group-hover/acts-list-header:pointer-events-auto">
-          <CreateActInlineButton campaignId={campaignId} />
-        </HeaderActions>
-      </div>
-    </CardHeader>
-    <CardContent className="space-y-3">
-      <InteractiveContainer stopPropagation>
-        <div className="space-y-3">
-          {acts.map((act) => (
-            <ActCard key={act.id} act={act} campaignId={campaignId} />
-          ))}
-        </div>
-      </InteractiveContainer>
-    </CardContent>
-  </Card>
-);
+      </CardHeader>
+      <CardContent className="space-y-3">
+        <InteractiveContainer stopPropagation>
+          <div className="space-y-3">
+            {acts.map((act) => (
+              <ActCard key={act.id} act={act} campaignId={campaignId} />
+            ))}
+          </div>
+        </InteractiveContainer>
+      </CardContent>
+    </Card>
+  );
+};
+// #endregion
 
 // #region Page
 export default async function Page({

@@ -2,7 +2,7 @@
 
 import CampaignForm, {
   type CampaignFormData,
-} from "@/components/forms/CampaignForm";
+} from "@/components/ui/custom/forms/CampaignForm";
 import { useState } from "react";
 import { toast } from "sonner";
 import { createCampaign } from "../actions";

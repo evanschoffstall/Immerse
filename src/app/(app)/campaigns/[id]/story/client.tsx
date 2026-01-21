@@ -1,22 +1,26 @@
 "use client";
 
-import ActForm, { type ActFormData } from "@/components/forms/ActForm";
-import BeatForm, { type BeatFormData } from "@/components/forms/BeatForm";
-import SceneForm, { type SceneFormData } from "@/components/forms/SceneForm";
+import ActForm, {
+  type ActFormData,
+} from "@/components/ui/custom/forms/ActForm";
+import BeatForm, {
+  type BeatFormData,
+} from "@/components/ui/custom/forms/BeatForm";
+import SceneForm, {
+  type SceneFormData,
+} from "@/components/ui/custom/forms/SceneForm";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { CardContent } from "@/components/ui/card";
+import { CreateCard } from "@/components/ui/custom/card/CreateCard";
+import { EditIconButton } from "@/components/ui/custom/button/EditIconButton";
 import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog";
+  FormDialog,
+  useFormDialog,
+  useFormDialogSubmit,
+} from "@/components/ui/custom/dialog/FormDialog";
+import { InlineCreateButton } from "@/components/ui/custom/button/InlineCreateButton";
 import { cn } from "@/lib/utils";
-import { BookOpen, Clock, Edit2, Plus, Theater } from "lucide-react";
-import { useRouter } from "next/navigation";
-import { useState, useTransition } from "react";
+import { Clock, Plus, Theater } from "lucide-react";
 import { toast } from "sonner";
 import {
   createAct,
@@ -26,97 +30,101 @@ import {
   updateBeat,
   updateScene,
 } from "./actions";
+import { Dialog, DialogTrigger } from "@/components/ui/dialog";
+import type { ReactNode } from "react";
 
-// #region Constants & Helpers
-const DIALOG_LG = "max-w-2xl max-h-[90vh] overflow-y-auto";
-const DIALOG_MD = "max-w-lg";
-const INLINE_BUTTON_CLASS = "h-8 px-2 text-xs";
-const ICON_BUTTON_CLASS = "h-9 w-9";
-const ICON_BUTTON_SM_CLASS = "h-8 w-8";
-const ICON_BUTTON_XS_CLASS = "h-7 w-7";
-const INLINE_ICON_CLASS = "mr-1 h-3.5 w-3.5";
+// ============================================================================
+// Helpers
+// ============================================================================
 
-const dialogCopy = {
-  act: {
-    createTitle: "New Act",
-    createDescription:
-      "Define the major narrative sections of your campaign. Acts help structure your story into major sections.",
-    editTitle: "Edit Act",
-    editDescription: "Update the act details and content.",
-  },
-  scene: {
-    createTitle: "New Scene",
-    createDescription:
-      "Create a scene within this act. Scenes represent specific events or moments in your story.",
-    editTitle: "Edit Scene",
-    editDescription: "Update the scene details and content.",
-  },
-  beat: {
-    createTitle: "New Beat",
-    createDescription: "Add a timestamped beat to track events in this scene.",
-    editTitle: "Edit Beat",
-    editDescription: "Update the timestamp or text for this beat.",
-  },
+const toLocalDateTime = (d: Date) =>
+  new Date(d.getTime() - d.getTimezoneOffset() * 60000)
+    .toISOString()
+    .slice(0, 16);
+
+const toFormData = (v: Record<string, string | null | undefined>) => {
+  const fd = new FormData();
+  Object.entries(v).forEach(([k, val]) => val != null && fd.append(k, val));
+  return fd;
 };
 
-const toastCopy = {
-  actCreated: "Act created successfully!",
-  actUpdated: "Act updated successfully!",
-  sceneCreated: "Scene created successfully!",
-  sceneUpdated: "Scene updated successfully!",
-  beatCreated: "Beat created successfully!",
-  beatUpdated: "Beat updated successfully!",
-  actCreateError: "Failed to create act",
-  actUpdateError: "Failed to update act",
-  sceneCreateError: "Failed to create scene",
-  sceneUpdateError: "Failed to update scene",
-  beatCreateError: "Failed to create beat",
-  beatUpdateError: "Failed to update beat",
-};
+type DialogMode = "create" | "edit";
 
-const toDateTimeLocalValue = (date: Date) => {
-  const localDate = new Date(date.getTime() - date.getTimezoneOffset() * 60000);
-  return localDate.toISOString().slice(0, 16);
-};
+const submitText = (mode: DialogMode, label: string) =>
+  mode === "create" ? `Create ${label}` : `Update ${label}`;
 
-const buildFormData = (values: Record<string, string | null | undefined>) => {
-  const formData = new FormData();
-  Object.entries(values).forEach(([key, value]) => {
-    if (value !== undefined && value !== null) {
-      formData.append(key, value);
-    }
-  });
-  return formData;
-};
+const successText = (mode: DialogMode, label: string) =>
+  mode === "create" ? `${label} created!` : `${label} updated!`;
 
-const DialogShell = ({
+const errorText = (mode: DialogMode, label: string) =>
+  `Failed to ${mode} ${label.toLowerCase()}`;
+
+type InitialTextNullable = { name: string; content?: string | null };
+
+function toOptionalText(
+  initial?: InitialTextNullable,
+): { name: string; content?: string } | undefined {
+  if (!initial) return undefined;
+  return { name: initial.name, content: initial.content ?? undefined };
+}
+
+// ============================================================================
+// Act
+// ============================================================================
+
+function ActDialogContent({
+  mode,
+  campaignId,
+  actId,
+  initial,
   open,
   onOpenChange,
-  title,
-  description,
-  className,
-  children,
 }: {
+  mode: DialogMode;
+  campaignId: string;
+  actId?: string;
+  initial?: { name: string; content?: string };
   open: boolean;
-  onOpenChange: (open: boolean) => void;
-  title: string;
-  description: string;
-  className: string;
-  children: React.ReactNode;
-}) => (
-  <Dialog open={open} onOpenChange={onOpenChange}>
-    <DialogContent className={className}>
-      <DialogHeader>
-        <DialogTitle>{title}</DialogTitle>
-        <DialogDescription>{description}</DialogDescription>
-      </DialogHeader>
-      {children}
-    </DialogContent>
-  </Dialog>
-);
-// #endregion
+  onOpenChange: (o: boolean) => void;
+}) {
+  const { isPending, done } = useFormDialogSubmit(onOpenChange);
+  const isCreate = mode === "create";
 
-// #region Empty State
+  const onSubmit = async (d: ActFormData) => {
+    try {
+      const fd = toFormData({ name: d.name, content: d.content });
+      isCreate
+        ? await createAct(campaignId, fd, false)
+        : await updateAct(actId!, fd, false);
+      toast.success(successText(mode, "Act"));
+      done();
+    } catch (err: any) {
+      toast.error(err.message || errorText(mode, "Act"));
+    }
+  };
+
+  return (
+    <FormDialog
+      open={open}
+      onOpenChange={onOpenChange}
+      title={isCreate ? "New Act" : "Edit Act"}
+      description={
+        isCreate
+          ? "Define the major narrative sections of your campaign."
+          : "Update the act details and content."
+      }
+      size="lg"
+    >
+      <ActForm
+        initialData={initial}
+        onSubmit={onSubmit}
+        isLoading={isPending}
+        submitText={submitText(mode, "Act")}
+      />
+    </FormDialog>
+  );
+}
+
 export function EmptyState({ campaignId }: { campaignId: string }) {
   return (
     <CardContent className="p-12">
@@ -127,8 +135,7 @@ export function EmptyState({ campaignId }: { campaignId: string }) {
         <div className="space-y-2">
           <h3 className="text-2xl font-semibold tracking-tight">No acts yet</h3>
           <p className="text-muted-foreground max-w-md">
-            Create your first act to get started organizing your story. Acts
-            help structure your narrative into major sections.
+            Create your first act to get started organizing your story.
           </p>
         </div>
         <CreateActButton campaignId={campaignId} />
@@ -136,142 +143,20 @@ export function EmptyState({ campaignId }: { campaignId: string }) {
     </CardContent>
   );
 }
-// #endregion
-
-// #region Act Dialogs & Buttons
-function CreateActDialog({
-  campaignId,
-  open,
-  onOpenChange,
-}: {
-  campaignId: string;
-  open: boolean;
-  onOpenChange: (open: boolean) => void;
-}) {
-  const [isPending, startTransition] = useTransition();
-  const router = useRouter();
-  const closeAndRefresh = () =>
-    startTransition(() => {
-      router.refresh();
-      onOpenChange(false);
-    });
-
-  const handleCreateAct = async (data: ActFormData) => {
-    try {
-      const formData = buildFormData({
-        name: data.name,
-        content: data.content,
-      });
-      await createAct(campaignId, formData, false);
-      toast.success(toastCopy.actCreated);
-      closeAndRefresh();
-    } catch (error: any) {
-      console.error("Error creating act:", error);
-      toast.error(error.message || toastCopy.actCreateError);
-    }
-  };
-
-  return (
-    <DialogShell
-      open={open}
-      onOpenChange={onOpenChange}
-      title={dialogCopy.act.createTitle}
-      description={dialogCopy.act.createDescription}
-      className={DIALOG_LG}
-    >
-      <ActForm
-        onSubmit={handleCreateAct}
-        isLoading={isPending}
-        submitText="Create Act"
-      />
-    </DialogShell>
-  );
-}
-
-function EditActDialog({
-  actId,
-  campaignId,
-  initialData,
-  open,
-  onOpenChange,
-}: {
-  actId: string;
-  campaignId: string;
-  initialData: { name: string; content?: string };
-  open: boolean;
-  onOpenChange: (open: boolean) => void;
-}) {
-  const [isPending, startTransition] = useTransition();
-  const router = useRouter();
-  const closeAndRefresh = () =>
-    startTransition(() => {
-      router.refresh();
-      onOpenChange(false);
-    });
-
-  const handleUpdateAct = async (data: ActFormData) => {
-    try {
-      const formData = buildFormData({
-        name: data.name,
-        content: data.content,
-      });
-      await updateAct(actId, formData, false);
-      toast.success(toastCopy.actUpdated);
-      closeAndRefresh();
-    } catch (error: any) {
-      console.error("Error updating act:", error);
-      toast.error(error.message || toastCopy.actUpdateError);
-    }
-  };
-
-  return (
-    <DialogShell
-      open={open}
-      onOpenChange={onOpenChange}
-      title={dialogCopy.act.editTitle}
-      description={dialogCopy.act.editDescription}
-      className={DIALOG_LG}
-    >
-      <ActForm
-        initialData={initialData}
-        onSubmit={handleUpdateAct}
-        isLoading={isPending}
-        submitText="Update Act"
-      />
-    </DialogShell>
-  );
-}
 
 export function CreateActCard({ campaignId }: { campaignId: string }) {
-  const [open, setOpen] = useState(false);
-
+  const { open, setOpen } = useFormDialog();
   return (
     <>
-      <Card
-        className={cn(
-          "border-0 border-l-4 border-l-primary/20 transition-all cursor-pointer bg-muted/20",
-          "hover:shadow-lg hover:bg-muted/40 hover:border-l-primary/50",
-          "border-dashed",
-        )}
+      <CreateCard
+        icon={Theater}
+        title="New Act"
+        description="Create a new act to organize your story"
+        variant="lg"
         onClick={() => setOpen(true)}
-      >
-        <CardHeader className="py-3">
-          <div className="flex items-center gap-4">
-            <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-primary/10">
-              <Theater className="h-6 w-6 text-primary" />
-            </div>
-            <div className="space-y-1">
-              <CardTitle className="text-xl leading-tight text-muted-foreground">
-                New Act
-              </CardTitle>
-              <p className="text-sm text-muted-foreground">
-                Create a new act to organize your story
-              </p>
-            </div>
-          </div>
-        </CardHeader>
-      </Card>
-      <CreateActDialog
+      />
+      <ActDialogContent
+        mode="create"
         campaignId={campaignId}
         open={open}
         onOpenChange={setOpen}
@@ -281,44 +166,37 @@ export function CreateActCard({ campaignId }: { campaignId: string }) {
 }
 
 export function CreateActButton({ campaignId }: { campaignId: string }) {
-  const [open, setOpen] = useState(false);
-
-  return (
-    <>
-      <Dialog open={open} onOpenChange={setOpen}>
-        <DialogTrigger asChild>
-          <Button size="icon" className={ICON_BUTTON_CLASS}>
-            <Plus className="h-4 w-4" />
-            <span className="sr-only">New Act</span>
-          </Button>
-        </DialogTrigger>
-        <CreateActDialog
-          campaignId={campaignId}
-          open={open}
-          onOpenChange={setOpen}
-        />
-      </Dialog>
-    </>
-  );
-}
-
-export function CreateActInlineButton({ campaignId }: { campaignId: string }) {
-  const [open, setOpen] = useState(false);
-
+  const { open, setOpen } = useFormDialog();
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button variant="ghost" size="sm" className={INLINE_BUTTON_CLASS}>
-          <Plus className={INLINE_ICON_CLASS} />
-          New Act
+        <Button size="icon" className="h-7 w-7">
+          <Plus className="h-4 w-4" />
+          <span className="sr-only">New Act</span>
         </Button>
       </DialogTrigger>
-      <CreateActDialog
+      <ActDialogContent
+        mode="create"
         campaignId={campaignId}
         open={open}
         onOpenChange={setOpen}
       />
     </Dialog>
+  );
+}
+
+export function CreateActInlineButton({ campaignId }: { campaignId: string }) {
+  return (
+    <InlineCreateButton label="New Act">
+      {(open, setOpen) => (
+        <ActDialogContent
+          mode="create"
+          campaignId={campaignId}
+          open={open}
+          onOpenChange={setOpen}
+        />
+      )}
+    </InlineCreateButton>
   );
 }
 
@@ -329,333 +207,204 @@ export function EditActButton({
 }: {
   actId: string;
   campaignId: string;
-  initialData: { name: string; content?: string | null };
+  initialData: InitialTextNullable;
 }) {
-  const [open, setOpen] = useState(false);
+  return (
+    <EditIconButton label="Edit act">
+      {(open, setOpen) => (
+        <ActDialogContent
+          mode="edit"
+          campaignId={campaignId}
+          actId={actId}
+          initial={toOptionalText(initialData)}
+          open={open}
+          onOpenChange={setOpen}
+        />
+      )}
+    </EditIconButton>
+  );
+}
+
+// ============================================================================
+// Scene
+// ============================================================================
+
+function SceneDialogContent({
+  mode,
+  actId,
+  sceneId,
+  initial,
+  open,
+  onOpenChange,
+}: {
+  mode: DialogMode;
+  actId: string;
+  sceneId?: string;
+  initial?: { name: string; content?: string };
+  open: boolean;
+  onOpenChange: (o: boolean) => void;
+}) {
+  const { isPending, done } = useFormDialogSubmit(onOpenChange);
+  const isCreate = mode === "create";
+
+  const onSubmit = async (d: SceneFormData) => {
+    try {
+      const fd = toFormData({ name: d.name, content: d.content });
+      isCreate
+        ? await createScene(actId, fd, false)
+        : await updateScene(sceneId!, fd, false);
+      toast.success(successText(mode, "Scene"));
+      done();
+    } catch (err: any) {
+      toast.error(err.message || errorText(mode, "Scene"));
+    }
+  };
 
   return (
+    <FormDialog
+      open={open}
+      onOpenChange={onOpenChange}
+      title={isCreate ? "New Scene" : "Edit Scene"}
+      description={
+        isCreate
+          ? "Create a scene within this act."
+          : "Update the scene details and content."
+      }
+      size="lg"
+    >
+      <SceneForm
+        initialData={initial}
+        onSubmit={onSubmit}
+        isLoading={isPending}
+        submitText={submitText(mode, "Scene")}
+      />
+    </FormDialog>
+  );
+}
+
+export function CreateSceneCard({ actId }: { actId: string }) {
+  const { open, setOpen } = useFormDialog();
+  return (
     <>
-      <EditActDialog
+      <CreateCard
+        icon={Theater}
+        title="New Scene"
+        description="Create a new scene in this act"
+        variant="md"
+        onClick={() => setOpen(true)}
+      />
+      <SceneDialogContent
+        mode="create"
         actId={actId}
-        campaignId={campaignId}
-        initialData={{
-          name: initialData.name,
-          content: initialData.content ?? undefined,
-        }}
         open={open}
         onOpenChange={setOpen}
       />
-      <Button
-        variant="ghost"
-        size="icon"
-        className={ICON_BUTTON_CLASS}
-        onClick={() => setOpen(true)}
-      >
-        <Edit2 className="h-4 w-4" />
-        <span className="sr-only">Edit act</span>
-      </Button>
     </>
   );
 }
-// #endregion
 
-// #region Scene Dialogs & Buttons
-function CreateSceneDialog({
-  actId,
-  campaignId,
-  open,
-  onOpenChange,
-}: {
-  actId: string;
-  campaignId: string;
-  open: boolean;
-  onOpenChange: (open: boolean) => void;
-}) {
-  const [isPending, startTransition] = useTransition();
-  const router = useRouter();
-  const closeAndRefresh = () =>
-    startTransition(() => {
-      router.refresh();
-      onOpenChange(false);
-    });
-
-  const handleCreateScene = async (data: SceneFormData) => {
-    try {
-      const formData = buildFormData({
-        name: data.name,
-        content: data.content,
-      });
-      await createScene(actId, formData, false);
-      toast.success(toastCopy.sceneCreated);
-      closeAndRefresh();
-    } catch (error: any) {
-      console.error("Error creating scene:", error);
-      toast.error(error.message || toastCopy.sceneCreateError);
-    }
-  };
-
+export function CreateSceneInlineButton({ actId }: { actId: string }) {
   return (
-    <DialogShell
-      open={open}
-      onOpenChange={onOpenChange}
-      title={dialogCopy.scene.createTitle}
-      description={dialogCopy.scene.createDescription}
-      className={DIALOG_LG}
-    >
-      <SceneForm
-        onSubmit={handleCreateScene}
-        isLoading={isPending}
-        submitText="Create Scene"
-      />
-    </DialogShell>
+    <InlineCreateButton label="New Scene">
+      {(open, setOpen) => (
+        <SceneDialogContent
+          mode="create"
+          actId={actId}
+          open={open}
+          onOpenChange={setOpen}
+        />
+      )}
+    </InlineCreateButton>
   );
 }
 
-function EditSceneDialog({
+export function EditSceneButton({
   sceneId,
   actId,
-  campaignId,
   initialData,
-  open,
-  onOpenChange,
 }: {
   sceneId: string;
   actId: string;
-  campaignId: string;
-  initialData: { name: string; content?: string };
-  open: boolean;
-  onOpenChange: (open: boolean) => void;
+  initialData: InitialTextNullable;
 }) {
-  const [isPending, startTransition] = useTransition();
-  const router = useRouter();
-  const closeAndRefresh = () =>
-    startTransition(() => {
-      router.refresh();
-      onOpenChange(false);
-    });
-
-  const handleUpdateScene = async (data: SceneFormData) => {
-    try {
-      const formData = buildFormData({
-        name: data.name,
-        content: data.content,
-      });
-      await updateScene(sceneId, formData, false);
-      toast.success(toastCopy.sceneUpdated);
-      closeAndRefresh();
-    } catch (error: any) {
-      console.error("Error updating scene:", error);
-      toast.error(error.message || toastCopy.sceneUpdateError);
-    }
-  };
-
   return (
-    <DialogShell
-      open={open}
-      onOpenChange={onOpenChange}
-      title={dialogCopy.scene.editTitle}
-      description={dialogCopy.scene.editDescription}
-      className={DIALOG_LG}
-    >
-      <SceneForm
-        initialData={initialData}
-        onSubmit={handleUpdateScene}
-        isLoading={isPending}
-        submitText="Update Scene"
-      />
-    </DialogShell>
+    <EditIconButton label="Edit scene">
+      {(open, setOpen) => (
+        <SceneDialogContent
+          mode="edit"
+          actId={actId}
+          sceneId={sceneId}
+          initial={toOptionalText(initialData)}
+          open={open}
+          onOpenChange={setOpen}
+        />
+      )}
+    </EditIconButton>
   );
 }
 
-function EditBeatDialog({
+// ============================================================================
+// Beat
+// ============================================================================
+
+function BeatDialogContent({
+  mode,
+  sceneId,
   beatId,
-  initialData,
+  initial,
   open,
   onOpenChange,
 }: {
-  beatId: string;
-  initialData: { text: string; timestamp: Date };
+  mode: DialogMode;
+  sceneId?: string;
+  beatId?: string;
+  initial?: { text: string; timestamp: string };
   open: boolean;
-  onOpenChange: (open: boolean) => void;
+  onOpenChange: (o: boolean) => void;
 }) {
-  const [isPending, startTransition] = useTransition();
-  const router = useRouter();
-  const closeAndRefresh = () =>
-    startTransition(() => {
-      router.refresh();
-      onOpenChange(false);
-    });
+  const { isPending, done } = useFormDialogSubmit(onOpenChange);
+  const isCreate = mode === "create";
 
-  const handleUpdateBeat = async (data: BeatFormData) => {
+  const onSubmit = async (d: BeatFormData) => {
     try {
-      const formData = buildFormData({
-        text: data.text,
-        timestamp: new Date(data.timestamp).toISOString(),
+      const fd = toFormData({
+        text: d.text,
+        timestamp: new Date(d.timestamp).toISOString(),
       });
-      await updateBeat(beatId, formData, false);
-      toast.success(toastCopy.beatUpdated);
-      closeAndRefresh();
-    } catch (error: any) {
-      console.error("Error updating beat:", error);
-      toast.error(error.message || toastCopy.beatUpdateError);
+      isCreate
+        ? await createBeat(sceneId!, fd, false)
+        : await updateBeat(beatId!, fd, false);
+      toast.success(successText(mode, "Beat"));
+      done();
+    } catch (err: any) {
+      toast.error(err.message || errorText(mode, "Beat"));
     }
   };
 
   return (
-    <DialogShell
+    <FormDialog
       open={open}
       onOpenChange={onOpenChange}
-      title={dialogCopy.beat.editTitle}
-      description={dialogCopy.beat.editDescription}
-      className={DIALOG_MD}
+      title={isCreate ? "New Beat" : "Edit Beat"}
+      description={
+        isCreate
+          ? "Add a timestamped beat to track events."
+          : "Update the beat details."
+      }
+      size="md"
     >
       <BeatForm
-        initialData={{
-          text: initialData.text,
-          timestamp: toDateTimeLocalValue(initialData.timestamp),
-        }}
-        onSubmit={handleUpdateBeat}
+        initialData={initial}
+        onSubmit={onSubmit}
         isLoading={isPending}
-        submitText="Update Beat"
+        submitText={submitText(mode, "Beat")}
       />
-    </DialogShell>
+    </FormDialog>
   );
 }
 
-export function CreateSceneCard({
-  actId,
-  campaignId,
-}: {
-  actId: string;
-  campaignId: string;
-}) {
-  const [open, setOpen] = useState(false);
-
-  return (
-    <>
-      <Card
-        className={cn(
-          "border-0 border-l-3 border-l-primary/20 transition-all cursor-pointer bg-muted/20",
-          "hover:shadow-md hover:bg-muted/40 hover:border-l-primary/50",
-          "border-dashed",
-        )}
-        onClick={() => setOpen(true)}
-      >
-        <CardHeader className="py-3">
-          <div className="flex items-center gap-3">
-            <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-primary/10">
-              <BookOpen className="h-4 w-4 text-primary" />
-            </div>
-            <div className="space-y-1">
-              <CardTitle className="text-base leading-tight text-muted-foreground">
-                New Scene
-              </CardTitle>
-              <p className="text-xs text-muted-foreground">
-                Create a new scene in this act
-              </p>
-            </div>
-          </div>
-        </CardHeader>
-      </Card>
-      <CreateSceneDialog
-        actId={actId}
-        campaignId={campaignId}
-        open={open}
-        onOpenChange={setOpen}
-      />
-    </>
-  );
-}
-
-export function CreateSceneInlineButton({
-  actId,
-  campaignId,
-}: {
-  actId: string;
-  campaignId: string;
-}) {
-  const [open, setOpen] = useState(false);
-
-  return (
-    <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger asChild>
-        <Button variant="ghost" size="sm" className={INLINE_BUTTON_CLASS}>
-          <Plus className={INLINE_ICON_CLASS} />
-          New Scene
-        </Button>
-      </DialogTrigger>
-      <CreateSceneDialog
-        actId={actId}
-        campaignId={campaignId}
-        open={open}
-        onOpenChange={setOpen}
-      />
-    </Dialog>
-  );
-}
-// #endregion
-
-// #region Beat Dialogs & Buttons
-function CreateBeatDialog({
-  sceneId,
-  campaignId,
-  open,
-  onOpenChange,
-}: {
-  sceneId: string;
-  campaignId: string;
-  open: boolean;
-  onOpenChange: (open: boolean) => void;
-}) {
-  const [isPending, startTransition] = useTransition();
-  const router = useRouter();
-  const closeAndRefresh = () =>
-    startTransition(() => {
-      router.refresh();
-      onOpenChange(false);
-    });
-
-  const handleCreateBeat = async (data: BeatFormData) => {
-    try {
-      const formData = buildFormData({
-        text: data.text,
-        timestamp: new Date(data.timestamp).toISOString(),
-      });
-      await createBeat(sceneId, formData, false);
-      toast.success(toastCopy.beatCreated);
-      closeAndRefresh();
-    } catch (error: any) {
-      console.error("Error creating beat:", error);
-      toast.error(error.message || toastCopy.beatCreateError);
-    }
-  };
-
-  return (
-    <DialogShell
-      open={open}
-      onOpenChange={onOpenChange}
-      title={dialogCopy.beat.createTitle}
-      description={dialogCopy.beat.createDescription}
-      className={DIALOG_MD}
-    >
-      <BeatForm
-        onSubmit={handleCreateBeat}
-        isLoading={isPending}
-        submitText="Create Beat"
-      />
-    </DialogShell>
-  );
-}
-
-export function CreateBeatCard({
-  sceneId,
-  campaignId,
-}: {
-  sceneId: string;
-  campaignId: string;
-}) {
-  const [open, setOpen] = useState(false);
-
+export function CreateBeatCard({ sceneId }: { sceneId: string }) {
+  const { open, setOpen } = useFormDialog();
   return (
     <>
       <div
@@ -677,9 +426,9 @@ export function CreateBeatCard({
           </p>
         </div>
       </div>
-      <CreateBeatDialog
+      <BeatDialogContent
+        mode="create"
         sceneId={sceneId}
-        campaignId={campaignId}
         open={open}
         onOpenChange={setOpen}
       />
@@ -687,71 +436,18 @@ export function CreateBeatCard({
   );
 }
 
-export function CreateBeatInlineButton({
-  sceneId,
-  campaignId,
-}: {
-  sceneId: string;
-  campaignId: string;
-}) {
-  const [open, setOpen] = useState(false);
-
+export function CreateBeatInlineButton({ sceneId }: { sceneId: string }) {
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger asChild>
-        <Button variant="ghost" size="sm" className={INLINE_BUTTON_CLASS}>
-          <Plus className={INLINE_ICON_CLASS} />
-          New Beat
-        </Button>
-      </DialogTrigger>
-      <CreateBeatDialog
-        sceneId={sceneId}
-        campaignId={campaignId}
-        open={open}
-        onOpenChange={setOpen}
-      />
-    </Dialog>
-  );
-}
-// #endregion
-
-// #region Edit Buttons
-export function EditSceneButton({
-  sceneId,
-  actId,
-  campaignId,
-  initialData,
-}: {
-  sceneId: string;
-  actId: string;
-  campaignId: string;
-  initialData: { name: string; content?: string | null };
-}) {
-  const [open, setOpen] = useState(false);
-
-  return (
-    <>
-      <Button
-        variant="ghost"
-        size="icon"
-        className={ICON_BUTTON_SM_CLASS}
-        onClick={() => setOpen(true)}
-      >
-        <Edit2 className="h-4 w-4" />
-        <span className="sr-only">Edit scene</span>
-      </Button>
-      <EditSceneDialog
-        sceneId={sceneId}
-        actId={actId}
-        campaignId={campaignId}
-        initialData={{
-          name: initialData.name,
-          content: initialData.content ?? undefined,
-        }}
-        open={open}
-        onOpenChange={setOpen}
-      />
-    </>
+    <InlineCreateButton label="New Beat">
+      {(open, setOpen) => (
+        <BeatDialogContent
+          mode="create"
+          sceneId={sceneId}
+          open={open}
+          onOpenChange={setOpen}
+        />
+      )}
+    </InlineCreateButton>
   );
 }
 
@@ -762,50 +458,38 @@ export function EditBeatButton({
   beatId: string;
   initialData: { text: string; timestamp: Date };
 }) {
-  const [open, setOpen] = useState(false);
-
   return (
-    <>
-      <Button
-        variant="ghost"
-        size="icon"
-        className={ICON_BUTTON_XS_CLASS}
-        onClick={() => setOpen(true)}
-      >
-        <Edit2 className="h-3.5 w-3.5" />
-        <span className="sr-only">Edit beat</span>
-      </Button>
-      <EditBeatDialog
-        beatId={beatId}
-        initialData={initialData}
-        open={open}
-        onOpenChange={setOpen}
-      />
-    </>
+    <EditIconButton label="Edit beat">
+      {(open, setOpen) => (
+        <BeatDialogContent
+          mode="edit"
+          beatId={beatId}
+          initial={{
+            text: initialData.text,
+            timestamp: toLocalDateTime(initialData.timestamp),
+          }}
+          open={open}
+          onOpenChange={setOpen}
+        />
+      )}
+    </EditIconButton>
   );
 }
-// #endregion
 
-// #region Interactive Wrapper
-// Client-side wrapper for interactive hover behavior
+// ============================================================================
+// Utils
+// ============================================================================
+
 export function InteractiveContainer({
   children,
   stopPropagation = false,
 }: {
-  children: React.ReactNode;
+  children: ReactNode;
   stopPropagation?: boolean;
 }) {
   return (
-    <div
-      className=""
-      onMouseEnter={(e) => {
-        if (stopPropagation) {
-          e.stopPropagation();
-        }
-      }}
-    >
+    <div onMouseEnter={(e) => stopPropagation && e.stopPropagation()}>
       {children}
     </div>
   );
 }
-// #endregion
