@@ -21,7 +21,7 @@ type DialogSize = keyof typeof DIALOG_SIZE;
 
 export type FormDialogProps = {
   open: boolean;
-  onOpenChange: (open: boolean) => void;
+  onOpenChangeAction: (open: boolean) => void;
   title: string;
   description: string;
   size?: DialogSize;
@@ -30,14 +30,14 @@ export type FormDialogProps = {
 
 export function FormDialog({
   open,
-  onOpenChange,
+  onOpenChangeAction,
   title,
   description,
   size = "lg",
   children,
 }: FormDialogProps) {
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
+    <Dialog open={open} onOpenChange={onOpenChangeAction}>
       <DialogContent className={DIALOG_SIZE[size]}>
         <DialogHeader>
           <DialogTitle>{title}</DialogTitle>
@@ -51,7 +51,7 @@ export function FormDialog({
 
 export function useFormDialog() {
   const [open, setOpen] = useState(false);
-  return { open, setOpen, onOpenChange: setOpen };
+  return { open, setOpen, onOpenChangeAction: setOpen };
 }
 
 export function useFormDialogSubmit(onClose: (open: boolean) => void) {
@@ -74,7 +74,7 @@ type FormDialogWithTriggerProps = {
   size?: DialogSize;
   children: (props: {
     open: boolean;
-    onOpenChange: (open: boolean) => void;
+    onOpenChangeAction: (open: boolean) => void;
   }) => ReactNode;
 };
 
@@ -94,7 +94,7 @@ function FormDialogWithTrigger({
           <DialogTitle>{title}</DialogTitle>
           <DialogDescription>{description}</DialogDescription>
         </DialogHeader>
-        {children({ open, onOpenChange: setOpen })}
+        {children({ open, onOpenChangeAction: setOpen })}
       </DialogContent>
     </Dialog>
   );

@@ -291,7 +291,7 @@ function ActDialogContent({
   return (
     <FormDialog
       open={open}
-      onOpenChange={onOpenChange}
+      onOpenChangeAction={onOpenChange}
       title={isCreate ? "New Act" : "Edit Act"}
       description={
         isCreate
@@ -411,8 +411,9 @@ export function EditActButton({
   initialData: InitialTextNullable;
 }) {
   return (
-    <EditIconButton label="Edit act">
-      {(open, setOpen) => (
+    <EditIconButton
+      label="Edit act"
+      childrenAction={(open, setOpen) => (
         <ActDialogContent
           mode="edit"
           campaignId={campaignId}
@@ -422,7 +423,7 @@ export function EditActButton({
           onOpenChange={setOpen}
         />
       )}
-    </EditIconButton>
+    />
   );
 }
 
@@ -478,7 +479,7 @@ function SceneDialogContent({
   return (
     <FormDialog
       open={open}
-      onOpenChange={onOpenChange}
+      onOpenChangeAction={onOpenChange}
       title={isCreate ? "New Scene" : "Edit Scene"}
       description={
         isCreate
@@ -559,8 +560,9 @@ export function EditSceneButton({
   initialData: InitialTextNullable;
 }) {
   return (
-    <EditIconButton label="Edit scene">
-      {(open, setOpen) => (
+    <EditIconButton
+      label="Edit scene"
+      childrenAction={(open, setOpen) => (
         <SceneDialogContent
           mode="edit"
           actId={actId}
@@ -570,7 +572,7 @@ export function EditSceneButton({
           onOpenChange={setOpen}
         />
       )}
-    </EditIconButton>
+    />
   );
 }
 
@@ -629,7 +631,7 @@ function BeatDialogContent({
   return (
     <FormDialog
       open={open}
-      onOpenChange={onOpenChange}
+      onOpenChangeAction={onOpenChange}
       title={isCreate ? "New Beat" : "Edit Beat"}
       description={
         isCreate
@@ -720,8 +722,9 @@ export function EditBeatButton({
   initialData: { text: string; timestamp: Date };
 }) {
   return (
-    <EditIconButton label="Edit beat">
-      {(open, setOpen) => (
+    <EditIconButton
+      label="Edit beat"
+      childrenAction={(open, setOpen) => (
         <BeatDialogContent
           mode="edit"
           beatId={beatId}
@@ -733,7 +736,7 @@ export function EditBeatButton({
           onOpenChange={setOpen}
         />
       )}
-    </EditIconButton>
+    />
   );
 }
 

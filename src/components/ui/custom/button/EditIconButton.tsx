@@ -6,13 +6,13 @@ import { useState, type ReactNode } from "react";
 
 export type EditIconButtonProps = {
   label: string;
-  children: (open: boolean, setOpen: (o: boolean) => void) => ReactNode;
+  childrenAction: (open: boolean, setOpen: (o: boolean) => void) => ReactNode;
   className?: string;
 };
 
 export function EditIconButton({
   label,
-  children,
+  childrenAction,
   className = "h-7 w-7",
 }: EditIconButtonProps) {
   const [open, setOpen] = useState(false);
@@ -27,7 +27,7 @@ export function EditIconButton({
         <Edit2 className="h-4 w-4" />
         <span className="sr-only">{label}</span>
       </Button>
-      {children(open, setOpen)}
+      {childrenAction(open, setOpen)}
     </>
   );
 }

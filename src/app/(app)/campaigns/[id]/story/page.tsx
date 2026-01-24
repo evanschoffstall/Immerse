@@ -250,7 +250,7 @@ const ActCard = ({
       data-sort-id={act.id}
     >
       <CardHeader
-        className={"group/act-header " + (hasContent ? "pb-4" : "pb-0")}
+        className={"group/act-header " + (hasContent ? "p-3" : "p-3 pb-0")}
       >
         <div className="flex items-center justify-between gap-4">
           <div className="flex items-center gap-4 flex-1 min-w-0">
