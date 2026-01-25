@@ -37,6 +37,15 @@ function extractTextFromNode(node: SerializedLexicalNode): string {
 }
 
 /**
+ * Check if Lexical content has actual text (not just empty nodes)
+ */
+export function hasLexicalContent(content: string | null | undefined): boolean {
+  if (!content) return false;
+  const text = extractTextFromLexical(content);
+  return text.trim().length > 0;
+}
+
+/**
  * Truncate text to a maximum length with ellipsis
  */
 export function truncateText(text: string, maxLength: number = 150): string {

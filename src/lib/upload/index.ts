@@ -84,7 +84,7 @@ export async function uploadImage(
  * Delete an image from the local file system
  * @param imagePath - The relative URL path (e.g., '/uploads/campaigns/123.webp')
  */
-export async function deleteImage(imagePath: string): Promise<void> {
+async function deleteImage(imagePath: string): Promise<void> {
   if (!imagePath.startsWith("/uploads/")) {
     throw new Error("Invalid image path");
   }
@@ -101,7 +101,7 @@ export async function deleteImage(imagePath: string): Promise<void> {
  * @param imagePath - The relative URL path
  * @returns Absolute file system path
  */
-export function getImagePath(imagePath: string): string {
+function getImagePath(imagePath: string): string {
   if (!imagePath.startsWith("/uploads/")) {
     throw new Error("Invalid image path");
   }
@@ -114,7 +114,7 @@ export function getImagePath(imagePath: string): string {
  * @param imagePath - The relative URL path
  * @returns True if the image exists
  */
-export function imageExists(imagePath: string): boolean {
+function imageExists(imagePath: string): boolean {
   try {
     return existsSync(getImagePath(imagePath));
   } catch {
@@ -125,7 +125,7 @@ export function imageExists(imagePath: string): boolean {
 /**
  * Create all upload directories
  */
-export async function initializeUploadDirectories(): Promise<void> {
+async function initializeUploadDirectories(): Promise<void> {
   const folders = ["campaigns", "general"];
 
   for (const folder of folders) {

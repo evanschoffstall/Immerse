@@ -1,10 +1,10 @@
-import { db } from '@/db';
-import { campaigns } from '@/db/schema';
-import { authConfig } from '@/lib/auth';
-import { eq } from 'drizzle-orm';
-import { getServerSession } from 'next-auth/next';
-import { redirect } from 'next/navigation';
-import CampaignLayoutClient from './client';
+import { db } from "@/db";
+import { campaigns } from "@/db/schema";
+import { authConfig } from "@/lib/auth";
+import { eq } from "drizzle-orm";
+import { getServerSession } from "next-auth/next";
+import { redirect } from "next/navigation";
+import CampaignLayoutClient from "./client";
 
 export default async function CampaignLayout({
   children,
@@ -17,7 +17,7 @@ export default async function CampaignLayout({
   const session = await getServerSession(authConfig);
 
   if (!session?.user?.id) {
-    redirect('/login');
+    redirect("/login");
   }
 
   const campaign = await db.query.campaigns.findFirst({
@@ -28,7 +28,7 @@ export default async function CampaignLayout({
   });
 
   if (!campaign || campaign.ownerId !== session.user.id) {
-    redirect('/campaigns');
+    redirect("/campaigns");
   }
 
   return (

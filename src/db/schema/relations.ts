@@ -1,12 +1,15 @@
 import { relations } from "drizzle-orm";
 // Import tables using relative paths to avoid circular dependency through index.ts
+import { acts } from "./acts";
 import { auditLogs } from "./audit-logs";
+import { beats } from "./beats";
 import { beings } from "./beings";
 import { calendars } from "./calendars";
 import { campaignSettings } from "./campaign-settings";
 import { campaigns } from "./campaigns";
 import { images } from "./images";
 import { quests } from "./quests";
+import { scenes } from "./scenes";
 import { users } from "./users";
 
 // All relations defined in one place to avoid circular dependencies
@@ -26,6 +29,7 @@ export const campaignsRelations = relations(campaigns, ({ one, many }) => ({
   quests: many(quests),
   images: many(images),
   calendars: many(calendars),
+  acts: many(acts),
   settings: one(campaignSettings),
 }));
 
@@ -93,5 +97,28 @@ export const auditLogsRelations = relations(auditLogs, ({ one }) => ({
   user: one(users, {
     fields: [auditLogs.userId],
     references: [users.id],
+  }),
+}));
+
+export const actsRelations = relations(acts, ({ one, many }) => ({
+  campaign: one(campaigns, {
+    fields: [acts.campaignId],
+    references: [campaigns.id],
+  }),
+  scenes: many(scenes),
+}));
+
+export const scenesRelations = relations(scenes, ({ one, many }) => ({
+  act: one(acts, {
+    fields: [scenes.actId],
+    references: [acts.id],
+  }),
+  beats: many(beats),
+}));
+
+export const beatsRelations = relations(beats, ({ one }) => ({
+  scene: one(scenes, {
+    fields: [beats.sceneId],
+    references: [scenes.id],
   }),
 }));

@@ -1,65 +1,88 @@
-import { Badge } from '@/components/ui/badge'
-import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { Separator } from '@/components/ui/separator'
-import { authConfig } from '@/lib/auth'
-import { BookOpen, Castle, CheckCircle2, Code, Map, Scroll, Sparkles, Swords, Users, Zap } from 'lucide-react'
-import { getServerSession } from 'next-auth'
-import Link from 'next/link'
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Separator } from "@/components/ui/separator";
+import { authConfig } from "@/lib/auth";
+import {
+  BookOpen,
+  Castle,
+  CheckCircle2,
+  Code,
+  Map,
+  Scroll,
+  Sparkles,
+  Swords,
+  Users,
+  Zap,
+} from "lucide-react";
+import { getServerSession } from "next-auth";
+import Link from "next/link";
 
 export default async function Home() {
-  const session = await getServerSession(authConfig)
+  const session = await getServerSession(authConfig);
 
   const features = [
     {
       icon: Swords,
-      title: 'Campaign Management',
-      description: 'Create and manage your RPG campaigns with powerful tools designed for game masters.',
+      title: "Campaign Management",
+      description:
+        "Create and manage your RPG campaigns with powerful tools designed for game masters.",
     },
     {
       icon: Map,
-      title: 'Interactive Worldbuilding',
-      description: 'Build rich, interconnected worlds with locations, factions, and deep lore.',
+      title: "Interactive Worldbuilding",
+      description:
+        "Build rich, interconnected worlds with locations, factions, and deep lore.",
     },
     {
       icon: Users,
-      title: 'Character Tracking',
-      description: 'Track characters, NPCs, relationships, and development arcs effortlessly.',
+      title: "Character Tracking",
+      description:
+        "Track characters, NPCs, relationships, and development arcs effortlessly.",
     },
     {
       icon: Castle,
-      title: 'Location Management',
-      description: 'Map out kingdoms, cities, dungeons, and every place your story unfolds.',
+      title: "Location Management",
+      description:
+        "Map out kingdoms, cities, dungeons, and every place your story unfolds.",
     },
     {
       icon: Scroll,
-      title: 'Quest & Event Timeline',
-      description: 'Manage quests, plot points, and create rich narrative timelines.',
+      title: "Quest & Event Timeline",
+      description:
+        "Manage quests, plot points, and create rich narrative timelines.",
     },
     {
       icon: BookOpen,
-      title: 'Rich Note System',
-      description: 'Document everything with powerful rich text notes and journals.',
+      title: "Rich Note System",
+      description:
+        "Document everything with powerful rich text notes and journals.",
     },
-  ]
+  ];
 
   const benefits = [
     {
       icon: Sparkles,
-      title: 'Built for GMs',
-      description: 'Every feature designed with game masters in mind',
+      title: "Built for GMs",
+      description: "Every feature designed with game masters in mind",
     },
     {
       icon: Zap,
-      title: 'Lightning Fast',
-      description: 'Quick access to everything during gameplay',
+      title: "Lightning Fast",
+      description: "Quick access to everything during gameplay",
     },
     {
       icon: Code,
-      title: 'Modern Stack',
-      description: 'Built with Next.js, TypeScript, and Prisma',
+      title: "Modern Stack",
+      description: "Built with Next.js, TypeScript, and Prisma",
     },
-  ]
+  ];
 
   return (
     <main className="flex min-h-screen flex-col">
@@ -71,7 +94,10 @@ export default async function Home() {
         <div className="absolute inset-0 -z-10 bg-[radial-gradient(circle_at_70%_80%,rgba(120,119,198,0.1),transparent_50%)]" />
 
         <div className="mx-auto flex max-w-6xl flex-col items-center gap-10 text-center">
-          <Badge variant="secondary" className="animate-in fade-in slide-in-from-bottom-4 px-4 py-1.5 text-sm duration-500">
+          <Badge
+            variant="secondary"
+            className="animate-in fade-in slide-in-from-bottom-4 px-4 py-1.5 text-sm duration-500"
+          >
             <Sparkles className="mr-2 h-3.5 w-3.5" />
             Built for Game Masters & Storytellers
           </Badge>
@@ -85,13 +111,18 @@ export default async function Home() {
               <span className="text-primary">Create Legends.</span>
             </h1>
             <p className="mx-auto max-w-175 text-lg leading-relaxed text-muted-foreground sm:text-xl md:text-2xl">
-              The ultimate RPG campaign management platform. Everything you need to bring your tabletop adventures to life.
+              The ultimate RPG campaign management platform. Everything you need
+              to bring your tabletop adventures to life.
             </p>
           </div>
 
           {session ? (
             <div className="flex flex-col gap-4 min-[400px]:flex-row animate-in fade-in slide-in-from-bottom-4 duration-1000">
-              <Button asChild size="lg" className="h-12 px-8 text-base shadow-lg hover:shadow-xl transition-shadow">
+              <Button
+                asChild
+                size="lg"
+                className="h-12 px-8 text-base shadow-lg hover:shadow-xl transition-shadow"
+              >
                 <Link href="/campaigns">
                   <Swords className="mr-2 h-5 w-5" />
                   Go to Campaigns
@@ -100,13 +131,22 @@ export default async function Home() {
             </div>
           ) : (
             <div className="flex flex-col gap-4 min-[400px]:flex-row animate-in fade-in slide-in-from-bottom-4 duration-1000">
-              <Button asChild size="lg" className="h-12 px-8 text-base shadow-lg hover:shadow-xl transition-shadow">
+              <Button
+                asChild
+                size="lg"
+                className="h-12 px-8 text-base shadow-lg hover:shadow-xl transition-shadow"
+              >
                 <Link href="/register">
                   <Sparkles className="mr-2 h-5 w-5" />
                   Get Started Free
                 </Link>
               </Button>
-              <Button asChild variant="outline" size="lg" className="h-12 px-8 text-base">
+              <Button
+                asChild
+                variant="outline"
+                size="lg"
+                className="h-12 px-8 text-base"
+              >
                 <Link href="/login">Sign In</Link>
               </Button>
             </div>
@@ -155,16 +195,23 @@ export default async function Home() {
         <div className="mx-auto max-w-6xl">
           <div className="grid gap-8 md:grid-cols-3">
             {benefits.map((benefit) => {
-              const Icon = benefit.icon
+              const Icon = benefit.icon;
               return (
-                <div key={benefit.title} className="flex flex-col items-center text-center">
+                <div
+                  key={benefit.title}
+                  className="flex flex-col items-center text-center"
+                >
                   <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-primary/10 ring-4 ring-primary/5">
                     <Icon className="h-8 w-8 text-primary" />
                   </div>
-                  <h3 className="mb-2 text-lg font-semibold">{benefit.title}</h3>
-                  <p className="text-sm text-muted-foreground">{benefit.description}</p>
+                  <h3 className="mb-2 text-lg font-semibold">
+                    {benefit.title}
+                  </h3>
+                  <p className="text-sm text-muted-foreground">
+                    {benefit.description}
+                  </p>
                 </div>
-              )
+              );
             })}
           </div>
         </div>
@@ -183,19 +230,24 @@ export default async function Home() {
           </div>
           <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
             {features.map((feature) => {
-              const Icon = feature.icon
+              const Icon = feature.icon;
               return (
-                <Card key={feature.title} className="group relative overflow-hidden transition-all hover:shadow-lg hover:border-primary/50">
+                <Card
+                  key={feature.title}
+                  className="group relative overflow-hidden transition-all hover:shadow-lg hover:border-primary/50"
+                >
                   <div className="absolute inset-0 bg-linear-to-br from-primary/5 to-transparent opacity-0 transition-opacity group-hover:opacity-100" />
                   <CardHeader className="relative flex flex-col items-center text-center">
                     <div className="mb-3 flex h-14 w-14 items-center justify-center rounded-xl bg-primary/10 transition-all group-hover:scale-110 group-hover:bg-primary/20">
                       <Icon className="h-7 w-7 text-primary" />
                     </div>
                     <CardTitle className="text-xl">{feature.title}</CardTitle>
-                    <CardDescription className="text-base">{feature.description}</CardDescription>
+                    <CardDescription className="text-base">
+                      {feature.description}
+                    </CardDescription>
                   </CardHeader>
                 </Card>
-              )
+              );
             })}
           </div>
         </div>
@@ -218,9 +270,12 @@ export default async function Home() {
                 1
               </div>
               <div className="flex-1">
-                <h3 className="mb-3 text-2xl font-bold">Create Your Campaign</h3>
+                <h3 className="mb-3 text-2xl font-bold">
+                  Create Your Campaign
+                </h3>
                 <p className="text-lg text-muted-foreground">
-                  Start with a name and setting. Add as much or as little detail as you want.
+                  Start with a name and setting. Add as much or as little detail
+                  as you want.
                 </p>
               </div>
             </div>
@@ -232,7 +287,8 @@ export default async function Home() {
               <div className="flex-1">
                 <h3 className="mb-3 text-2xl font-bold">Build Your World</h3>
                 <p className="text-lg text-muted-foreground">
-                  Add characters, locations, factions, and lore. Everything interconnects automatically.
+                  Add characters, locations, factions, and lore. Everything
+                  interconnects automatically.
                 </p>
               </div>
             </div>
@@ -242,9 +298,12 @@ export default async function Home() {
                 3
               </div>
               <div className="flex-1">
-                <h3 className="mb-3 text-2xl font-bold">Run Amazing Sessions</h3>
+                <h3 className="mb-3 text-2xl font-bold">
+                  Run Amazing Sessions
+                </h3>
                 <p className="text-lg text-muted-foreground">
-                  Access all your notes, NPCs, and plot threads instantly during gameplay.
+                  Access all your notes, NPCs, and plot threads instantly during
+                  gameplay.
                 </p>
               </div>
             </div>
@@ -338,7 +397,8 @@ export default async function Home() {
                   Ready to Begin Your Adventure?
                 </h2>
                 <p className="mx-auto max-w-150 text-lg text-muted-foreground">
-                  Start managing your RPG campaigns with a modern, powerful platform.
+                  Start managing your RPG campaigns with a modern, powerful
+                  platform.
                 </p>
                 <div className="flex flex-wrap items-center justify-center gap-4 pt-4 text-sm text-muted-foreground">
                   <div className="flex items-center gap-2">
@@ -364,7 +424,12 @@ export default async function Home() {
                   <Button asChild size="lg" className="h-12 px-8 text-base">
                     <Link href="/register">Start Free Today</Link>
                   </Button>
-                  <Button asChild variant="outline" size="lg" className="h-12 px-8 text-base">
+                  <Button
+                    asChild
+                    variant="outline"
+                    size="lg"
+                    className="h-12 px-8 text-base"
+                  >
                     <Link href="/login">Sign In</Link>
                   </Button>
                 </div>
@@ -373,7 +438,6 @@ export default async function Home() {
           </Card>
         </div>
       </section>
-
     </main>
-  )
+  );
 }

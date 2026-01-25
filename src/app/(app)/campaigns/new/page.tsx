@@ -1,7 +1,13 @@
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { authConfig } from '@/lib/auth';
-import { getServerSession } from 'next-auth';
-import NewCampaignClient from './client';
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { authConfig } from "@/lib/auth";
+import { getServerSession } from "next-auth";
+import NewCampaignClient from "./client";
 
 export default async function NewCampaignPage() {
   const session = await getServerSession(authConfig);

@@ -1,0 +1,46 @@
+#!/usr/bin/env bash
+
+# Database directory
+DB_DIR=~/Databases/ImmerseDB
+DB_NAME=immerse
+
+DID_CREATE_DB=false
+
+# Check if database exists, if not initialize it
+if [ ! -d "$DB_DIR" ]; then
+  echo "Database not found. Creating and initializing..."
+  mkdir -p ~/Databases
+  /usr/lib/postgresql/16/bin/initdb -D "$DB_DIR"
+  DID_CREATE_DB=true
+fi
+
+# Set DATABASE_URL for both drizzle-kit and Next.js
+export DATABASE_URL="postgres://$USER@127.0.0.1:5432/$DB_NAME"
+
+# Start PostgreSQL
+/usr/lib/postgresql/16/bin/postgres -D "$DB_DIR" -k /tmp 2>&1 &
+
+# Wait for PostgreSQL to be ready
+echo "Waiting for PostgreSQL to start..."
+for i in {1..30}; do
+  if psql -h /tmp -d postgres -c "SELECT 1" >/dev/null 2>&1; then
+    break
+  fi
+  sleep 0.1
+done
+
+if [ "$DID_CREATE_DB" = true ]; then
+  # Create the database (connect to default 'postgres' database)
+  psql -h /tmp -d postgres -c "CREATE DATABASE $DB_NAME;" 2>/dev/null || true
+  # Seed test user
+  psql -h /tmp -d $DB_NAME -f scripts/seed-test-user.sql 2>/dev/null || true
+fi
+
+# Generate Drizzle types
+npx drizzle-kit generate
+
+# Apply Drizzle migrations
+npx drizzle-kit migrate
+
+# Start Next.js dev server
+npx next dev --turbo

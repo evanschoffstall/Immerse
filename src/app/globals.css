@@ -1,5 +1,5 @@
 @import "tailwindcss";
-@import "../components/editor/themes/editor-theme.css";
+@import "../components/ui/editor/themes/editor-theme.css";
 
 /* Tailwind v4 Theme Configuration - Generates utility classes from CSS variables */
 @theme {
@@ -136,7 +136,11 @@
   }
 
   body {
-    font-family: 'Roboto Variable', system-ui, -apple-system, sans-serif;
+    font-family:
+      "Roboto Variable",
+      system-ui,
+      -apple-system,
+      sans-serif;
     background-color: hsl(var(--background));
     color: hsl(var(--foreground));
   }
@@ -199,4 +203,16 @@
 
 .dark [data-sonner-toast][data-rich-colors="true"][data-type="warning"] {
   background-color: rgba(0, 0, 0, 0.5) !important;
+}
+
+.act-card:has(.scene-card:hover) .act-header-actions {
+  opacity: 0;
+  transform: translateY(0.5rem);
+  pointer-events: none;
+}
+
+.acts-list-card:has(.act-card:hover) .acts-list-header-actions {
+  opacity: 0;
+  transform: translateY(0.5rem);
+  pointer-events: none;
 }

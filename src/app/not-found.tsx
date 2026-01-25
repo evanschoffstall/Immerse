@@ -1,12 +1,11 @@
+"use client";
 
-'use client'
-
-import { Button } from '@/components/ui/button'
-import { ArrowLeft, Compass, Home } from 'lucide-react'
-import { useRouter } from 'next/navigation'
+import { Button } from "@/components/ui/button";
+import { ArrowLeft, Compass, Home } from "lucide-react";
+import { useRouter } from "next/navigation";
 
 export default function NotFound() {
-  const router = useRouter()
+  const router = useRouter();
 
   return (
     <div className="flex min-h-[calc(100vh)] items-center justify-center p-4">
@@ -31,7 +30,7 @@ export default function NotFound() {
           <Button
             variant="ghost"
             size="sm"
-            onClick={() => router.push('/')}
+            onClick={() => router.push("/")}
             className="gap-2"
           >
             <Home className="h-4 w-4" />
@@ -40,5 +39,5 @@ export default function NotFound() {
         </div>
       </div>
     </div>
-  )
+  );
 }

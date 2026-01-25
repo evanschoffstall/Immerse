@@ -15,6 +15,20 @@
       "when": 1768090606010,
       "tag": "0001_large_dexter_bennett",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1768877113503,
+      "tag": "0002_smart_blue_shield",
+      "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1768969421099,
+      "tag": "0003_dear_rocket_racer",
+      "breakpoints": true
     }
   ]
 }

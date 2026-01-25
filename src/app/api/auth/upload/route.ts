@@ -24,7 +24,7 @@ export async function POST(request: NextRequest) {
         {
           error: "Invalid file type. Only JPG, PNG, WebP, and GIF are allowed.",
         },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -32,7 +32,7 @@ export async function POST(request: NextRequest) {
     if (file.size > 10 * 1024 * 1024) {
       return NextResponse.json(
         { error: "File too large. Maximum size is 10MB." },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -49,7 +49,7 @@ export async function POST(request: NextRequest) {
         error:
           error instanceof Error ? error.message : "Failed to upload image",
       },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }
