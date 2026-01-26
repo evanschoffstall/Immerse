@@ -6,7 +6,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { db } from "@/db";
+import { db } from "@/db/db";
 import { campaigns } from "@/db/schema";
 import { authConfig } from "@/lib/auth";
 import { extractTextFromLexical, truncateText } from "@/lib/utils/lexical";

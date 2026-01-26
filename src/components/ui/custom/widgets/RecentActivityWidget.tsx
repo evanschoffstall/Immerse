@@ -1,5 +1,5 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { db } from "@/db";
+import { db } from "@/db/db";
 import { beings } from "@/db/schema";
 import { desc, eq } from "drizzle-orm";
 import Image from "next/image";

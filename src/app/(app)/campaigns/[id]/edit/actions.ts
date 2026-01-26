@@ -1,6 +1,6 @@
 "use server";
 
-import { db } from "@/db";
+import { db } from "@/db/db";
 import { campaigns, campaignSettings } from "@/db/schema";
 import { authConfig } from "@/lib/auth";
 import { eq } from "drizzle-orm";

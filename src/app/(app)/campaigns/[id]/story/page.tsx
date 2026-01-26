@@ -4,7 +4,7 @@ import { HoverActions } from "@/components/ui/custom/HoverActions";
 import RichTextViewer from "@/components/ui/custom/rich-text/RichTextViewer";
 import { SectionIcon } from "@/components/ui/custom/SectionIcon";
 import { Separator } from "@/components/ui/separator";
-import { db } from "@/db";
+import { db } from "@/db/db";
 import { acts, beats, campaigns, scenes } from "@/db/schema";
 import { hasLexicalContent } from "@/lib/utils/lexical";
 import { and, asc, eq, isNull } from "drizzle-orm";
