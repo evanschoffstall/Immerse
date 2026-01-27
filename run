@@ -1,5 +1,9 @@
 #!/usr/bin/env bash
 
+# Load NVM
+export NVM_DIR="$HOME/.nvm"
+[ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
+
 # Database directory
 DB_DIR=~/Databases/ImmerseDB
 DB_NAME=immerse
@@ -42,5 +46,5 @@ npx drizzle-kit generate
 # Apply Drizzle migrations
 npx drizzle-kit migrate
 
-# Start Next.js dev server
-npx next dev --turbo
+# Start Next.js dev server (accessible from network)
+npx next dev --turbo -H 0.0.0.0

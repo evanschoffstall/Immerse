@@ -1,6 +1,6 @@
 import { drizzle } from "drizzle-orm/postgres-js";
 import postgres from "postgres";
-import * as schema from "./db/schema/index";
+import * as schema from "./schema/index";
 
 const globalForDb = globalThis as unknown as {
   conn: ReturnType<typeof postgres> | undefined;

@@ -1,6 +1,6 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
-import { db } from "@/db";
+import { db } from "@/db/db";
 import { beings } from "@/db/schema";
 import { count, eq } from "drizzle-orm";
 import Link from "next/link";

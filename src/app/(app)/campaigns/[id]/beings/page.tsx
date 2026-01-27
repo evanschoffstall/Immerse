@@ -7,7 +7,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
-import { db } from "@/db";
+import { db } from "@/db/db";
 import { beings } from "@/db/schema";
 import { extractTextFromLexical, truncateText } from "@/lib/utils/lexical";
 import { desc, eq } from "drizzle-orm";

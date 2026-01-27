@@ -1,6 +1,6 @@
 "use server";
 
-import { db } from "@/db";
+import { db } from "@/db/db";
 import { acts, beats, scenes } from "@/db/schema";
 import { authConfig } from "@/lib/auth";
 import { and, eq, inArray, isNull, sql } from "drizzle-orm";
