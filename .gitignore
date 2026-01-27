@@ -1,5 +1,3 @@
-# Dev
-
 # Github
 .github/
 
@@ -13,24 +11,20 @@
 .env
 .env.local
 
-# Bun
+# Node
+node_modules/
+
 bun-debug.log
 bun.lock
 
-# Node.js
-node_modules/
-
-# Next.js
 /.next/
 /out/
 next-env.d.ts
 
-# TypeScript
-*.tsbuildinfo
-
-# Lock files
 *.lock
 package-lock.json
+
+*.tsbuildinfo
 
 # Playwright
 /test-results/
@@ -42,6 +36,5 @@ package-lock.json
 *storybook.log
 storybook-static
 
-# Other
+# Immerse
 public/
-.vscode/private-folder-alias.json
