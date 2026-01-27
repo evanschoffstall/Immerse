@@ -1,8 +1,8 @@
 "use client";
 
-import { ThemeToggle } from "@/components/theme/ThemeToggle";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
+import { ThemeToggle } from "@/components/ui/custom/theme/ThemeToggle";
 import {
   HoverCard,
   HoverCardContent,
@@ -27,8 +27,8 @@ function getCampaignIdFromPath(pathname: string | null): string | null {
 
 function getCampaignHeaderStyles(isOnCampaignPage: boolean) {
   const className = `fixed top-0 z-50 w-full ${isOnCampaignPage
-      ? "bg-transparent border-transparent"
-      : "border-b border-border/20"
+    ? "bg-transparent border-transparent"
+    : "border-b border-border/20"
     }`;
 
   const style = isOnCampaignPage
@@ -46,8 +46,8 @@ function getCampaignHeaderStyles(isOnCampaignPage: boolean) {
 
 function getCampaignBackgroundClassName(isOnCampaignPage: boolean) {
   return `absolute inset-0 -z-10 ${isOnCampaignPage
-      ? "bg-background/(--campaign-header-bg-opacity,0.95)"
-      : "bg-linear-to-b from-background/60 via-background/40 to-transparent"
+    ? "bg-background/(--campaign-header-bg-opacity,0.95)"
+    : "bg-linear-to-b from-background/60 via-background/40 to-transparent"
     }`;
 }
 
