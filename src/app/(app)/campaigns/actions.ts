@@ -3,6 +3,7 @@
 import { db } from "@/db/db";
 import { campaigns } from "@/db/schema";
 import { requireAuth } from "@/lib/auth/server-actions";
+import { requireCampaignOwnership } from "@/lib/auth/authorization";
 import { eq } from "drizzle-orm";
 import { createInsertSchema } from "drizzle-zod";
 import { revalidatePath } from "next/cache";
@@ -53,16 +54,7 @@ export async function updateCampaign(
   campaignId: string,
   data: Partial<typeof campaigns.$inferInsert>,
 ) {
-  const userId = await requireAuth();
-
-  const campaign = await db.query.campaigns.findFirst({
-    where: eq(campaigns.id, campaignId),
-    columns: { ownerId: true },
-  });
-
-  if (!campaign || campaign.ownerId !== userId) {
-    throw new Error("Forbidden");
-  }
+  await requireCampaignOwnership(campaignId);
 
   await db
     .update(campaigns)
@@ -74,16 +66,7 @@ export async function updateCampaign(
 }
 
 export async function deleteCampaign(campaignId: string) {
-  const userId = await requireAuth();
-
-  const campaign = await db.query.campaigns.findFirst({
-    where: eq(campaigns.id, campaignId),
-    columns: { ownerId: true },
-  });
-
-  if (!campaign || campaign.ownerId !== userId) {
-    throw new Error("Forbidden");
-  }
+  await requireCampaignOwnership(campaignId);
 
   await db.delete(campaigns).where(eq(campaigns.id, campaignId));
 

@@ -1,6 +1,8 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { db } from "@/db/db";
 import { beings } from "@/db/schema";
+import { WIDGET_LIMITS } from "@/lib/constants/validation";
+import { formatTimeAgo } from "@/lib/utils/date";
 import { desc, eq } from "drizzle-orm";
 import Image from "next/image";
 import Link from "next/link";
@@ -24,7 +26,7 @@ export async function RecentActivityWidget({
   const recentBeings = await db.query.beings.findMany({
     where: eq(beings.campaignId, campaignId),
     orderBy: [desc(beings.updatedAt)],
-    limit: 5,
+    limit: WIDGET_LIMITS.RECENT_ACTIVITY,
     columns: {
       id: true,
       name: true,
@@ -43,18 +45,6 @@ export async function RecentActivityWidget({
 
   // Sort by most recent
   entities.sort((a, b) => b.updatedAt.getTime() - a.updatedAt.getTime());
-
-  const formatTimeAgo = (date: Date) => {
-    const now = new Date();
-    const days = Math.floor(
-      (now.getTime() - date.getTime()) / (1000 * 60 * 60 * 24),
-    );
-
-    if (days === 0) return "Today";
-    if (days === 1) return "Yesterday";
-    if (days < 7) return `${days} days ago`;
-    return date.toLocaleDateString();
-  };
 
   const getEntityLink = (entity: RecentEntity) => {
     const typeMap: Record<string, string> = {

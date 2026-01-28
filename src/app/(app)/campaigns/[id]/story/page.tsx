@@ -16,7 +16,7 @@ import {
   ScrollText,
   Theater,
 } from "lucide-react";
-import { updateCampaign } from "../edit/actions";
+import { updateCampaign } from "../../actions";
 import {
   CreateActInlineButton,
   CreateBeatInlineButton,

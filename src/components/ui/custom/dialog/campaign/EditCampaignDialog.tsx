@@ -34,8 +34,8 @@ import { toast } from "sonner";
 import {
   deleteCampaign,
   updateCampaign,
-  updateCampaignSettings,
-} from "@/app/(app)/campaigns/[id]/edit/actions";
+} from "@/app/(app)/campaigns/actions";
+import { updateCampaignSettings } from "@/app/(app)/campaigns/[id]/edit/actions";
 import {
   BackgroundSettingsCard,
   type CampaignSettings,

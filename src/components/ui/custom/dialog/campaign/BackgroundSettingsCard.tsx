@@ -10,32 +10,110 @@ import {
 } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
+import { BACKGROUND_SETTINGS } from "@/lib/constants/validation";
+import {
+  CampaignSettings,
+  DEFAULT_CAMPAIGN_SETTINGS,
+} from "@/lib/types/campaign-settings";
 import { SliderControl } from "./SliderControl";
 
-export interface CampaignSettings {
-  bg: {
-    opacity: number;
-    blur: number;
-    expandToSidebar: boolean;
-    expandToHeader: boolean;
-  };
-  header: { bgOpacity: number; blur: number };
-  sidebar: { bgOpacity: number; blur: number };
-  card: { bgOpacity: number; blur: number };
-}
-
-export const DEFAULT_SETTINGS: CampaignSettings = {
-  bg: { opacity: 0.6, blur: 4, expandToSidebar: true, expandToHeader: true },
-  header: { bgOpacity: 0.0, blur: 4 },
-  sidebar: { bgOpacity: 0.0, blur: 0 },
-  card: { bgOpacity: 0.6, blur: 8 },
-};
+// Re-export for backward compatibility
+export type { CampaignSettings };
+export { DEFAULT_CAMPAIGN_SETTINGS as DEFAULT_SETTINGS };
 
 interface BackgroundSettingsCardProps {
   settings: CampaignSettings;
   onSettingsChange: (settings: CampaignSettings) => void;
   onSave: () => void;
   isPending: boolean;
+}
+
+/**
+ * Helper component for a section of background settings controls
+ */
+interface SettingsSectionProps {
+  title: string;
+  section: "header" | "sidebar" | "bg" | "card";
+  settings: CampaignSettings;
+  onSettingsChange: (settings: CampaignSettings) => void;
+  showExpandCheckbox?: {
+    id: string;
+    label: string;
+    checked: boolean;
+    field: "expandToHeader" | "expandToSidebar";
+  };
+  opacityLabel?: string;
+  className?: string;
+}
+
+function SettingsSection({
+  title,
+  section,
+  settings,
+  onSettingsChange,
+  showExpandCheckbox,
+  opacityLabel = "Background Opacity",
+  className = "",
+}: SettingsSectionProps) {
+  const updateSetting = (key: string, value: number | boolean) => {
+    onSettingsChange({
+      ...settings,
+      [section]: { ...settings[section], [key]: value },
+    });
+  };
+
+  const currentSettings = settings[section];
+  const opacityValue =
+    "opacity" in currentSettings
+      ? currentSettings.opacity
+      : "bgOpacity" in currentSettings
+        ? currentSettings.bgOpacity
+        : 0;
+  const blurValue = currentSettings.blur;
+
+  return (
+    <div className={`space-y-4 ${className}`}>
+      <h3 className="font-semibold text-lg mb-4">{title}</h3>
+
+      <SliderControl
+        label={opacityLabel}
+        value={opacityValue}
+        onChange={(v) =>
+          updateSetting("opacity" in currentSettings ? "opacity" : "bgOpacity", v)
+        }
+        {...BACKGROUND_SETTINGS.OPACITY}
+      />
+
+      <SliderControl
+        label="Blur"
+        value={blurValue}
+        onChange={(v) => updateSetting("blur", v)}
+        {...BACKGROUND_SETTINGS.BLUR}
+        formatValue={(v) => `${Math.round(v)}${BACKGROUND_SETTINGS.BLUR.UNIT}`}
+      />
+
+      {showExpandCheckbox && (
+        <div className="flex items-center space-x-2">
+          <Checkbox
+            id={showExpandCheckbox.id}
+            checked={showExpandCheckbox.checked}
+            onCheckedChange={(checked) =>
+              onSettingsChange({
+                ...settings,
+                bg: {
+                  ...settings.bg,
+                  [showExpandCheckbox.field]: checked as boolean,
+                },
+              })
+            }
+          />
+          <Label htmlFor={showExpandCheckbox.id} className="cursor-pointer">
+            {showExpandCheckbox.label}
+          </Label>
+        </div>
+      )}
+    </div>
+  );
 }
 
 export function BackgroundSettingsCard({
@@ -54,167 +132,48 @@ export function BackgroundSettingsCard({
       </CardHeader>
       <CardContent className="space-y-6">
         <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6">
-          {/* Header Settings */}
-          <div className="space-y-4">
-            <h3 className="font-semibold text-lg mb-4">Header</h3>
+          <SettingsSection
+            title="Header"
+            section="header"
+            settings={settings}
+            onSettingsChange={onSettingsChange}
+            showExpandCheckbox={{
+              id: "bg-header",
+              label: "Expand background to header",
+              checked: settings.bg.expandToHeader,
+              field: "expandToHeader",
+            }}
+          />
 
-            <SliderControl
-              label="Background Opacity"
-              value={settings.header.bgOpacity}
-              onChange={(v) =>
-                onSettingsChange({
-                  ...settings,
-                  header: { ...settings.header, bgOpacity: v },
-                })
-              }
-            />
+          <SettingsSection
+            title="Sidebar"
+            section="sidebar"
+            settings={settings}
+            onSettingsChange={onSettingsChange}
+            showExpandCheckbox={{
+              id: "bg-sidebar",
+              label: "Expand background to sidebar",
+              checked: settings.bg.expandToSidebar,
+              field: "expandToSidebar",
+            }}
+          />
 
-            <SliderControl
-              label="Blur"
-              value={settings.header.blur}
-              onChange={(v) =>
-                onSettingsChange({
-                  ...settings,
-                  header: { ...settings.header, blur: v },
-                })
-              }
-              min={0}
-              max={50}
-              step={1}
-              formatValue={(v) => `${Math.round(v)}px`}
-            />
+          <SettingsSection
+            title="Main Background"
+            section="bg"
+            settings={settings}
+            onSettingsChange={onSettingsChange}
+            opacityLabel="Overlay Opacity"
+            className="md:pt-6 md:border-t xl:pt-0 xl:border-t-0"
+          />
 
-            <div className="flex items-center space-x-2">
-              <Checkbox
-                id="bg-header"
-                checked={settings.bg.expandToHeader}
-                onCheckedChange={(checked) =>
-                  onSettingsChange({
-                    ...settings,
-                    bg: {
-                      ...settings.bg,
-                      expandToHeader: checked as boolean,
-                    },
-                  })
-                }
-              />
-              <Label htmlFor="bg-header" className="cursor-pointer">
-                Expand background to header
-              </Label>
-            </div>
-          </div>
-
-          {/* Sidebar Settings */}
-          <div className="space-y-4">
-            <h3 className="font-semibold text-lg mb-4">Sidebar</h3>
-
-            <SliderControl
-              label="Background Opacity"
-              value={settings.sidebar.bgOpacity}
-              onChange={(v) =>
-                onSettingsChange({
-                  ...settings,
-                  sidebar: { ...settings.sidebar, bgOpacity: v },
-                })
-              }
-            />
-
-            <SliderControl
-              label="Blur"
-              value={settings.sidebar.blur}
-              onChange={(v) =>
-                onSettingsChange({
-                  ...settings,
-                  sidebar: { ...settings.sidebar, blur: v },
-                })
-              }
-              min={0}
-              max={50}
-              step={1}
-              formatValue={(v) => `${Math.round(v)}px`}
-            />
-
-            <div className="flex items-center space-x-2">
-              <Checkbox
-                id="bg-sidebar"
-                checked={settings.bg.expandToSidebar}
-                onCheckedChange={(checked) =>
-                  onSettingsChange({
-                    ...settings,
-                    bg: {
-                      ...settings.bg,
-                      expandToSidebar: checked as boolean,
-                    },
-                  })
-                }
-              />
-              <Label htmlFor="bg-sidebar" className="cursor-pointer">
-                Expand background to sidebar
-              </Label>
-            </div>
-          </div>
-
-          {/* Main background settings */}
-          <div className="space-y-4 md:pt-6 md:border-t xl:pt-0 xl:border-t-0">
-            <h3 className="font-semibold text-lg mb-4">Main Background</h3>
-
-            <SliderControl
-              label="Overlay Opacity"
-              value={settings.bg.opacity}
-              onChange={(v) =>
-                onSettingsChange({
-                  ...settings,
-                  bg: { ...settings.bg, opacity: v },
-                })
-              }
-            />
-
-            <SliderControl
-              label="Blur"
-              value={settings.bg.blur}
-              onChange={(v) =>
-                onSettingsChange({
-                  ...settings,
-                  bg: { ...settings.bg, blur: v },
-                })
-              }
-              min={0}
-              max={50}
-              step={1}
-              formatValue={(v) => `${Math.round(v)}px`}
-            />
-          </div>
-
-          {/* Card/UI settings */}
-          <div className="space-y-4 md:pt-6 md:border-t xl:pt-0 xl:border-t-0">
-            <h3 className="font-semibold text-lg mb-4">Cards &amp; UI Elements</h3>
-
-            <SliderControl
-              label="Background Opacity"
-              value={settings.card.bgOpacity}
-              onChange={(v) =>
-                onSettingsChange({
-                  ...settings,
-                  card: { ...settings.card, bgOpacity: v },
-                })
-              }
-            />
-
-            <SliderControl
-              label="Blur"
-              value={settings.card.blur}
-              onChange={(v) =>
-                onSettingsChange({
-                  ...settings,
-                  card: { ...settings.card, blur: v },
-                })
-              }
-              min={0}
-              max={50}
-              step={1}
-              formatValue={(v) => `${Math.round(v)}px`}
-            />
-          </div>
+          <SettingsSection
+            title="Cards & UI Elements"
+            section="card"
+            settings={settings}
+            onSettingsChange={onSettingsChange}
+            className="md:pt-6 md:border-t xl:pt-0 xl:border-t-0"
+          />
         </div>
 
         <div className="flex justify-end">

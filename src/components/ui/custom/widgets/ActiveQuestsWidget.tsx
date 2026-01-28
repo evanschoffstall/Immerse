@@ -1,6 +1,8 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { db } from "@/db/db";
 import { quests } from "@/db/schema";
+import { WIDGET_LIMITS } from "@/lib/constants/validation";
+import { formatTimeAgo } from "@/lib/utils/date";
 import { and, desc, eq, isNull } from "drizzle-orm";
 import Link from "next/link";
 
@@ -26,7 +28,7 @@ export async function ActiveQuestsWidget({
       isNull(quests.deletedAt),
     ),
     orderBy: [desc(quests.updatedAt)],
-    limit: 5,
+    limit: WIDGET_LIMITS.ACTIVE_QUESTS,
     columns: {
       id: true,
       name: true,
@@ -34,18 +36,6 @@ export async function ActiveQuestsWidget({
       status: true,
     },
   });
-
-  const formatTimeAgo = (date: Date) => {
-    const now = new Date();
-    const days = Math.floor(
-      (now.getTime() - date.getTime()) / (1000 * 60 * 60 * 24),
-    );
-
-    if (days === 0) return "Today";
-    if (days === 1) return "Yesterday";
-    if (days < 7) return `${days} days ago`;
-    return date.toLocaleDateString();
-  };
 
   return (
     <Card>

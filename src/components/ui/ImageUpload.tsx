@@ -1,5 +1,6 @@
 'use client'
 
+import { IMAGE_UPLOAD } from '@/lib/constants/validation'
 import { ImageIcon, Upload, X } from 'lucide-react'
 import Image from 'next/image'
 import { ChangeEvent, useRef, useState } from 'react'
@@ -28,15 +29,14 @@ export default function ImageUpload({
     if (!file) return
 
     // Validate file type
-    const validTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp', 'image/gif']
-    if (!validTypes.includes(file.type)) {
+    if (!IMAGE_UPLOAD.ALLOWED_TYPES.includes(file.type)) {
       toast.error('Invalid file type. Only JPG, PNG, WebP, and GIF are allowed.')
       return
     }
 
-    // Validate file size (5MB)
-    if (file.size > 5 * 1024 * 1024) {
-      toast.error('File too large. Maximum size is 5MB.')
+    // Validate file size
+    if (file.size > IMAGE_UPLOAD.MAX_SIZE_BYTES) {
+      toast.error(`File too large. Maximum size is ${IMAGE_UPLOAD.MAX_SIZE_LABEL}.`)
       return
     }
 

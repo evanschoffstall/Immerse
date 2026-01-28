@@ -4,6 +4,7 @@ import {
   CampaignForm,
   type CampaignFormData,
 } from "@/components/ui/custom/forms/CampaignForm";
+import { generateSlug } from "@/lib/utils/slug";
 import { useState } from "react";
 import { toast } from "sonner";
 import { createCampaign } from "../actions";
@@ -16,12 +17,7 @@ export default function NewCampaignClient() {
     try {
       const formData = new FormData();
       formData.append("name", data.name);
-      // Generate slug from name if not provided
-      const slug = data.name
-        .toLowerCase()
-        .replace(/[^a-z0-9]+/g, "-")
-        .replace(/(^-|-$)/g, "");
-      formData.append("slug", slug);
+      formData.append("slug", generateSlug(data.name));
       if (data.description) formData.append("description", data.description);
       if (data.image) formData.append("image", data.image);
       if (data.backgroundImage)

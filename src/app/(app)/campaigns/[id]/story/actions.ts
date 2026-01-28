@@ -3,6 +3,8 @@
 import { db } from "@/db/db";
 import { acts, beats, scenes } from "@/db/schema";
 import { requireAuth } from "@/lib/auth/server-actions";
+import { requireEntityOwnership } from "@/lib/auth/authorization";
+import { generateSlug } from "@/lib/utils/slug";
 import { and, eq, inArray, isNull, sql } from "drizzle-orm";
 import { createInsertSchema } from "drizzle-zod";
 import { revalidatePath } from "next/cache";
@@ -39,16 +41,6 @@ const reorderIdsSchema = z.array(z.string().uuid()).min(1);
 // =======================================================================================================
 // #region Helpers
 // =======================================================================================================
-
-function generateSlug(name: string, providedSlug?: string | null): string {
-  return (
-    providedSlug ||
-    name
-      .toLowerCase()
-      .replace(/[^a-z0-9]+/g, "-")
-      .replace(/(^-|-$)/g, "")
-  );
-}
 
 async function getNextSortOrder(
   table: typeof acts | typeof scenes | typeof beats,
@@ -202,13 +194,14 @@ export async function updateAct(
   formData: FormData,
   shouldRedirect: boolean = true,
 ) {
-  const userId = await requireAuth();
-
-  const act = await db.query.acts.findFirst({
-    where: eq(acts.id, actId),
-    columns: { campaignId: true, createdById: true },
-  });
-  if (!act || act.createdById !== userId) throw new Error("Forbidden");
+  const { userId, entity: act } = await requireEntityOwnership(
+    () =>
+      db.query.acts.findFirst({
+        where: eq(acts.id, actId),
+        columns: { campaignId: true, createdById: true },
+      }),
+    "act",
+  );
 
   const name = formData.get("name") as string;
   const slug = generateSlug(name, formData.get("slug") as string);
@@ -236,14 +229,15 @@ export async function updateScene(
   formData: FormData,
   shouldRedirect: boolean = true,
 ) {
-  const userId = await requireAuth();
-
-  const scene = await db.query.scenes.findFirst({
-    where: eq(scenes.id, sceneId),
-    columns: { actId: true, createdById: true },
-    with: { act: { columns: { campaignId: true } } },
-  });
-  if (!scene || scene.createdById !== userId) throw new Error("Forbidden");
+  const { userId, entity: scene } = await requireEntityOwnership(
+    () =>
+      db.query.scenes.findFirst({
+        where: eq(scenes.id, sceneId),
+        columns: { actId: true, createdById: true },
+        with: { act: { columns: { campaignId: true } } },
+      }),
+    "scene",
+  );
 
   const name = formData.get("name") as string;
   const slug = generateSlug(name, formData.get("slug") as string);
@@ -271,19 +265,20 @@ export async function updateBeat(
   formData: FormData,
   shouldRedirect: boolean = true,
 ) {
-  const userId = await requireAuth();
-
-  const beat = await db.query.beats.findFirst({
-    where: eq(beats.id, beatId),
-    columns: { createdById: true },
-    with: {
-      scene: {
-        columns: { actId: true },
-        with: { act: { columns: { campaignId: true } } },
-      },
-    },
-  });
-  if (!beat || beat.createdById !== userId) throw new Error("Forbidden");
+  const { userId, entity: beat } = await requireEntityOwnership(
+    () =>
+      db.query.beats.findFirst({
+        where: eq(beats.id, beatId),
+        columns: { createdById: true },
+        with: {
+          scene: {
+            columns: { actId: true },
+            with: { act: { columns: { campaignId: true } } },
+          },
+        },
+      }),
+    "beat",
+  );
 
   const text = formData.get("text") as string | null;
   const timestampStr = formData.get("timestamp") as string | null;
@@ -315,13 +310,14 @@ export async function updateBeat(
 // =======================================================================================================
 
 export async function deleteAct(actId: string) {
-  const userId = await requireAuth();
-
-  const act = await db.query.acts.findFirst({
-    where: eq(acts.id, actId),
-    columns: { campaignId: true, createdById: true },
-  });
-  if (!act || act.createdById !== userId) throw new Error("Forbidden");
+  const { userId, entity: act } = await requireEntityOwnership(
+    () =>
+      db.query.acts.findFirst({
+        where: eq(acts.id, actId),
+        columns: { campaignId: true, createdById: true },
+      }),
+    "act",
+  );
 
   await db
     .update(acts)
@@ -332,14 +328,15 @@ export async function deleteAct(actId: string) {
 }
 
 export async function deleteScene(sceneId: string) {
-  const userId = await requireAuth();
-
-  const scene = await db.query.scenes.findFirst({
-    where: eq(scenes.id, sceneId),
-    columns: { createdById: true },
-    with: { act: { columns: { campaignId: true } } },
-  });
-  if (!scene || scene.createdById !== userId) throw new Error("Forbidden");
+  const { userId, entity: scene } = await requireEntityOwnership(
+    () =>
+      db.query.scenes.findFirst({
+        where: eq(scenes.id, sceneId),
+        columns: { createdById: true },
+        with: { act: { columns: { campaignId: true } } },
+      }),
+    "scene",
+  );
 
   await db
     .update(scenes)
@@ -350,19 +347,20 @@ export async function deleteScene(sceneId: string) {
 }
 
 export async function deleteBeat(beatId: string) {
-  const userId = await requireAuth();
-
-  const beat = await db.query.beats.findFirst({
-    where: eq(beats.id, beatId),
-    columns: { createdById: true },
-    with: {
-      scene: {
-        columns: { actId: true },
-        with: { act: { columns: { campaignId: true } } },
-      },
-    },
-  });
-  if (!beat || beat.createdById !== userId) throw new Error("Forbidden");
+  const { userId, entity: beat } = await requireEntityOwnership(
+    () =>
+      db.query.beats.findFirst({
+        where: eq(beats.id, beatId),
+        columns: { createdById: true },
+        with: {
+          scene: {
+            columns: { actId: true },
+            with: { act: { columns: { campaignId: true } } },
+          },
+        },
+      }),
+    "beat",
+  );
 
   await db
     .update(beats)
