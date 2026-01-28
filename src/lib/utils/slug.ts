@@ -17,8 +17,14 @@ export function generateSlug(
 ): string {
   if (providedSlug) return providedSlug;
 
-  return name
+  const slug = name
     .toLowerCase()
     .replace(/[^a-z0-9]+/g, "-")
     .replace(/(^-|-$)/g, "");
+
+  if (!slug || slug.length === 0) {
+    throw new Error("Cannot generate valid slug from the provided name");
+  }
+
+  return slug;
 }

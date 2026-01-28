@@ -1,4 +1,14 @@
 /**
+ * Error thrown when a user is not authenticated
+ */
+export class UnauthorizedError extends Error {
+  constructor(message: string = "Unauthorized") {
+    super(message);
+    this.name = "UnauthorizedError";
+  }
+}
+
+/**
  * Error thrown when a user attempts to access or modify a resource they don't own
  */
 export class ForbiddenError extends Error {

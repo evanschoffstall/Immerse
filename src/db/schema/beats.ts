@@ -21,6 +21,7 @@ export const beats = pgTable(
     index("beats_scene_id_idx").on(table.sceneId),
     index("beats_timestamp_idx").on(table.timestamp),
     index("beats_created_by_id_idx").on(table.createdById),
+    index("beats_updated_by_id_idx").on(table.updatedById),
     index("beats_deleted_at_idx").on(table.deletedAt),
   ],
 );

@@ -39,6 +39,7 @@ export const beings = pgTable(
     unique("beings_campaign_slug_unique").on(table.campaignId, table.slug),
     index("beings_campaign_id_idx").on(table.campaignId),
     index("beings_created_by_id_idx").on(table.createdById),
+    index("beings_updated_by_id_idx").on(table.updatedById),
     index("beings_deleted_at_idx").on(table.deletedAt),
   ]
 );

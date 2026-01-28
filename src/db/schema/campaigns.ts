@@ -12,6 +12,7 @@ export const campaigns = pgTable("campaigns", {
   locale: text("locale").notNull().default("en"),
   createdAt: timestamp("createdAt").notNull().defaultNow(),
   updatedAt: timestamp("updatedAt").notNull(),
+  deletedAt: timestamp("deletedAt"),
   ownerId: text("ownerId")
     .notNull()
     .references(() => users.id, { onDelete: "cascade" }),

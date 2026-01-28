@@ -1,5 +1,6 @@
 import { db } from "@/db/db";
 import { users } from "@/db/schema";
+import { env } from "@/lib/env";
 import bcrypt from "bcryptjs";
 import { eq } from "drizzle-orm";
 import type { AuthOptions, Session } from "next-auth";
@@ -90,17 +91,17 @@ export const authConfig: AuthOptions = {
   cookies: {
     sessionToken: {
       name: `${
-        process.env.NODE_ENV === "production" ? "__Secure-" : ""
+        env.NODE_ENV === "production" ? "__Secure-" : ""
       }next-auth.session-token`,
       options: {
         httpOnly: true,
         sameSite: "lax",
         path: "/",
-        secure: process.env.NODE_ENV === "production",
+        secure: env.NODE_ENV === "production",
       },
     },
   },
-  secret: process.env.NEXTAUTH_SECRET,
+  secret: env.NEXTAUTH_SECRET,
 };
 
 const handler = NextAuth(authConfig);

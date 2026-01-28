@@ -29,6 +29,7 @@ export const scenes = pgTable(
     unique("scenes_act_slug_unique").on(table.actId, table.slug),
     index("scenes_act_id_idx").on(table.actId),
     index("scenes_created_by_id_idx").on(table.createdById),
+    index("scenes_updated_by_id_idx").on(table.updatedById),
     index("scenes_deleted_at_idx").on(table.deletedAt),
   ],
 );

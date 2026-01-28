@@ -34,6 +34,7 @@ export const quests = pgTable(
     unique("quests_campaign_slug_unique").on(table.campaignId, table.slug),
     index("quests_campaign_id_idx").on(table.campaignId),
     index("quests_created_by_id_idx").on(table.createdById),
+    index("quests_updated_by_id_idx").on(table.updatedById),
     index("quests_deleted_at_idx").on(table.deletedAt),
   ]
 );

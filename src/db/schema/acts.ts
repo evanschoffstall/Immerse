@@ -29,6 +29,7 @@ export const acts = pgTable(
     unique("acts_campaign_slug_unique").on(table.campaignId, table.slug),
     index("acts_campaign_id_idx").on(table.campaignId),
     index("acts_created_by_id_idx").on(table.createdById),
+    index("acts_updated_by_id_idx").on(table.updatedById),
     index("acts_deleted_at_idx").on(table.deletedAt),
   ],
 );

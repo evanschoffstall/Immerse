@@ -1,6 +1,6 @@
 import { db } from "@/db/db";
 import { campaigns } from "@/db/schema";
-import { eq } from "drizzle-orm";
+import { and, eq, isNull } from "drizzle-orm";
 import { ForbiddenError } from "../errors/action-errors";
 import { requireAuth } from "./server-actions";
 
@@ -16,7 +16,7 @@ export async function requireCampaignOwnership(
   const userId = await requireAuth();
 
   const campaign = await db.query.campaigns.findFirst({
-    where: eq(campaigns.id, campaignId),
+    where: and(eq(campaigns.id, campaignId), isNull(campaigns.deletedAt)),
     columns: { ownerId: true },
   });
 

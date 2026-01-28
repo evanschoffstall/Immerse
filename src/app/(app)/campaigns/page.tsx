@@ -10,7 +10,7 @@ import { db } from "@/db/db";
 import { campaigns } from "@/db/schema";
 import { authConfig } from "@/lib/auth/config";
 import { extractTextFromLexical, truncateText } from "@/lib/utils/lexical";
-import { desc, eq } from "drizzle-orm";
+import { and, desc, eq, isNull } from "drizzle-orm";
 import { Mountain } from "lucide-react";
 import { getServerSession } from "next-auth";
 import Image from "next/image";
@@ -25,7 +25,10 @@ export default async function CampaignsPage() {
   }
 
   const campaignsList = await db.query.campaigns.findMany({
-    where: eq(campaigns.ownerId, session.user.id!),
+    where: and(
+      eq(campaigns.ownerId, session.user.id!),
+      isNull(campaigns.deletedAt),
+    ),
     orderBy: [desc(campaigns.updatedAt)],
   });
 

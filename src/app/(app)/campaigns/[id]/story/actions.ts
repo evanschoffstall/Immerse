@@ -245,6 +245,21 @@ export async function updateAct(
 
   const { name, slug, content } = extractNameSlugContent(formData);
 
+  if (slug) {
+    const duplicate = await db.query.acts.findFirst({
+      where: and(
+        eq(acts.campaignId, act.campaignId),
+        eq(acts.slug, slug),
+        isNull(acts.deletedAt),
+      ),
+      columns: { id: true },
+    });
+
+    if (duplicate && duplicate.id !== actId) {
+      throw new ValidationError("An act with this slug already exists");
+    }
+  }
+
   const validated = createActSchema.partial().parse({
     name,
     slug,
@@ -278,6 +293,21 @@ export async function updateScene(
   );
 
   const { name, slug, content } = extractNameSlugContent(formData);
+
+  if (slug) {
+    const duplicate = await db.query.scenes.findFirst({
+      where: and(
+        eq(scenes.actId, scene.actId),
+        eq(scenes.slug, slug),
+        isNull(scenes.deletedAt),
+      ),
+      columns: { id: true },
+    });
+
+    if (duplicate && duplicate.id !== sceneId) {
+      throw new ValidationError("A scene with this slug already exists");
+    }
+  }
 
   const validated = createSceneSchema.partial().parse({
     name,

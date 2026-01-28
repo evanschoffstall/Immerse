@@ -1,9 +1,15 @@
 import { uploadImage } from "@/lib/upload";
 import { validateImageFile } from "@/lib/constants/upload";
+import { getAuthUserId } from "@/lib/auth/server-actions";
 import { NextRequest, NextResponse } from "next/server";
 
 export async function POST(request: NextRequest) {
   try {
+    const userId = await getAuthUserId();
+    if (!userId) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
     const formData = await request.formData();
     const file = formData.get("file") as File;
     const folder = (formData.get("folder") as string) || "general";

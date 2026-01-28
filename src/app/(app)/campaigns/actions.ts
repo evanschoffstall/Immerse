@@ -23,6 +23,21 @@ const createCampaignSchema = createInsertSchema(campaigns, {
   locale: true,
 });
 
+const updateCampaignSchema = createInsertSchema(campaigns, {
+  name: z.string().min(3, "Name must be at least 3 characters").optional(),
+  slug: z.string().min(3).optional(),
+})
+  .pick({
+    name: true,
+    slug: true,
+    description: true,
+    image: true,
+    backgroundImage: true,
+    visibility: true,
+    locale: true,
+  })
+  .partial();
+
 export async function createCampaign(formData: FormData) {
   const userId = await requireAuth();
 
@@ -52,13 +67,15 @@ export async function createCampaign(formData: FormData) {
 
 export async function updateCampaign(
   campaignId: string,
-  data: Partial<typeof campaigns.$inferInsert>,
+  data: z.infer<typeof updateCampaignSchema>,
 ) {
   await requireCampaignOwnership(campaignId);
 
+  const validated = updateCampaignSchema.parse(data);
+
   await db
     .update(campaigns)
-    .set({ ...data, updatedAt: new Date() })
+    .set({ ...validated, updatedAt: new Date() })
     .where(eq(campaigns.id, campaignId));
 
   revalidatePath(`/campaigns/${campaignId}`);
@@ -68,7 +85,10 @@ export async function updateCampaign(
 export async function deleteCampaign(campaignId: string) {
   await requireCampaignOwnership(campaignId);
 
-  await db.delete(campaigns).where(eq(campaigns.id, campaignId));
+  await db
+    .update(campaigns)
+    .set({ deletedAt: new Date(), updatedAt: new Date() })
+    .where(eq(campaigns.id, campaignId));
 
   revalidatePath("/campaigns");
   redirect("/campaigns");
