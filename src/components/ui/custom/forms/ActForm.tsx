@@ -1,7 +1,7 @@
 "use client";
 
 import { Button } from "@/components/ui/button";
-import RichTextEditor from "@/components/ui/custom/rich-text/RichTextEditor";
+import { RichTextEditor } from "@/components/ui/custom/rich-text/RichTextEditor";
 import {
   Form,
   FormControl,
@@ -32,7 +32,7 @@ interface ActFormProps {
   submitText?: string;
 }
 
-export default function ActForm({
+export function ActForm({
   initialData,
   onSubmit,
   isLoading = false,

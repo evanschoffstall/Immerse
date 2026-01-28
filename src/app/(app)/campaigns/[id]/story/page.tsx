@@ -1,11 +1,12 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { EditCampaignField } from "@/components/ui/custom/EditCampaignField";
-import { HoverActions } from "@/components/ui/custom/HoverActions";
-import RichTextViewer from "@/components/ui/custom/rich-text/RichTextViewer";
-import { SectionIcon } from "@/components/ui/custom/SectionIcon";
+import { EditCampaignField } from "@/components/ui/custom/dialog/EditCampaignField";
+import { HoverActions } from "@/components/ui/custom/primitives/HoverActions";
+import { RichTextViewer } from "@/components/ui/custom/rich-text/RichTextViewer";
+import { SectionIcon } from "@/components/ui/custom/primitives/SectionIcon";
 import { Separator } from "@/components/ui/separator";
 import { db } from "@/db/db";
 import { acts, beats, campaigns, scenes } from "@/db/schema";
+import { cn } from "@/lib/utils";
 import { hasLexicalContent } from "@/lib/utils/lexical";
 import { and, asc, eq, isNull } from "drizzle-orm";
 import {
@@ -30,7 +31,10 @@ import {
   SortableScenes,
 } from "./client";
 
+// =======================================================================================================
 // #region Types & Helpers
+// =======================================================================================================
+
 type ActWithScenesAndBeats = typeof acts.$inferSelect & {
   scenes: (typeof scenes.$inferSelect & {
     beats: (typeof beats.$inferSelect)[];
@@ -54,6 +58,12 @@ const formatTimestamp = (ts: Date) =>
     hour12: true,
   });
 
+const sortByOrder = <T extends { sortOrder: number; createdAt: Date }>(items: T[]): T[] =>
+  [...items].sort((a, b) => a.sortOrder - b.sortOrder || a.createdAt.getTime() - b.createdAt.getTime());
+
+const sortBeatsByOrder = (items: (typeof beats.$inferSelect)[]) =>
+  [...items].sort((a, b) => a.sortOrder - b.sortOrder || a.timestamp.getTime() - b.timestamp.getTime());
+
 const LexicalContent = ({
   content,
   size = "sm",
@@ -62,16 +72,18 @@ const LexicalContent = ({
   size?: "sm" | "base";
 }) => (
   <div className="flex min-h-10 items-center py-1">
-    <div
-      className={`prose dark:prose-invert max-w-none ${size === "sm" ? "prose-sm" : ""}`}
-    >
+    <div className={cn("prose dark:prose-invert max-w-none", size === "sm" && "prose-sm")}>
       <RichTextViewer content={content} />
     </div>
   </div>
 );
-// #endregion
 
+// #endregion Helpers
+
+// =======================================================================================================
 // #region Page Header
+// =======================================================================================================
+
 const PageHeader = ({
   campaign,
   campaignId,
@@ -90,9 +102,13 @@ const PageHeader = ({
     />
   </div>
 );
-// #endregion
 
+// #endregion Page Header
+
+// =======================================================================================================
 // #region Overview Card
+// =======================================================================================================
+
 const CampaignDescriptionCard = ({
   campaign,
   campaignId,
@@ -103,7 +119,7 @@ const CampaignDescriptionCard = ({
   const hasContent = hasLexicalContent(campaign.description);
   return (
     <Card className="group/overview">
-      <CardHeader className={hasContent ? "pb-4" : "pb-0"}>
+      <CardHeader className={cn(hasContent ? "pb-4" : "pb-0")}>
         <div className="flex items-center justify-between gap-4">
           <div className="flex items-center gap-4 flex-1 min-w-0">
             <SectionIcon icon={ScrollText} size="lg" />
@@ -126,9 +142,12 @@ const CampaignDescriptionCard = ({
     </Card>
   );
 };
-// #endregion
 
-// #region Beat
+// #endregion Overview Card
+
+// =======================================================================================================
+// #region Beat Components
+// =======================================================================================================
 const BeatItem = ({ beat }: { beat: typeof beats.$inferSelect }) => (
   <InteractiveContainer
     stopPropagation
@@ -162,9 +181,12 @@ const BeatItem = ({ beat }: { beat: typeof beats.$inferSelect }) => (
     </HoverActions>
   </InteractiveContainer>
 );
-// #endregion
 
-// #region Scene
+// #endregion Beat Components
+
+// =======================================================================================================
+// #region Scene Components
+// =======================================================================================================
 const SceneCard = ({
   scene,
   campaignId,
@@ -172,20 +194,14 @@ const SceneCard = ({
   scene: typeof scenes.$inferSelect & { beats: (typeof beats.$inferSelect)[] };
   campaignId: string;
 }) => {
-  const sortedBeats = [...scene.beats].sort(
-    (a, b) =>
-      a.sortOrder - b.sortOrder ||
-      a.timestamp.getTime() - b.timestamp.getTime(),
-  );
+  const sortedBeats = sortBeatsByOrder(scene.beats);
   const hasContent = hasLexicalContent(scene.content);
   return (
     <Card
       className="group/scene scene-card ml-8 transition-shadow hover:shadow-md"
       data-sort-id={scene.id}
     >
-      <CardHeader
-        className={"group/scene-header " + (hasContent ? "pb-4" : "pb-0")}
-      >
+      <CardHeader className={cn("group/scene-header", hasContent ? "pb-4" : "pb-0")}>
         <div className="flex items-center justify-between gap-4">
           <div className="flex items-center gap-3 flex-1 min-w-0">
             <SectionIcon icon={BookOpen} size="md" />
@@ -213,9 +229,7 @@ const SceneCard = ({
       </CardHeader>
       <InteractiveContainer stopPropagation>
         <CardContent className="space-y-3">
-          {hasContent && scene.content && (
-            <LexicalContent content={scene.content} />
-          )}
+          {hasContent && scene.content && <LexicalContent content={scene.content} />}
           {sortedBeats.length > 0 && (
             <SortableBeats sceneId={scene.id} className="space-y-3">
               {sortedBeats.map((beat) => (
@@ -228,9 +242,12 @@ const SceneCard = ({
     </Card>
   );
 };
-// #endregion
 
-// #region Act
+// #endregion Scene Components
+
+// =======================================================================================================
+// #region Act Components
+// =======================================================================================================
 const ActCard = ({
   act,
   campaignId,
@@ -238,20 +255,14 @@ const ActCard = ({
   act: ActWithScenesAndBeats;
   campaignId: string;
 }) => {
-  const sortedScenes = [...act.scenes].sort(
-    (a, b) =>
-      a.sortOrder - b.sortOrder ||
-      a.createdAt.getTime() - b.createdAt.getTime(),
-  );
+  const sortedScenes = sortByOrder(act.scenes);
   const hasContent = hasLexicalContent(act.content);
   return (
     <Card
       className="group/act act-card overflow-hidden transition-shadow hover:shadow-lg"
       data-sort-id={act.id}
     >
-      <CardHeader
-        className={"group/act-header " + (hasContent ? "p-3" : "p-3 pb-0")}
-      >
+      <CardHeader className={cn("group/act-header", hasContent ? "p-3" : "p-3 pb-0")}>
         <div className="flex items-center justify-between gap-4">
           <div className="flex items-center gap-4 flex-1 min-w-0">
             <SectionIcon icon={Theater} size="lg" />
@@ -279,17 +290,11 @@ const ActCard = ({
       </CardHeader>
       <InteractiveContainer stopPropagation>
         <CardContent className="space-y-3">
-          {hasContent && act.content && (
-            <LexicalContent content={act.content} />
-          )}
+          {hasContent && act.content && <LexicalContent content={act.content} />}
           {sortedScenes.length > 0 && (
             <SortableScenes actId={act.id} className="space-y-3">
               {sortedScenes.map((scene) => (
-                <SceneCard
-                  key={scene.id}
-                  scene={scene}
-                  campaignId={campaignId}
-                />
+                <SceneCard key={scene.id} scene={scene} campaignId={campaignId} />
               ))}
             </SortableScenes>
           )}
@@ -298,9 +303,12 @@ const ActCard = ({
     </Card>
   );
 };
-// #endregion
 
+// #endregion Act Components
+
+// =======================================================================================================
 // #region Acts List
+// =======================================================================================================
 const ActsList = ({
   acts,
   campaignId,
@@ -311,9 +319,7 @@ const ActsList = ({
   const hasContent = acts.length > 0;
   return (
     <Card className="group/acts-list acts-list-card">
-      <CardHeader
-        className={"group/acts-list-header " + (hasContent ? "pb-4" : "pb-0")}
-      >
+      <CardHeader className={cn("group/acts-list-header", hasContent ? "pb-4" : "pb-0")}>
         <div className="flex items-center justify-between gap-4">
           <div className="flex items-center gap-4">
             <SectionIcon icon={Theater} size="lg" />
@@ -336,9 +342,12 @@ const ActsList = ({
     </Card>
   );
 };
-// #endregion
 
+// #endregion Acts List
+
+// =======================================================================================================
 // #region Page
+// =======================================================================================================
 export default async function Page({
   params,
 }: {
@@ -401,4 +410,5 @@ export default async function Page({
     </div>
   );
 }
-// #endregion
+
+// #endregion Page

@@ -31,7 +31,7 @@ interface BeatFormProps {
   submitText?: string;
 }
 
-export default function BeatForm({
+export function BeatForm({
   initialData,
   onSubmit,
   isLoading = false,

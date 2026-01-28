@@ -1,7 +1,7 @@
 "use client";
 
 import { Button } from "@/components/ui/button";
-import RichTextEditor from "@/components/ui/custom/rich-text/RichTextEditor";
+import { RichTextEditor } from "@/components/ui/custom/rich-text/RichTextEditor";
 import {
   Dialog,
   DialogContent,

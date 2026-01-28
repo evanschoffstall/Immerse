@@ -1,8 +1,8 @@
 import { ConditionalFooter } from "@/components/ui/custom/layout/ConditionalFooter";
-import Header from "@/components/ui/custom/layout/Header";
+import { Header } from "@/components/ui/custom/layout/Header";
 import { QueryProvider } from "@/components/ui/custom/providers/QueryProvider";
 import { SessionProvider } from "@/components/ui/custom/providers/SessionProvider";
-import { SonnerToast } from "@/components/ui/custom/SonnerToast";
+import { SonnerToast } from "@/components/ui/custom/feedback/SonnerToast";
 import { ThemeProvider } from "@/components/ui/custom/theme/ThemeProvider";
 import "@fontsource-variable/roboto";
 import type { Metadata } from "next";

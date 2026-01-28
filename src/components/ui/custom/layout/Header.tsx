@@ -246,7 +246,7 @@ function MobileNav({ session, navigationItems }: MobileNavProps) {
   );
 }
 
-export default function Header() {
+export function Header() {
   const { data: session, status } = useSession();
   const pathname = usePathname();
 

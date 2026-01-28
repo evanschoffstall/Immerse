@@ -27,7 +27,7 @@ interface RichTextEditorProps {
  * />
  * ```
  */
-export default function RichTextEditor({
+export function RichTextEditor({
   content,
   onChange,
   disabled,

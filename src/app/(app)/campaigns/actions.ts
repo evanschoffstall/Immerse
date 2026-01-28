@@ -2,9 +2,8 @@
 
 import { db } from "@/db/db";
 import { campaigns } from "@/db/schema";
-import { authConfig } from "@/lib/auth";
+import { requireAuth } from "@/lib/auth/server-actions";
 import { eq } from "drizzle-orm";
-import { getServerSession } from "next-auth";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { z } from "zod";
@@ -20,10 +19,7 @@ const createCampaignSchema = z.object({
 });
 
 export async function createCampaign(formData: FormData) {
-  const session = await getServerSession(authConfig);
-  if (!session?.user?.id) {
-    throw new Error("Unauthorized");
-  }
+  const userId = await requireAuth();
 
   const data = {
     name: formData.get("name"),
@@ -41,7 +37,7 @@ export async function createCampaign(formData: FormData) {
   await db.insert(campaigns).values({
     id: campaignId,
     ...validated,
-    ownerId: session.user.id,
+    ownerId: userId,
     updatedAt: new Date(),
   });
 
@@ -49,61 +45,43 @@ export async function createCampaign(formData: FormData) {
   redirect(`/campaigns/${campaignId}`);
 }
 
-async function updateCampaign(id: string, formData: FormData) {
-  const session = await getServerSession(authConfig);
-  if (!session?.user?.id) {
-    throw new Error("Unauthorized");
-  }
+export async function updateCampaign(
+  campaignId: string,
+  data: Partial<typeof campaigns.$inferInsert>,
+) {
+  const userId = await requireAuth();
 
   const campaign = await db.query.campaigns.findFirst({
-    where: eq(campaigns.id, id),
+    where: eq(campaigns.id, campaignId),
     columns: { ownerId: true },
   });
 
-  if (!campaign || campaign.ownerId !== session.user.id) {
+  if (!campaign || campaign.ownerId !== userId) {
     throw new Error("Forbidden");
   }
-
-  const data = {
-    name: formData.get("name"),
-    slug: formData.get("slug"),
-    description: formData.get("description") || undefined,
-    image: formData.get("image") || undefined,
-    backgroundImage: formData.get("backgroundImage") || undefined,
-    visibility: formData.get("visibility"),
-    locale: formData.get("locale"),
-  };
-
-  const validated = createCampaignSchema.partial().parse(data);
 
   await db
     .update(campaigns)
-    .set({
-      ...validated,
-      updatedAt: new Date(),
-    })
-    .where(eq(campaigns.id, id));
+    .set({ ...data, updatedAt: new Date() })
+    .where(eq(campaigns.id, campaignId));
 
-  revalidatePath(`/campaigns/${id}`);
+  revalidatePath(`/campaigns/${campaignId}`);
   revalidatePath("/campaigns");
 }
 
-async function deleteCampaign(id: string) {
-  const session = await getServerSession(authConfig);
-  if (!session?.user?.id) {
-    throw new Error("Unauthorized");
-  }
+export async function deleteCampaign(campaignId: string) {
+  const userId = await requireAuth();
 
   const campaign = await db.query.campaigns.findFirst({
-    where: eq(campaigns.id, id),
+    where: eq(campaigns.id, campaignId),
     columns: { ownerId: true },
   });
 
-  if (!campaign || campaign.ownerId !== session.user.id) {
+  if (!campaign || campaign.ownerId !== userId) {
     throw new Error("Forbidden");
   }
 
-  await db.delete(campaigns).where(eq(campaigns.id, id));
+  await db.delete(campaigns).where(eq(campaigns.id, campaignId));
 
   revalidatePath("/campaigns");
   redirect("/campaigns");

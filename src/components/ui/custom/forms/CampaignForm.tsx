@@ -1,7 +1,7 @@
 "use client";
 
 import { Button } from "@/components/ui/button";
-import RichTextEditor from "@/components/ui/custom/rich-text/RichTextEditor";
+import { RichTextEditor } from "@/components/ui/custom/rich-text/RichTextEditor";
 import {
   Form,
   FormControl,
@@ -34,7 +34,7 @@ interface CampaignFormProps {
   onBackgroundImageChange?: (url: string) => void;
 }
 
-export default function CampaignForm({
+export function CampaignForm({
   initialData,
   onSubmit,
   isLoading = false,

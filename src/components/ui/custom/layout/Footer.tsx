@@ -1,7 +1,7 @@
 import { Swords } from 'lucide-react'
 import Link from 'next/link'
 
-export default function Footer() {
+export function Footer() {
   return (
     <footer className="bg-background">
       <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 md:py-12 lg:px-8">

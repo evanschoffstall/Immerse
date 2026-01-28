@@ -2,12 +2,15 @@
 
 import { db } from "@/db/db";
 import { acts, beats, scenes } from "@/db/schema";
-import { authConfig } from "@/lib/auth";
+import { requireAuth } from "@/lib/auth/server-actions";
 import { and, eq, inArray, isNull, sql } from "drizzle-orm";
-import { getServerSession } from "next-auth";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { z } from "zod";
+
+// =======================================================================================================
+// #region Schemas
+// =======================================================================================================
 
 const createActSchema = z.object({
   name: z.string().min(1, "Name is required"),
@@ -23,23 +26,57 @@ const createSceneSchema = z.object({
   actId: z.string().uuid(),
 });
 
+const createBeatSchema = z.object({
+  text: z.string().min(1, "Text is required"),
+  timestamp: z.string().min(1, "Timestamp is required"),
+  sceneId: z.string().uuid(),
+});
+
+const updateBeatSchema = createBeatSchema.omit({ sceneId: true }).partial();
+const reorderIdsSchema = z.array(z.string().uuid()).min(1);
+
+// #endregion Schemas
+
+// =======================================================================================================
+// #region Helpers
+// =======================================================================================================
+
+function generateSlug(name: string, providedSlug?: string | null): string {
+  return (
+    providedSlug ||
+    name
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, "-")
+      .replace(/(^-|-$)/g, "")
+  );
+}
+
+async function getNextSortOrder(
+  table: typeof acts | typeof scenes | typeof beats,
+  whereClause: ReturnType<typeof and>,
+): Promise<number> {
+  const [{ maxSortOrder }] = await db
+    .select({ maxSortOrder: sql<number | null>`max(${table.sortOrder})` })
+    .from(table)
+    .where(whereClause);
+  return (maxSortOrder ?? -1) + 1;
+}
+
+// #endregion Helpers
+
+// =======================================================================================================
+// #region Create Actions
+// =======================================================================================================
+
 export async function createAct(
   campaignId: string,
   formData: FormData,
   shouldRedirect: boolean = true,
 ) {
-  const session = await getServerSession(authConfig);
-  if (!session?.user?.id) {
-    throw new Error("Unauthorized");
-  }
+  const userId = await requireAuth();
 
   const name = formData.get("name") as string;
-  const slug =
-    (formData.get("slug") as string) ||
-    name
-      .toLowerCase()
-      .replace(/[^a-z0-9]+/g, "-")
-      .replace(/(^-|-$)/g, "");
+  const slug = generateSlug(name, formData.get("slug") as string);
   const content = formData.get("content") as string | null;
 
   const validated = createActSchema.parse({
@@ -49,23 +86,20 @@ export async function createAct(
     campaignId,
   });
 
-  const [{ maxSortOrder }] = await db
-    .select({ maxSortOrder: sql<number | null>`max(${acts.sortOrder})` })
-    .from(acts)
-    .where(and(eq(acts.campaignId, campaignId), isNull(acts.deletedAt)));
-  const sortOrder = (maxSortOrder ?? -1) + 1;
+  const sortOrder = await getNextSortOrder(
+    acts,
+    and(eq(acts.campaignId, campaignId), isNull(acts.deletedAt)),
+  );
 
-  const actId = crypto.randomUUID();
   await db.insert(acts).values({
-    id: actId,
+    id: crypto.randomUUID(),
     ...validated,
     sortOrder,
-    createdById: session.user.id,
+    createdById: userId,
     updatedAt: new Date(),
   });
 
   revalidatePath(`/campaigns/${campaignId}/story`);
-
   if (shouldRedirect) {
     redirect(`/campaigns/${campaignId}/story`);
   }
@@ -76,28 +110,16 @@ export async function createScene(
   formData: FormData,
   shouldRedirect: boolean = true,
 ) {
-  const session = await getServerSession(authConfig);
-  if (!session?.user?.id) {
-    throw new Error("Unauthorized");
-  }
+  const userId = await requireAuth();
 
-  // Get the act to find the campaignId
   const act = await db.query.acts.findFirst({
     where: eq(acts.id, actId),
     columns: { campaignId: true },
   });
-
-  if (!act) {
-    throw new Error("Act not found");
-  }
+  if (!act) throw new Error("Act not found");
 
   const name = formData.get("name") as string;
-  const slug =
-    (formData.get("slug") as string) ||
-    name
-      .toLowerCase()
-      .replace(/[^a-z0-9]+/g, "-")
-      .replace(/(^-|-$)/g, "");
+  const slug = generateSlug(name, formData.get("slug") as string);
   const content = formData.get("content") as string | null;
 
   const validated = createSceneSchema.parse({
@@ -107,64 +129,41 @@ export async function createScene(
     actId,
   });
 
-  const [{ maxSortOrder }] = await db
-    .select({ maxSortOrder: sql<number | null>`max(${scenes.sortOrder})` })
-    .from(scenes)
-    .where(and(eq(scenes.actId, actId), isNull(scenes.deletedAt)));
-  const sortOrder = (maxSortOrder ?? -1) + 1;
+  const sortOrder = await getNextSortOrder(
+    scenes,
+    and(eq(scenes.actId, actId), isNull(scenes.deletedAt)),
+  );
 
-  const sceneId = crypto.randomUUID();
   await db.insert(scenes).values({
-    id: sceneId,
+    id: crypto.randomUUID(),
     ...validated,
     sortOrder,
-    createdById: session.user.id,
+    createdById: userId,
     updatedAt: new Date(),
   });
 
   revalidatePath(`/campaigns/${act.campaignId}/story`);
-
   if (shouldRedirect) {
     redirect(`/campaigns/${act.campaignId}/story`);
   }
 }
-
-const createBeatSchema = z.object({
-  text: z.string().min(1, "Text is required"),
-  timestamp: z.string().min(1, "Timestamp is required"),
-  sceneId: z.string().uuid(),
-});
-
-const updateBeatSchema = createBeatSchema.omit({ sceneId: true }).partial();
 
 export async function createBeat(
   sceneId: string,
   formData: FormData,
   shouldRedirect: boolean = true,
 ) {
-  const session = await getServerSession(authConfig);
-  if (!session?.user?.id) {
-    throw new Error("Unauthorized");
-  }
+  const userId = await requireAuth();
 
-  // Get the scene to find the act and campaignId
   const scene = await db.query.scenes.findFirst({
     where: eq(scenes.id, sceneId),
     columns: { actId: true },
-    with: {
-      act: {
-        columns: { campaignId: true },
-      },
-    },
+    with: { act: { columns: { campaignId: true } } },
   });
-
-  if (!scene) {
-    throw new Error("Scene not found");
-  }
+  if (!scene) throw new Error("Scene not found");
 
   const text = formData.get("text") as string;
   const timestampStr = formData.get("timestamp") as string;
-  const timestamp = new Date(timestampStr);
 
   const validated = createBeatSchema.parse({
     text,
@@ -172,56 +171,48 @@ export async function createBeat(
     sceneId,
   });
 
-  const [{ maxSortOrder }] = await db
-    .select({ maxSortOrder: sql<number | null>`max(${beats.sortOrder})` })
-    .from(beats)
-    .where(and(eq(beats.sceneId, sceneId), isNull(beats.deletedAt)));
-  const sortOrder = (maxSortOrder ?? -1) + 1;
+  const sortOrder = await getNextSortOrder(
+    beats,
+    and(eq(beats.sceneId, sceneId), isNull(beats.deletedAt)),
+  );
 
-  const beatId = crypto.randomUUID();
   await db.insert(beats).values({
-    id: beatId,
+    id: crypto.randomUUID(),
     text: validated.text,
-    timestamp,
+    timestamp: new Date(timestampStr),
     sceneId: validated.sceneId,
     sortOrder,
-    createdById: session.user.id,
+    createdById: userId,
     updatedAt: new Date(),
   });
 
   revalidatePath(`/campaigns/${scene.act.campaignId}/story`);
-
   if (shouldRedirect) {
     redirect(`/campaigns/${scene.act.campaignId}/story`);
   }
 }
+
+// #endregion Create Actions
+
+// =======================================================================================================
+// #region Update Actions
+// =======================================================================================================
 
 export async function updateAct(
   actId: string,
   formData: FormData,
   shouldRedirect: boolean = true,
 ) {
-  const session = await getServerSession(authConfig);
-  if (!session?.user?.id) {
-    throw new Error("Unauthorized");
-  }
+  const userId = await requireAuth();
 
   const act = await db.query.acts.findFirst({
     where: eq(acts.id, actId),
     columns: { campaignId: true, createdById: true },
   });
-
-  if (!act || act.createdById !== session.user.id) {
-    throw new Error("Forbidden");
-  }
+  if (!act || act.createdById !== userId) throw new Error("Forbidden");
 
   const name = formData.get("name") as string;
-  const slug =
-    (formData.get("slug") as string) ||
-    name
-      .toLowerCase()
-      .replace(/[^a-z0-9]+/g, "-")
-      .replace(/(^-|-$)/g, "");
+  const slug = generateSlug(name, formData.get("slug") as string);
   const content = formData.get("content") as string | null;
 
   const validated = createActSchema.partial().parse({
@@ -232,15 +223,10 @@ export async function updateAct(
 
   await db
     .update(acts)
-    .set({
-      ...validated,
-      updatedAt: new Date(),
-      updatedById: session.user.id,
-    })
+    .set({ ...validated, updatedAt: new Date(), updatedById: userId })
     .where(eq(acts.id, actId));
 
   revalidatePath(`/campaigns/${act.campaignId}/story`);
-
   if (shouldRedirect) {
     redirect(`/campaigns/${act.campaignId}/story`);
   }
@@ -251,32 +237,17 @@ export async function updateScene(
   formData: FormData,
   shouldRedirect: boolean = true,
 ) {
-  const session = await getServerSession(authConfig);
-  if (!session?.user?.id) {
-    throw new Error("Unauthorized");
-  }
+  const userId = await requireAuth();
 
   const scene = await db.query.scenes.findFirst({
     where: eq(scenes.id, sceneId),
     columns: { actId: true, createdById: true },
-    with: {
-      act: {
-        columns: { campaignId: true },
-      },
-    },
+    with: { act: { columns: { campaignId: true } } },
   });
-
-  if (!scene || scene.createdById !== session.user.id) {
-    throw new Error("Forbidden");
-  }
+  if (!scene || scene.createdById !== userId) throw new Error("Forbidden");
 
   const name = formData.get("name") as string;
-  const slug =
-    (formData.get("slug") as string) ||
-    name
-      .toLowerCase()
-      .replace(/[^a-z0-9]+/g, "-")
-      .replace(/(^-|-$)/g, "");
+  const slug = generateSlug(name, formData.get("slug") as string);
   const content = formData.get("content") as string | null;
 
   const validated = createSceneSchema.partial().parse({
@@ -287,15 +258,10 @@ export async function updateScene(
 
   await db
     .update(scenes)
-    .set({
-      ...validated,
-      updatedAt: new Date(),
-      updatedById: session.user.id,
-    })
+    .set({ ...validated, updatedAt: new Date(), updatedById: userId })
     .where(eq(scenes.id, sceneId));
 
   revalidatePath(`/campaigns/${scene.act.campaignId}/story`);
-
   if (shouldRedirect) {
     redirect(`/campaigns/${scene.act.campaignId}/story`);
   }
@@ -306,10 +272,7 @@ export async function updateBeat(
   formData: FormData,
   shouldRedirect: boolean = true,
 ) {
-  const session = await getServerSession(authConfig);
-  if (!session?.user?.id) {
-    throw new Error("Unauthorized");
-  }
+  const userId = await requireAuth();
 
   const beat = await db.query.beats.findFirst({
     where: eq(beats.id, beatId),
@@ -317,18 +280,11 @@ export async function updateBeat(
     with: {
       scene: {
         columns: { actId: true },
-        with: {
-          act: {
-            columns: { campaignId: true },
-          },
-        },
+        with: { act: { columns: { campaignId: true } } },
       },
     },
   });
-
-  if (!beat || beat.createdById !== session.user.id) {
-    throw new Error("Forbidden");
-  }
+  if (!beat || beat.createdById !== userId) throw new Error("Forbidden");
 
   const text = formData.get("text") as string | null;
   const timestampStr = formData.get("timestamp") as string | null;
@@ -339,95 +295,63 @@ export async function updateBeat(
   });
 
   const updates: { text?: string; timestamp?: Date } = {};
-
-  if (validated.text) {
-    updates.text = validated.text;
-  }
-
-  if (validated.timestamp) {
-    updates.timestamp = new Date(validated.timestamp);
-  }
+  if (validated.text) updates.text = validated.text;
+  if (validated.timestamp) updates.timestamp = new Date(validated.timestamp);
 
   await db
     .update(beats)
-    .set({
-      ...updates,
-      updatedAt: new Date(),
-      updatedById: session.user.id,
-    })
+    .set({ ...updates, updatedAt: new Date(), updatedById: userId })
     .where(eq(beats.id, beatId));
 
   revalidatePath(`/campaigns/${beat.scene.act.campaignId}/story`);
-
   if (shouldRedirect) {
     redirect(`/campaigns/${beat.scene.act.campaignId}/story`);
   }
 }
 
+// #endregion Update Actions
+
+// =======================================================================================================
+// #region Delete Actions
+// =======================================================================================================
+
 export async function deleteAct(actId: string) {
-  const session = await getServerSession(authConfig);
-  if (!session?.user?.id) {
-    throw new Error("Unauthorized");
-  }
+  const userId = await requireAuth();
 
   const act = await db.query.acts.findFirst({
     where: eq(acts.id, actId),
     columns: { campaignId: true, createdById: true },
   });
-
-  if (!act || act.createdById !== session.user.id) {
-    throw new Error("Forbidden");
-  }
+  if (!act || act.createdById !== userId) throw new Error("Forbidden");
 
   await db
     .update(acts)
-    .set({
-      deletedAt: new Date(),
-      updatedAt: new Date(),
-      updatedById: session.user.id,
-    })
+    .set({ deletedAt: new Date(), updatedAt: new Date(), updatedById: userId })
     .where(eq(acts.id, actId));
 
   revalidatePath(`/campaigns/${act.campaignId}/story`);
 }
 
 export async function deleteScene(sceneId: string) {
-  const session = await getServerSession(authConfig);
-  if (!session?.user?.id) {
-    throw new Error("Unauthorized");
-  }
+  const userId = await requireAuth();
 
   const scene = await db.query.scenes.findFirst({
     where: eq(scenes.id, sceneId),
     columns: { createdById: true },
-    with: {
-      act: {
-        columns: { campaignId: true },
-      },
-    },
+    with: { act: { columns: { campaignId: true } } },
   });
-
-  if (!scene || scene.createdById !== session.user.id) {
-    throw new Error("Forbidden");
-  }
+  if (!scene || scene.createdById !== userId) throw new Error("Forbidden");
 
   await db
     .update(scenes)
-    .set({
-      deletedAt: new Date(),
-      updatedAt: new Date(),
-      updatedById: session.user.id,
-    })
+    .set({ deletedAt: new Date(), updatedAt: new Date(), updatedById: userId })
     .where(eq(scenes.id, sceneId));
 
   revalidatePath(`/campaigns/${scene.act.campaignId}/story`);
 }
 
 export async function deleteBeat(beatId: string) {
-  const session = await getServerSession(authConfig);
-  if (!session?.user?.id) {
-    throw new Error("Unauthorized");
-  }
+  const userId = await requireAuth();
 
   const beat = await db.query.beats.findFirst({
     where: eq(beats.id, beatId),
@@ -435,38 +359,28 @@ export async function deleteBeat(beatId: string) {
     with: {
       scene: {
         columns: { actId: true },
-        with: {
-          act: {
-            columns: { campaignId: true },
-          },
-        },
+        with: { act: { columns: { campaignId: true } } },
       },
     },
   });
-
-  if (!beat || beat.createdById !== session.user.id) {
-    throw new Error("Forbidden");
-  }
+  if (!beat || beat.createdById !== userId) throw new Error("Forbidden");
 
   await db
     .update(beats)
-    .set({
-      deletedAt: new Date(),
-      updatedAt: new Date(),
-      updatedById: session.user.id,
-    })
+    .set({ deletedAt: new Date(), updatedAt: new Date(), updatedById: userId })
     .where(eq(beats.id, beatId));
 
   revalidatePath(`/campaigns/${beat.scene.act.campaignId}/story`);
 }
 
-const reorderIdsSchema = z.array(z.string().uuid()).min(1);
+// #endregion Delete Actions
+
+// =======================================================================================================
+// #region Reorder Actions
+// =======================================================================================================
 
 export async function reorderActs(campaignId: string, actIds: string[]) {
-  const session = await getServerSession(authConfig);
-  if (!session?.user?.id) {
-    throw new Error("Unauthorized");
-  }
+  const userId = await requireAuth();
 
   const ids = reorderIdsSchema.parse(actIds);
   const rows = await db.query.acts.findMany({
@@ -478,11 +392,8 @@ export async function reorderActs(campaignId: string, actIds: string[]) {
     columns: { id: true, createdById: true },
   });
 
-  if (rows.length !== ids.length) {
-    throw new Error("Invalid acts");
-  }
-
-  if (rows.some((row) => row.createdById !== session.user.id)) {
+  if (rows.length !== ids.length) throw new Error("Invalid acts");
+  if (rows.some((row) => row.createdById !== userId)) {
     throw new Error("Forbidden");
   }
 
@@ -490,11 +401,7 @@ export async function reorderActs(campaignId: string, actIds: string[]) {
     for (const [index, id] of ids.entries()) {
       await tx
         .update(acts)
-        .set({
-          sortOrder: index,
-          updatedAt: new Date(),
-          updatedById: session.user.id,
-        })
+        .set({ sortOrder: index, updatedAt: new Date(), updatedById: userId })
         .where(eq(acts.id, id));
     }
   });
@@ -503,19 +410,13 @@ export async function reorderActs(campaignId: string, actIds: string[]) {
 }
 
 export async function reorderScenes(actId: string, sceneIds: string[]) {
-  const session = await getServerSession(authConfig);
-  if (!session?.user?.id) {
-    throw new Error("Unauthorized");
-  }
+  const userId = await requireAuth();
 
   const act = await db.query.acts.findFirst({
     where: eq(acts.id, actId),
     columns: { campaignId: true },
   });
-
-  if (!act) {
-    throw new Error("Act not found");
-  }
+  if (!act) throw new Error("Act not found");
 
   const ids = reorderIdsSchema.parse(sceneIds);
   const rows = await db.query.scenes.findMany({
@@ -527,11 +428,8 @@ export async function reorderScenes(actId: string, sceneIds: string[]) {
     columns: { id: true, createdById: true },
   });
 
-  if (rows.length !== ids.length) {
-    throw new Error("Invalid scenes");
-  }
-
-  if (rows.some((row) => row.createdById !== session.user.id)) {
+  if (rows.length !== ids.length) throw new Error("Invalid scenes");
+  if (rows.some((row) => row.createdById !== userId)) {
     throw new Error("Forbidden");
   }
 
@@ -539,11 +437,7 @@ export async function reorderScenes(actId: string, sceneIds: string[]) {
     for (const [index, id] of ids.entries()) {
       await tx
         .update(scenes)
-        .set({
-          sortOrder: index,
-          updatedAt: new Date(),
-          updatedById: session.user.id,
-        })
+        .set({ sortOrder: index, updatedAt: new Date(), updatedById: userId })
         .where(eq(scenes.id, id));
     }
   });
@@ -552,24 +446,14 @@ export async function reorderScenes(actId: string, sceneIds: string[]) {
 }
 
 export async function reorderBeats(sceneId: string, beatIds: string[]) {
-  const session = await getServerSession(authConfig);
-  if (!session?.user?.id) {
-    throw new Error("Unauthorized");
-  }
+  const userId = await requireAuth();
 
   const scene = await db.query.scenes.findFirst({
     where: eq(scenes.id, sceneId),
     columns: { actId: true },
-    with: {
-      act: {
-        columns: { campaignId: true },
-      },
-    },
+    with: { act: { columns: { campaignId: true } } },
   });
-
-  if (!scene) {
-    throw new Error("Scene not found");
-  }
+  if (!scene) throw new Error("Scene not found");
 
   const ids = reorderIdsSchema.parse(beatIds);
   const rows = await db.query.beats.findMany({
@@ -581,11 +465,8 @@ export async function reorderBeats(sceneId: string, beatIds: string[]) {
     columns: { id: true, createdById: true },
   });
 
-  if (rows.length !== ids.length) {
-    throw new Error("Invalid beats");
-  }
-
-  if (rows.some((row) => row.createdById !== session.user.id)) {
+  if (rows.length !== ids.length) throw new Error("Invalid beats");
+  if (rows.some((row) => row.createdById !== userId)) {
     throw new Error("Forbidden");
   }
 
@@ -593,14 +474,12 @@ export async function reorderBeats(sceneId: string, beatIds: string[]) {
     for (const [index, id] of ids.entries()) {
       await tx
         .update(beats)
-        .set({
-          sortOrder: index,
-          updatedAt: new Date(),
-          updatedById: session.user.id,
-        })
+        .set({ sortOrder: index, updatedAt: new Date(), updatedById: userId })
         .where(eq(beats.id, id));
     }
   });
 
   revalidatePath(`/campaigns/${scene.act.campaignId}/story`);
 }
+
+// #endregion Reorder Actions

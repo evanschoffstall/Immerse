@@ -1,6 +1,6 @@
 "use client";
 
-import { EditCampaignDialog } from "@/components/ui/custom/dialog/EditCampaignDialog";
+import { EditCampaignDialog } from "@/components/ui/custom/dialog/campaign/EditCampaignDialog";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import {
   Sidebar,

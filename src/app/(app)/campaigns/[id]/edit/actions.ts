@@ -2,9 +2,8 @@
 
 import { db } from "@/db/db";
 import { campaigns, campaignSettings } from "@/db/schema";
-import { authConfig } from "@/lib/auth";
+import { requireAuth } from "@/lib/auth/server-actions";
 import { eq } from "drizzle-orm";
-import { getServerSession } from "next-auth";
 import { revalidatePath } from "next/cache";
 
 export async function updateCampaign(
@@ -16,20 +15,15 @@ export async function updateCampaign(
     backgroundImage: string;
   },
 ) {
-  const session = await getServerSession(authConfig);
+  const userId = await requireAuth();
 
-  if (!session?.user) {
-    throw new Error("Unauthorized");
-  }
-
-  // Verify ownership
   const campaign = await db.query.campaigns.findFirst({
     where: eq(campaigns.id, campaignId),
     columns: { ownerId: true },
   });
 
-  if (!campaign || campaign.ownerId !== session.user.id) {
-    throw new Error("Unauthorized");
+  if (!campaign || campaign.ownerId !== userId) {
+    throw new Error("Forbidden");
   }
 
   await db
@@ -62,23 +56,17 @@ export async function updateCampaignSettings(
     cardBlur: number;
   },
 ) {
-  const session = await getServerSession(authConfig);
+  const userId = await requireAuth();
 
-  if (!session?.user) {
-    throw new Error("Unauthorized");
-  }
-
-  // Verify ownership
   const campaign = await db.query.campaigns.findFirst({
     where: eq(campaigns.id, campaignId),
     columns: { ownerId: true },
   });
 
-  if (!campaign || campaign.ownerId !== session.user.id) {
-    throw new Error("Unauthorized");
+  if (!campaign || campaign.ownerId !== userId) {
+    throw new Error("Forbidden");
   }
 
-  // Check if settings exist
   const existing = await db.query.campaignSettings.findFirst({
     where: eq(campaignSettings.campaignId, campaignId),
   });
@@ -104,20 +92,15 @@ export async function updateCampaignSettings(
 }
 
 export async function deleteCampaign(campaignId: string) {
-  const session = await getServerSession(authConfig);
+  const userId = await requireAuth();
 
-  if (!session?.user) {
-    throw new Error("Unauthorized");
-  }
-
-  // Verify ownership
   const campaign = await db.query.campaigns.findFirst({
     where: eq(campaigns.id, campaignId),
     columns: { ownerId: true },
   });
 
-  if (!campaign || campaign.ownerId !== session.user.id) {
-    throw new Error("Unauthorized");
+  if (!campaign || campaign.ownerId !== userId) {
+    throw new Error("Forbidden");
   }
 
   await db.delete(campaigns).where(eq(campaigns.id, campaignId));

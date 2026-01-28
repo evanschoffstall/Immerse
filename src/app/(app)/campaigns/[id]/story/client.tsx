@@ -4,24 +4,26 @@ import { Button } from "@/components/ui/button";
 import { CardContent } from "@/components/ui/card";
 import { EditIconButton } from "@/components/ui/custom/button/EditIconButton";
 import { InlineCreateButton } from "@/components/ui/custom/button/InlineCreateButton";
-import { CreateCard } from "@/components/ui/custom/card/CreateCard";
 import {
   FormDialog,
   useFormDialog,
   useFormDialogSubmit,
 } from "@/components/ui/custom/dialog/FormDialog";
-import ActForm, {
+import {
+  ActForm,
   type ActFormData,
 } from "@/components/ui/custom/forms/ActForm";
-import BeatForm, {
+import {
+  BeatForm,
   type BeatFormData,
 } from "@/components/ui/custom/forms/BeatForm";
-import SceneForm, {
+import {
+  SceneForm,
   type SceneFormData,
 } from "@/components/ui/custom/forms/SceneForm";
 import { Dialog, DialogTrigger } from "@/components/ui/dialog";
 import { cn } from "@/lib/utils";
-import { Clock, Plus, Theater } from "lucide-react";
+import { Plus, Theater } from "lucide-react";
 import { type ReactNode, useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 import Sortable, { type SortableEvent } from "sortablejs";
@@ -40,9 +42,9 @@ import {
   updateScene,
 } from "./actions";
 
-// ============================================================================
-// Helpers
-// ============================================================================
+// =======================================================================================================
+// #region Helpers
+// =======================================================================================================
 
 const toLocalDateTime = (d: Date) =>
   new Date(d.getTime() - d.getTimezoneOffset() * 60000)
@@ -80,12 +82,20 @@ const getSortIds = (el: HTMLElement) =>
     .map((node) => (node as HTMLElement).dataset.sortId)
     .filter((id): id is string => Boolean(id));
 
-export function SortableActs({
-  campaignId,
+// #endregion Helpers
+
+// =======================================================================================================
+// #region Sortable Components
+// =======================================================================================================
+
+function GenericSortable({
+  handleType,
+  onReorder,
   children,
   className,
 }: {
-  campaignId: string;
+  handleType: string;
+  onReorder: (ids: string[]) => Promise<void>;
   children: ReactNode;
   className?: string;
 }) {
@@ -97,7 +107,7 @@ export function SortableActs({
     const el = containerRef.current;
     const sortable = Sortable.create(el, {
       animation: 150,
-      handle: "[data-drag-handle='act']",
+      handle: `[data-drag-handle='${handleType}']`,
       draggable: "[data-sort-id]",
       ghostClass: "opacity-50",
       onEnd: async (evt: SortableEvent) => {
@@ -106,10 +116,10 @@ export function SortableActs({
         if (ids.length === 0) return;
         setIsSaving(true);
         try {
-          await reorderActs(campaignId, ids);
-          toast.success("Acts reordered");
+          await onReorder(ids);
+          toast.success(`${handleType}s reordered`);
         } catch (err: any) {
-          toast.error(err.message || "Failed to reorder acts");
+          toast.error(err.message || `Failed to reorder ${handleType}s`);
         } finally {
           setIsSaving(false);
         }
@@ -117,7 +127,7 @@ export function SortableActs({
     });
 
     return () => sortable.destroy();
-  }, [campaignId]);
+  }, [handleType, onReorder]);
 
   return (
     <div
@@ -130,6 +140,26 @@ export function SortableActs({
     >
       {children}
     </div>
+  );
+}
+
+export function SortableActs({
+  campaignId,
+  children,
+  className,
+}: {
+  campaignId: string;
+  children: ReactNode;
+  className?: string;
+}) {
+  return (
+    <GenericSortable
+      handleType="act"
+      onReorder={(ids) => reorderActs(campaignId, ids)}
+      className={className}
+    >
+      {children}
+    </GenericSortable>
   );
 }
 
@@ -142,47 +172,14 @@ export function SortableScenes({
   children: ReactNode;
   className?: string;
 }) {
-  const containerRef = useRef<HTMLDivElement | null>(null);
-  const [isSaving, setIsSaving] = useState(false);
-
-  useEffect(() => {
-    if (!containerRef.current) return;
-    const el = containerRef.current;
-    const sortable = Sortable.create(el, {
-      animation: 150,
-      handle: "[data-drag-handle='scene']",
-      draggable: "[data-sort-id]",
-      ghostClass: "opacity-50",
-      onEnd: async (evt: SortableEvent) => {
-        if (evt.oldIndex === evt.newIndex) return;
-        const ids = getSortIds(el);
-        if (ids.length === 0) return;
-        setIsSaving(true);
-        try {
-          await reorderScenes(actId, ids);
-          toast.success("Scenes reordered");
-        } catch (err: any) {
-          toast.error(err.message || "Failed to reorder scenes");
-        } finally {
-          setIsSaving(false);
-        }
-      },
-    });
-
-    return () => sortable.destroy();
-  }, [actId]);
-
   return (
-    <div
-      ref={containerRef}
-      className={cn(
-        "space-y-3",
-        isSaving && "pointer-events-none opacity-70",
-        className,
-      )}
+    <GenericSortable
+      handleType="scene"
+      onReorder={(ids) => reorderScenes(actId, ids)}
+      className={className}
     >
       {children}
-    </div>
+    </GenericSortable>
   );
 }
 
@@ -195,53 +192,22 @@ export function SortableBeats({
   children: ReactNode;
   className?: string;
 }) {
-  const containerRef = useRef<HTMLDivElement | null>(null);
-  const [isSaving, setIsSaving] = useState(false);
-
-  useEffect(() => {
-    if (!containerRef.current) return;
-    const el = containerRef.current;
-    const sortable = Sortable.create(el, {
-      animation: 150,
-      handle: "[data-drag-handle='beat']",
-      draggable: "[data-sort-id]",
-      ghostClass: "opacity-50",
-      onEnd: async (evt: SortableEvent) => {
-        if (evt.oldIndex === evt.newIndex) return;
-        const ids = getSortIds(el);
-        if (ids.length === 0) return;
-        setIsSaving(true);
-        try {
-          await reorderBeats(sceneId, ids);
-          toast.success("Beats reordered");
-        } catch (err: any) {
-          toast.error(err.message || "Failed to reorder beats");
-        } finally {
-          setIsSaving(false);
-        }
-      },
-    });
-
-    return () => sortable.destroy();
-  }, [sceneId]);
-
   return (
-    <div
-      ref={containerRef}
-      className={cn(
-        "space-y-3",
-        isSaving && "pointer-events-none opacity-70",
-        className,
-      )}
+    <GenericSortable
+      handleType="beat"
+      onReorder={(ids) => reorderBeats(sceneId, ids)}
+      className={className}
     >
       {children}
-    </div>
+    </GenericSortable>
   );
 }
 
-// ============================================================================
-// Act
-// ============================================================================
+// #endregion Sortable Components
+
+// =======================================================================================================
+// #region Act Components
+// =======================================================================================================
 
 function ActDialogContent({
   mode,
@@ -265,9 +231,11 @@ function ActDialogContent({
   const onSubmit = async (d: ActFormData) => {
     try {
       const fd = toFormData({ name: d.name, content: d.content });
-      isCreate
-        ? await createAct(campaignId, fd, false)
-        : await updateAct(actId!, fd, false);
+      if (isCreate) {
+        await createAct(campaignId, fd, false);
+      } else {
+        await updateAct(actId!, fd, false);
+      }
       toast.success(successText(mode, "Act"));
       done();
     } catch (err: any) {
@@ -288,6 +256,8 @@ function ActDialogContent({
     }
   };
 
+  const isLoading = isPending || isDeleting;
+
   return (
     <FormDialog
       open={open}
@@ -304,17 +274,17 @@ function ActDialogContent({
         <ActForm
           initialData={initial}
           onSubmit={onSubmit}
-          isLoading={isPending || isDeleting}
+          isLoading={isLoading}
           submitText={submitText(mode, "Act")}
         />
-        {mode === "edit" && (
+        {!isCreate && (
           <div className="flex justify-end">
             <Button
               type="button"
               variant="destructive"
               size="sm"
               onClick={onDelete}
-              disabled={isPending || isDeleting}
+              disabled={isLoading}
             >
               {isDeleting ? "Deleting..." : "Delete Act"}
             </Button>
@@ -341,27 +311,6 @@ export function EmptyState({ campaignId }: { campaignId: string }) {
         <CreateActButton campaignId={campaignId} />
       </div>
     </CardContent>
-  );
-}
-
-function CreateActCard({ campaignId }: { campaignId: string }) {
-  const { open, setOpen } = useFormDialog();
-  return (
-    <>
-      <CreateCard
-        icon={Theater}
-        title="New Act"
-        description="Create a new act to organize your story"
-        variant="lg"
-        onClick={() => setOpen(true)}
-      />
-      <ActDialogContent
-        mode="create"
-        campaignId={campaignId}
-        open={open}
-        onOpenChange={setOpen}
-      />
-    </>
   );
 }
 
@@ -427,9 +376,11 @@ export function EditActButton({
   );
 }
 
-// ============================================================================
-// Scene
-// ============================================================================
+// #endregion Act Components
+
+// =======================================================================================================
+// #region Scene Components
+// =======================================================================================================
 
 function SceneDialogContent({
   mode,
@@ -449,13 +400,16 @@ function SceneDialogContent({
   const { isPending, done } = useFormDialogSubmit(onOpenChange);
   const [isDeleting, setIsDeleting] = useState(false);
   const isCreate = mode === "create";
+  const isLoading = isPending || isDeleting;
 
   const onSubmit = async (d: SceneFormData) => {
     try {
       const fd = toFormData({ name: d.name, content: d.content });
-      isCreate
-        ? await createScene(actId, fd, false)
-        : await updateScene(sceneId!, fd, false);
+      if (isCreate) {
+        await createScene(actId, fd, false);
+      } else {
+        await updateScene(sceneId!, fd, false);
+      }
       toast.success(successText(mode, "Scene"));
       done();
     } catch (err: any) {
@@ -492,17 +446,17 @@ function SceneDialogContent({
         <SceneForm
           initialData={initial}
           onSubmit={onSubmit}
-          isLoading={isPending || isDeleting}
+          isLoading={isLoading}
           submitText={submitText(mode, "Scene")}
         />
-        {mode === "edit" && (
+        {!isCreate && (
           <div className="flex justify-end">
             <Button
               type="button"
               variant="destructive"
               size="sm"
               onClick={onDelete}
-              disabled={isPending || isDeleting}
+              disabled={isLoading}
             >
               {isDeleting ? "Deleting..." : "Delete Scene"}
             </Button>
@@ -510,27 +464,6 @@ function SceneDialogContent({
         )}
       </div>
     </FormDialog>
-  );
-}
-
-function CreateSceneCard({ actId }: { actId: string }) {
-  const { open, setOpen } = useFormDialog();
-  return (
-    <>
-      <CreateCard
-        icon={Theater}
-        title="New Scene"
-        description="Create a new scene in this act"
-        variant="md"
-        onClick={() => setOpen(true)}
-      />
-      <SceneDialogContent
-        mode="create"
-        actId={actId}
-        open={open}
-        onOpenChange={setOpen}
-      />
-    </>
   );
 }
 
@@ -576,9 +509,11 @@ export function EditSceneButton({
   );
 }
 
-// ============================================================================
-// Beat
-// ============================================================================
+// #endregion Scene Components
+
+// =======================================================================================================
+// #region Beat Components
+// =======================================================================================================
 
 function BeatDialogContent({
   mode,
@@ -598,6 +533,7 @@ function BeatDialogContent({
   const { isPending, done } = useFormDialogSubmit(onOpenChange);
   const [isDeleting, setIsDeleting] = useState(false);
   const isCreate = mode === "create";
+  const isLoading = isPending || isDeleting;
 
   const onSubmit = async (d: BeatFormData) => {
     try {
@@ -605,9 +541,11 @@ function BeatDialogContent({
         text: d.text,
         timestamp: new Date(d.timestamp).toISOString(),
       });
-      isCreate
-        ? await createBeat(sceneId!, fd, false)
-        : await updateBeat(beatId!, fd, false);
+      if (isCreate) {
+        await createBeat(sceneId!, fd, false);
+      } else {
+        await updateBeat(beatId!, fd, false);
+      }
       toast.success(successText(mode, "Beat"));
       done();
     } catch (err: any) {
@@ -644,17 +582,17 @@ function BeatDialogContent({
         <BeatForm
           initialData={initial}
           onSubmit={onSubmit}
-          isLoading={isPending || isDeleting}
+          isLoading={isLoading}
           submitText={submitText(mode, "Beat")}
         />
-        {mode === "edit" && (
+        {!isCreate && (
           <div className="flex justify-end">
             <Button
               type="button"
               variant="destructive"
               size="sm"
               onClick={onDelete}
-              disabled={isPending || isDeleting}
+              disabled={isLoading}
             >
               {isDeleting ? "Deleting..." : "Delete Beat"}
             </Button>
@@ -662,39 +600,6 @@ function BeatDialogContent({
         )}
       </div>
     </FormDialog>
-  );
-}
-
-function CreateBeatCard({ sceneId }: { sceneId: string }) {
-  const { open, setOpen } = useFormDialog();
-  return (
-    <>
-      <div
-        className={cn(
-          "group relative flex gap-3 rounded-lg border-l-2 border-dashed border-l-primary/20 bg-muted/20 p-3 transition-colors cursor-pointer",
-          "hover:bg-muted/40 hover:border-l-primary/50",
-        )}
-        onClick={() => setOpen(true)}
-      >
-        <div className="shrink-0">
-          <div className="flex h-8 w-8 items-center justify-center rounded-md bg-primary/10">
-            <Clock className="h-3.5 w-3.5 text-primary" />
-          </div>
-        </div>
-        <div className="flex-1 min-w-0 space-y-1">
-          <p className="text-sm text-muted-foreground">New Beat</p>
-          <p className="text-xs text-muted-foreground">
-            Add a timestamped event to this scene
-          </p>
-        </div>
-      </div>
-      <BeatDialogContent
-        mode="create"
-        sceneId={sceneId}
-        open={open}
-        onOpenChange={setOpen}
-      />
-    </>
   );
 }
 
@@ -740,9 +645,11 @@ export function EditBeatButton({
   );
 }
 
-// ============================================================================
-// Utils
-// ============================================================================
+// #endregion Beat Components
+
+// =======================================================================================================
+// #region Utils
+// =======================================================================================================
 
 export function InteractiveContainer({
   children,
@@ -765,3 +672,5 @@ export function InteractiveContainer({
     </div>
   );
 }
+
+// #endregion Utils

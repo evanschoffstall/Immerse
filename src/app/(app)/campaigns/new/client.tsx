@@ -1,6 +1,7 @@
 "use client";
 
-import CampaignForm, {
+import {
+  CampaignForm,
   type CampaignFormData,
 } from "@/components/ui/custom/forms/CampaignForm";
 import { useState } from "react";

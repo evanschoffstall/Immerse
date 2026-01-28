@@ -12,7 +12,7 @@ import { SerializedEditorState } from "lexical";
 import { editorTheme } from "@/components/ui/editor/themes/editor-theme";
 import { nodes } from "@/components/ui/editor/nodes";
 
-interface RichTextViewerrProps {
+interface RichTextViewerProps {
   content: string;
   className?: string;
 }
@@ -31,10 +31,10 @@ interface RichTextViewerrProps {
  * />
  * ```
  */
-export default function RichTextViewerr({
+export function RichTextViewer({
   content,
   className = "prose prose-sm max-w-none dark:prose-invert",
-}: RichTextViewerrProps) {
+}: RichTextViewerProps) {
   let editorState: SerializedEditorState | undefined;
 
   try {
