@@ -1,6 +1,6 @@
 import { db } from "@/db/db";
 import { campaigns } from "@/db/schema";
-import { authConfig } from "@/lib/auth";
+import { authConfig } from "@/lib/auth/config";
 import { eq } from "drizzle-orm";
 import { getServerSession } from "next-auth/next";
 import { redirect } from "next/navigation";

@@ -1,4 +1,4 @@
-import { authConfig } from "@/lib/auth";
+import { authConfig } from "@/lib/auth/config";
 import { getServerSession } from "next-auth";
 
 export async function requireAuth(): Promise<string> {

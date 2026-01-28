@@ -8,7 +8,7 @@ import {
 } from "@/components/ui/card";
 import { db } from "@/db/db";
 import { campaigns } from "@/db/schema";
-import { authConfig } from "@/lib/auth";
+import { authConfig } from "@/lib/auth/config";
 import { extractTextFromLexical, truncateText } from "@/lib/utils/lexical";
 import { desc, eq } from "drizzle-orm";
 import { Mountain } from "lucide-react";
