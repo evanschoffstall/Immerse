@@ -1,3 +1,5 @@
+import { TIME_CONSTANTS } from "@/lib/constants/time";
+
 /**
  * Formats a date as a human-readable "time ago" string.
  * Shows "Today", "Yesterday", or "X days ago" for recent dates,
@@ -14,11 +16,13 @@
 export function formatTimeAgo(date: Date): string {
   const now = new Date();
   const days = Math.floor(
-    (now.getTime() - date.getTime()) / (1000 * 60 * 60 * 24),
+    (now.getTime() - date.getTime()) / TIME_CONSTANTS.MS_PER_DAY,
   );
 
   if (days === 0) return "Today";
   if (days === 1) return "Yesterday";
-  if (days < 7) return `${days} days ago`;
+  if (days < TIME_CONSTANTS.DAYS_THRESHOLD_FOR_RELATIVE_DATE) {
+    return `${days} days ago`;
+  }
   return date.toLocaleDateString();
 }

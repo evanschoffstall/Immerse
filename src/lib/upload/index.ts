@@ -3,10 +3,9 @@ import { existsSync } from "fs";
 import { mkdir, unlink, writeFile } from "fs/promises";
 import path from "path";
 import sharp from "sharp";
+import { UPLOAD_CONFIG, validateImageFile } from "@/lib/constants/upload";
 
 const UPLOAD_DIR = path.join(process.cwd(), "public", "uploads");
-const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
-const MAX_DIMENSION = 1200;
 
 /**
  * Calculate SHA-256 hash of a buffer
@@ -26,18 +25,8 @@ export async function uploadImage(
   file: File,
   folder: string = "general"
 ): Promise<string> {
-  // Validate file size
-  if (file.size > MAX_FILE_SIZE) {
-    throw new Error(`File size exceeds ${MAX_FILE_SIZE / 1024 / 1024}MB limit`);
-  }
-
-  // Validate file type
-  const validTypes = ["image/jpeg", "image/png", "image/webp", "image/gif"];
-  if (!validTypes.includes(file.type)) {
-    throw new Error(
-      "Invalid file type. Only JPG, PNG, WebP, and GIF are allowed."
-    );
-  }
+  // Validate file
+  validateImageFile(file);
 
   // Create folder if it doesn't exist
   const folderPath = path.join(UPLOAD_DIR, folder);
@@ -51,18 +40,18 @@ export async function uploadImage(
 
   // Optimize image with Sharp (this is what we'll actually store)
   const optimizedBuffer = await sharp(buffer)
-    .resize(MAX_DIMENSION, MAX_DIMENSION, {
+    .resize(UPLOAD_CONFIG.MAX_DIMENSION, UPLOAD_CONFIG.MAX_DIMENSION, {
       fit: "inside",
       withoutEnlargement: true,
     })
-    .webp({ quality: 80 })
+    .webp({ quality: UPLOAD_CONFIG.QUALITY })
     .toBuffer();
 
   // Calculate hash of the OPTIMIZED buffer (so same source image = same hash)
   const hash = calculateHash(optimizedBuffer);
 
   // Generate filename based on hash
-  const ext = "webp"; // Always convert to WebP for optimal compression
+  const ext = UPLOAD_CONFIG.OUTPUT_FORMAT; // Always convert to WebP for optimal compression
   const filename = `${hash}.${ext}`;
   const filePath = path.join(folderPath, filename);
   const relativeUrl = `/uploads/${folder}/${filename}`;
@@ -84,7 +73,7 @@ export async function uploadImage(
  * Delete an image from the local file system
  * @param imagePath - The relative URL path (e.g., '/uploads/campaigns/123.webp')
  */
-async function deleteImage(imagePath: string): Promise<void> {
+export async function deleteImage(imagePath: string): Promise<void> {
   if (!imagePath.startsWith("/uploads/")) {
     throw new Error("Invalid image path");
   }
@@ -101,7 +90,7 @@ async function deleteImage(imagePath: string): Promise<void> {
  * @param imagePath - The relative URL path
  * @returns Absolute file system path
  */
-function getImagePath(imagePath: string): string {
+export function getImagePath(imagePath: string): string {
   if (!imagePath.startsWith("/uploads/")) {
     throw new Error("Invalid image path");
   }
@@ -114,7 +103,7 @@ function getImagePath(imagePath: string): string {
  * @param imagePath - The relative URL path
  * @returns True if the image exists
  */
-function imageExists(imagePath: string): boolean {
+export function imageExists(imagePath: string): boolean {
   try {
     return existsSync(getImagePath(imagePath));
   } catch {
@@ -125,7 +114,7 @@ function imageExists(imagePath: string): boolean {
 /**
  * Create all upload directories
  */
-async function initializeUploadDirectories(): Promise<void> {
+export async function initializeUploadDirectories(): Promise<void> {
   const folders = ["campaigns", "general"];
 
   for (const folder of folders) {

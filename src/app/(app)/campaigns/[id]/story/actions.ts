@@ -4,7 +4,16 @@ import { db } from "@/db/db";
 import { acts, beats, scenes } from "@/db/schema";
 import { requireAuth } from "@/lib/auth/server-actions";
 import { requireEntityOwnership } from "@/lib/auth/authorization";
-import { generateSlug } from "@/lib/utils/slug";
+import {
+  ForbiddenError,
+  NotFoundError,
+  ValidationError,
+} from "@/lib/errors/action-errors";
+import {
+  reorderEntities,
+  type EntityConfig,
+} from "@/lib/db/helpers/entity-operations";
+import { extractNameSlugContent } from "@/lib/utils/form";
 import { and, eq, inArray, isNull, sql } from "drizzle-orm";
 import { createInsertSchema } from "drizzle-zod";
 import { revalidatePath } from "next/cache";
@@ -34,7 +43,6 @@ const createBeatSchema = createInsertSchema(beats, {
   });
 
 const updateBeatSchema = createBeatSchema.omit({ sceneId: true }).partial();
-const reorderIdsSchema = z.array(z.string().uuid()).min(1);
 
 // #endregion Schemas
 
@@ -53,6 +61,42 @@ async function getNextSortOrder(
   return (maxSortOrder ?? -1) + 1;
 }
 
+/**
+ * Entity configurations for reorder operations
+ */
+const actsConfig: EntityConfig<typeof acts> = {
+  table: acts,
+  tableName: "acts",
+  idColumn: acts.id,
+  sortOrderColumn: acts.sortOrder,
+  deletedAtColumn: acts.deletedAt,
+  createdByColumn: acts.createdById,
+  updatedByColumn: acts.updatedById,
+  updatedAtColumn: acts.updatedAt,
+};
+
+const scenesConfig: EntityConfig<typeof scenes> = {
+  table: scenes,
+  tableName: "scenes",
+  idColumn: scenes.id,
+  sortOrderColumn: scenes.sortOrder,
+  deletedAtColumn: scenes.deletedAt,
+  createdByColumn: scenes.createdById,
+  updatedByColumn: scenes.updatedById,
+  updatedAtColumn: scenes.updatedAt,
+};
+
+const beatsConfig: EntityConfig<typeof beats> = {
+  table: beats,
+  tableName: "beats",
+  idColumn: beats.id,
+  sortOrderColumn: beats.sortOrder,
+  deletedAtColumn: beats.deletedAt,
+  createdByColumn: beats.createdById,
+  updatedByColumn: beats.updatedById,
+  updatedAtColumn: beats.updatedAt,
+};
+
 // #endregion Helpers
 
 // =======================================================================================================
@@ -66,14 +110,12 @@ export async function createAct(
 ) {
   const userId = await requireAuth();
 
-  const name = formData.get("name") as string;
-  const slug = generateSlug(name, formData.get("slug") as string);
-  const content = formData.get("content") as string | null;
+  const { name, slug, content } = extractNameSlugContent(formData);
 
   const validated = createActSchema.parse({
     name,
     slug,
-    content: content || undefined,
+    content,
     campaignId,
   });
 
@@ -107,16 +149,14 @@ export async function createScene(
     where: eq(acts.id, actId),
     columns: { campaignId: true },
   });
-  if (!act) throw new Error("Act not found");
+  if (!act) throw new NotFoundError("act");
 
-  const name = formData.get("name") as string;
-  const slug = generateSlug(name, formData.get("slug") as string);
-  const content = formData.get("content") as string | null;
+  const { name, slug, content } = extractNameSlugContent(formData);
 
   const validated = createSceneSchema.parse({
     name,
     slug,
-    content: content || undefined,
+    content,
     actId,
   });
 
@@ -151,7 +191,7 @@ export async function createBeat(
     columns: { actId: true },
     with: { act: { columns: { campaignId: true } } },
   });
-  if (!scene) throw new Error("Scene not found");
+  if (!scene) throw new NotFoundError("scene");
 
   const text = formData.get("text") as string;
   const timestampStr = formData.get("timestamp") as string;
@@ -203,14 +243,12 @@ export async function updateAct(
     "act",
   );
 
-  const name = formData.get("name") as string;
-  const slug = generateSlug(name, formData.get("slug") as string);
-  const content = formData.get("content") as string | null;
+  const { name, slug, content } = extractNameSlugContent(formData);
 
   const validated = createActSchema.partial().parse({
     name,
     slug,
-    content: content || undefined,
+    content,
   });
 
   await db
@@ -239,14 +277,12 @@ export async function updateScene(
     "scene",
   );
 
-  const name = formData.get("name") as string;
-  const slug = generateSlug(name, formData.get("slug") as string);
-  const content = formData.get("content") as string | null;
+  const { name, slug, content } = extractNameSlugContent(formData);
 
   const validated = createSceneSchema.partial().parse({
     name,
     slug,
-    content: content || undefined,
+    content,
   });
 
   await db
@@ -379,31 +415,13 @@ export async function deleteBeat(beatId: string) {
 export async function reorderActs(campaignId: string, actIds: string[]) {
   const userId = await requireAuth();
 
-  const ids = reorderIdsSchema.parse(actIds);
-  const rows = await db.query.acts.findMany({
-    where: and(
-      inArray(acts.id, ids),
-      eq(acts.campaignId, campaignId),
-      isNull(acts.deletedAt),
-    ),
-    columns: { id: true, createdById: true },
-  });
-
-  if (rows.length !== ids.length) throw new Error("Invalid acts");
-  if (rows.some((row) => row.createdById !== userId)) {
-    throw new Error("Forbidden");
-  }
-
-  await db.transaction(async (tx) => {
-    for (const [index, id] of ids.entries()) {
-      await tx
-        .update(acts)
-        .set({ sortOrder: index, updatedAt: new Date(), updatedById: userId })
-        .where(eq(acts.id, id));
-    }
-  });
-
-  revalidatePath(`/campaigns/${campaignId}/story`);
+  await reorderEntities(
+    actsConfig,
+    actIds,
+    eq(acts.campaignId, campaignId),
+    userId,
+    campaignId,
+  );
 }
 
 export async function reorderScenes(actId: string, sceneIds: string[]) {
@@ -413,33 +431,15 @@ export async function reorderScenes(actId: string, sceneIds: string[]) {
     where: eq(acts.id, actId),
     columns: { campaignId: true },
   });
-  if (!act) throw new Error("Act not found");
+  if (!act) throw new NotFoundError("act");
 
-  const ids = reorderIdsSchema.parse(sceneIds);
-  const rows = await db.query.scenes.findMany({
-    where: and(
-      inArray(scenes.id, ids),
-      eq(scenes.actId, actId),
-      isNull(scenes.deletedAt),
-    ),
-    columns: { id: true, createdById: true },
-  });
-
-  if (rows.length !== ids.length) throw new Error("Invalid scenes");
-  if (rows.some((row) => row.createdById !== userId)) {
-    throw new Error("Forbidden");
-  }
-
-  await db.transaction(async (tx) => {
-    for (const [index, id] of ids.entries()) {
-      await tx
-        .update(scenes)
-        .set({ sortOrder: index, updatedAt: new Date(), updatedById: userId })
-        .where(eq(scenes.id, id));
-    }
-  });
-
-  revalidatePath(`/campaigns/${act.campaignId}/story`);
+  await reorderEntities(
+    scenesConfig,
+    sceneIds,
+    eq(scenes.actId, actId),
+    userId,
+    act.campaignId,
+  );
 }
 
 export async function reorderBeats(sceneId: string, beatIds: string[]) {
@@ -450,33 +450,15 @@ export async function reorderBeats(sceneId: string, beatIds: string[]) {
     columns: { actId: true },
     with: { act: { columns: { campaignId: true } } },
   });
-  if (!scene) throw new Error("Scene not found");
+  if (!scene) throw new NotFoundError("scene");
 
-  const ids = reorderIdsSchema.parse(beatIds);
-  const rows = await db.query.beats.findMany({
-    where: and(
-      inArray(beats.id, ids),
-      eq(beats.sceneId, sceneId),
-      isNull(beats.deletedAt),
-    ),
-    columns: { id: true, createdById: true },
-  });
-
-  if (rows.length !== ids.length) throw new Error("Invalid beats");
-  if (rows.some((row) => row.createdById !== userId)) {
-    throw new Error("Forbidden");
-  }
-
-  await db.transaction(async (tx) => {
-    for (const [index, id] of ids.entries()) {
-      await tx
-        .update(beats)
-        .set({ sortOrder: index, updatedAt: new Date(), updatedById: userId })
-        .where(eq(beats.id, id));
-    }
-  });
-
-  revalidatePath(`/campaigns/${scene.act.campaignId}/story`);
+  await reorderEntities(
+    beatsConfig,
+    beatIds,
+    eq(beats.sceneId, sceneId),
+    userId,
+    scene.act.campaignId,
+  );
 }
 
 // #endregion Reorder Actions

@@ -19,6 +19,21 @@ const DIALOG_SIZE = {
 
 type DialogSize = keyof typeof DIALOG_SIZE;
 
+function FormDialogHeader({
+  title,
+  description,
+}: {
+  title: string;
+  description?: string;
+}) {
+  return (
+    <DialogHeader>
+      <DialogTitle>{title}</DialogTitle>
+      {description && <DialogDescription>{description}</DialogDescription>}
+    </DialogHeader>
+  );
+}
+
 export type FormDialogProps = {
   open: boolean;
   onOpenChangeAction: (open: boolean) => void;
@@ -39,10 +54,7 @@ export function FormDialog({
   return (
     <Dialog open={open} onOpenChange={onOpenChangeAction}>
       <DialogContent className={DIALOG_SIZE[size]}>
-        <DialogHeader>
-          <DialogTitle>{title}</DialogTitle>
-          <DialogDescription>{description}</DialogDescription>
-        </DialogHeader>
+        <FormDialogHeader title={title} description={description} />
         {children}
       </DialogContent>
     </Dialog>
@@ -90,10 +102,7 @@ function FormDialogWithTrigger({
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>{trigger}</DialogTrigger>
       <DialogContent className={DIALOG_SIZE[size]}>
-        <DialogHeader>
-          <DialogTitle>{title}</DialogTitle>
-          <DialogDescription>{description}</DialogDescription>
-        </DialogHeader>
+        <FormDialogHeader title={title} description={description} />
         {children({ open, onOpenChangeAction: setOpen })}
       </DialogContent>
     </Dialog>

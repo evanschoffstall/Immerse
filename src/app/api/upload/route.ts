@@ -1,4 +1,5 @@
 import { uploadImage } from "@/lib/upload";
+import { validateImageFile } from "@/lib/constants/upload";
 import { NextRequest, NextResponse } from "next/server";
 
 export async function POST(request: NextRequest) {
@@ -11,27 +12,14 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "No file provided" }, { status: 400 });
     }
 
-    // Validate file type
-    const validTypes = [
-      "image/jpeg",
-      "image/jpg",
-      "image/png",
-      "image/webp",
-      "image/gif",
-    ];
-    if (!validTypes.includes(file.type)) {
+    // Validate file
+    try {
+      validateImageFile(file);
+    } catch (error) {
       return NextResponse.json(
         {
-          error: "Invalid file type. Only JPG, PNG, WebP, and GIF are allowed.",
+          error: error instanceof Error ? error.message : "Validation failed",
         },
-        { status: 400 },
-      );
-    }
-
-    // Validate file size (10MB max)
-    if (file.size > 10 * 1024 * 1024) {
-      return NextResponse.json(
-        { error: "File too large. Maximum size is 10MB." },
         { status: 400 },
       );
     }
