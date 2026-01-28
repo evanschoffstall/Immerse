@@ -38,3 +38,9 @@ storybook-static
 
 # Immerse
 public/
+
+# AI (Shameless!)
+AGENTS.md
+CLAUDE.md
+.clautana/
+.coding/
