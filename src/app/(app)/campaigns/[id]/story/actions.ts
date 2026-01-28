@@ -4,6 +4,7 @@ import { db } from "@/db/db";
 import { acts, beats, scenes } from "@/db/schema";
 import { requireAuth } from "@/lib/auth/server-actions";
 import { and, eq, inArray, isNull, sql } from "drizzle-orm";
+import { createInsertSchema } from "drizzle-zod";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { z } from "zod";
@@ -12,25 +13,23 @@ import { z } from "zod";
 // #region Schemas
 // =======================================================================================================
 
-const createActSchema = z.object({
+const createActSchema = createInsertSchema(acts, {
   name: z.string().min(1, "Name is required"),
   slug: z.string().min(1, "Slug is required"),
-  content: z.string().optional(),
-  campaignId: z.string().uuid(),
-});
+}).pick({ name: true, slug: true, content: true, campaignId: true });
 
-const createSceneSchema = z.object({
+const createSceneSchema = createInsertSchema(scenes, {
   name: z.string().min(1, "Name is required"),
   slug: z.string().min(1, "Slug is required"),
-  content: z.string().optional(),
-  actId: z.string().uuid(),
-});
+}).pick({ name: true, slug: true, content: true, actId: true });
 
-const createBeatSchema = z.object({
+const createBeatSchema = createInsertSchema(beats, {
   text: z.string().min(1, "Text is required"),
-  timestamp: z.string().min(1, "Timestamp is required"),
-  sceneId: z.string().uuid(),
-});
+})
+  .pick({ text: true, sceneId: true })
+  .extend({
+    timestamp: z.string().min(1, "Timestamp is required"),
+  });
 
 const updateBeatSchema = createBeatSchema.omit({ sceneId: true }).partial();
 const reorderIdsSchema = z.array(z.string().uuid()).min(1);

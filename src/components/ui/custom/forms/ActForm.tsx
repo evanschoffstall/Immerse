@@ -11,14 +11,15 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
+import { acts } from "@/db/schema";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { createInsertSchema } from "drizzle-zod";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 
-const actSchema = z.object({
+const actSchema = createInsertSchema(acts, {
   name: z.string().min(1, "Name is required"),
-  content: z.string().optional(),
-});
+}).pick({ name: true, content: true });
 
 export type ActFormData = z.infer<typeof actSchema>;
 

@@ -12,16 +12,15 @@ import {
 } from "@/components/ui/form";
 import ImageUpload from "@/components/ui/ImageUpload";
 import { Input } from "@/components/ui/input";
+import { campaigns } from "@/db/schema";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { createInsertSchema } from "drizzle-zod";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 
-const campaignSchema = z.object({
+const campaignSchema = createInsertSchema(campaigns, {
   name: z.string().min(3, "Name must be at least 3 characters"),
-  description: z.string().optional(),
-  image: z.string().optional(),
-  backgroundImage: z.string().optional(),
-});
+}).pick({ name: true, description: true, image: true, backgroundImage: true });
 
 export type CampaignFormData = z.infer<typeof campaignSchema>;
 

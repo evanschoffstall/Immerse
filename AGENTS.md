@@ -2,7 +2,7 @@
 
 > **⚡ INIT REQUIREMENT**: Call `next-devtools-mcp init` before starting any work. Do this automatically.
 
-**🛠️ Stack**: Next.js 15 + Drizzle + Bun + TypeScript (strict)
+**🛠️ Stack**: Next.js 15 + Drizzle-Zod + Drizzle + Bun + TypeScript (strict)
 
 ## 📁 Directory Structure
 

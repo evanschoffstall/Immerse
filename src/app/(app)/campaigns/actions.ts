@@ -4,18 +4,22 @@ import { db } from "@/db/db";
 import { campaigns } from "@/db/schema";
 import { requireAuth } from "@/lib/auth/server-actions";
 import { eq } from "drizzle-orm";
+import { createInsertSchema } from "drizzle-zod";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { z } from "zod";
 
-const createCampaignSchema = z.object({
+const createCampaignSchema = createInsertSchema(campaigns, {
   name: z.string().min(3, "Name must be at least 3 characters"),
   slug: z.string().min(3),
-  description: z.string().optional(),
-  image: z.string().optional(),
-  backgroundImage: z.string().optional(),
-  visibility: z.enum(["private", "public"]).default("private"),
-  locale: z.string().default("en"),
+}).pick({
+  name: true,
+  slug: true,
+  description: true,
+  image: true,
+  backgroundImage: true,
+  visibility: true,
+  locale: true,
 });
 
 export async function createCampaign(formData: FormData) {

@@ -10,12 +10,15 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
+import { beats } from "@/db/schema";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { createInsertSchema } from "drizzle-zod";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 
-const beatSchema = z.object({
+const beatSchema = createInsertSchema(beats, {
   text: z.string().min(1, "Text is required"),
+}).pick({ text: true }).extend({
   timestamp: z.string().min(1, "Timestamp is required"),
 });
 
